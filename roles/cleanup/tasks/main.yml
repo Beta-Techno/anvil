@@ -1,0 +1,28 @@
+---
+- name: Skip cleanup when disabled
+  ansible.builtin.debug:
+    msg: "Cleanup skipped (cleanup_run=false)."
+  when: not cleanup_run
+
+- name: Attempt apt fix
+  ansible.builtin.command: apt -f install -y
+  changed_when: false
+  failed_when: false
+  when: cleanup_run
+
+- name: Autoremove unused packages
+  ansible.builtin.apt:
+    autoremove: true
+  when: cleanup_run
+
+- name: Remove common temp artifacts
+  ansible.builtin.shell: rm -f /tmp/*.deb /tmp/*.tar.gz
+  args:
+    executable: /bin/bash
+  changed_when: false
+  when: cleanup_run
+
+- name: Cleanup summary
+  ansible.builtin.debug:
+    msg: "Cleanup run complete (cleanup_run={{ cleanup_run }})."
+  when: cleanup_run

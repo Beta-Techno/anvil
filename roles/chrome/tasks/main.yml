@@ -1,0 +1,38 @@
+---
+- name: Skip Chrome install when disabled
+  ansible.builtin.debug:
+    msg: "Chrome install skipped (chrome_install=false)."
+  when: not chrome_install
+
+- name: Ensure apt keyring directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+  when: chrome_install
+
+- name: Add Google Chrome GPG key
+  ansible.builtin.get_url:
+    url: https://dl.google.com/linux/linux_signing_key.pub
+    dest: /etc/apt/keyrings/google-linux.gpg
+    mode: "0644"
+  when: chrome_install
+
+- name: Add Google Chrome apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ apt_arch }} signed-by=/etc/apt/keyrings/google-linux.gpg] {{ chrome_repo_url }} stable main"
+    filename: google-chrome
+    state: present
+  when: chrome_install
+
+- name: Install google-chrome-stable
+  ansible.builtin.apt:
+    name: google-chrome-stable
+    state: "{{ chrome_package_state }}"
+    update_cache: true
+  when: chrome_install
+
+- name: Chrome install summary
+  ansible.builtin.debug:
+    msg: "Google Chrome {{ chrome_package_state }} (install={{ chrome_install }})."
+  when: chrome_install

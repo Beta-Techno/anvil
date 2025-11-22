@@ -1,0 +1,67 @@
+---
+- name: Warn if git_user_email is empty
+  ansible.builtin.debug:
+    msg: "git_user_email is empty; git global email will not be set."
+    verbosity: 0
+  when: git_user_email | length == 0
+
+- name: Configure git user.name
+  ansible.builtin.command: git config --global user.name "{{ git_user_name }}"
+  become: false
+  when: git_user_name | length > 0
+
+- name: Configure git user.email
+  ansible.builtin.command: git config --global user.email "{{ git_user_email }}"
+  become: false
+  when: git_user_email | length > 0
+
+- name: Configure git defaults
+  ansible.builtin.command: git config --global {{ item.key }} {{ item.value }}
+  become: false
+  loop:
+    - { key: init.defaultBranch, value: "{{ git_init_default_branch }}" }
+    - { key: pull.ff, value: "{{ 'only' if git_pull_ff_only else 'true' }}" }
+    - { key: color.ui, value: "{{ git_color_ui }}" }
+
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: "{{ git_ssh_key_path | dirname }}"
+    state: directory
+    mode: "0700"
+  become: false
+
+- name: Create SSH keypair if absent
+  ansible.builtin.openssh_keypair:
+    path: "{{ git_ssh_key_path }}"
+    type: ed25519
+    mode: "0600"
+    comment: "{{ git_user_email if git_user_email | length > 0 else git_user_name }}"
+    state: present
+  become: false
+
+- name: Ensure minimal GitHub host stanza
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.ssh/config"
+    mode: "0600"
+    create: true
+    block: |
+      Host github.com
+        HostName github.com
+        User git
+        IdentityFile {{ git_ssh_key_path }}
+        IdentitiesOnly yes
+        AddKeysToAgent yes
+  become: false
+
+- name: Configure SSH-based commit signing (best effort)
+  ansible.builtin.command: git config --global {{ item.key }} {{ item.value }}
+  become: false
+  loop:
+    - { key: gpg.format, value: ssh }
+    - { key: user.signingkey, value: "{{ git_ssh_key_path }}.pub" }
+  when: git_enable_ssh_signing
+  failed_when: false
+
+- name: Show public key path
+  ansible.builtin.debug:
+    msg: "Public key ready at {{ git_ssh_key_path }}.pub (add to Git hosting)."

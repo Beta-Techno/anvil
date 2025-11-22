@@ -1,0 +1,172 @@
+---
+- name: Ensure Python build dependencies are installed
+  ansible.builtin.apt:
+    name: "{{ langs_pyenv_build_deps }}"
+    state: present
+    update_cache: true
+  when: langs_install_python
+
+- name: Install nvm
+  ansible.builtin.git:
+    repo: https://github.com/nvm-sh/nvm.git
+    dest: "{{ ansible_env.HOME }}/.nvm"
+    version: "{{ langs_nvm_version }}"
+  become: false
+  when: langs_install_node
+
+- name: Install Node.js LTS with nvm
+  ansible.builtin.shell: |
+    set -e
+    export NVM_DIR="{{ ansible_env.HOME }}/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    nvm install --lts
+    nvm alias default "{{ langs_node_default }}"
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.nvm/alias/default"
+  become: false
+  when: langs_install_node
+
+- name: Install pyenv
+  ansible.builtin.git:
+    repo: https://github.com/pyenv/pyenv.git
+    dest: "{{ langs_pyenv_root }}"
+  become: false
+  when: langs_install_python
+
+- name: Ensure pyenv init is present in shell rc files
+  ansible.builtin.blockinfile:
+    path: "{{ item }}"
+    block: |
+      export PYENV_ROOT="{{ langs_pyenv_root }}"
+      command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+      eval "$(pyenv init -)"
+    create: true
+  loop:
+    - "{{ ansible_env.HOME }}/.bashrc"
+    - "{{ ansible_env.HOME }}/.zshrc"
+  become: false
+  when: langs_install_python
+
+- name: Install Python via pyenv
+  ansible.builtin.shell: |
+    set -e
+    export PYENV_ROOT="{{ langs_pyenv_root }}"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
+    pyenv install -s "{{ langs_pyenv_python_version }}"
+    pyenv global "{{ langs_pyenv_python_version }}"
+  args:
+    executable: /bin/bash
+  environment:
+    PYENV_ROOT: "{{ langs_pyenv_root }}"
+    PATH: "{{ langs_pyenv_root }}/bin:{{ langs_pyenv_root }}/shims:{{ ansible_env.PATH }}"
+  become: false
+  when: langs_install_python
+
+- name: Install Ruby build dependencies
+  ansible.builtin.apt:
+    name: "{{ langs_ruby_build_deps }}"
+    state: present
+    update_cache: true
+  when: langs_install_ruby
+
+- name: Install rbenv from source
+  ansible.builtin.git:
+    repo: https://github.com/rbenv/rbenv.git
+    dest: "{{ langs_rbenv_root }}"
+    version: master
+  become: false
+  when: langs_install_ruby
+
+- name: Install ruby-build plugin
+  ansible.builtin.git:
+    repo: https://github.com/rbenv/ruby-build.git
+    dest: "{{ langs_rbenv_root }}/plugins/ruby-build"
+    version: master
+  become: false
+  when: langs_install_ruby
+
+- name: Install Ruby via rbenv
+  ansible.builtin.shell: |
+    set -e
+    export RBENV_ROOT="{{ langs_rbenv_root }}"
+    export PATH="$RBENV_ROOT/bin:$RBENV_ROOT/shims:$PATH"
+    rbenv install -s "{{ langs_rbenv_ruby_version }}"
+    rbenv global "{{ langs_rbenv_ruby_version }}"
+  args:
+    executable: /bin/bash
+  environment:
+    RBENV_ROOT: "{{ langs_rbenv_root }}"
+    PATH: "{{ langs_rbenv_root }}/bin:{{ langs_rbenv_root }}/shims:{{ ansible_env.PATH }}"
+  become: false
+  when: langs_install_ruby
+
+- name: Ensure rbenv init is present in shell rc files
+  ansible.builtin.blockinfile:
+    path: "{{ item }}"
+    block: |
+      export RBENV_ROOT="{{ langs_rbenv_root }}"
+      export PATH="$RBENV_ROOT/bin:$PATH"
+      eval "$(rbenv init - bash)"
+    create: true
+  loop:
+    - "{{ ansible_env.HOME }}/.bashrc"
+    - "{{ ansible_env.HOME }}/.zshrc"
+  become: false
+  when: langs_install_ruby
+
+- name: Check installed Go version
+  ansible.builtin.command: /usr/local/go/bin/go version
+  register: go_version_check
+  changed_when: false
+  failed_when: false
+  when: langs_install_go
+
+- name: Remove existing Go installation if version differs
+  ansible.builtin.file:
+    path: /usr/local/go
+    state: absent
+  when:
+    - langs_install_go
+    - go_version_check.stdout is defined
+    - ("go" + langs_go_version) not in go_version_check.stdout
+
+- name: Download Go archive
+  ansible.builtin.get_url:
+    url: "{{ langs_go_download_url }}"
+    dest: /tmp/go.tar.gz
+    mode: "0644"
+  when:
+    - langs_install_go
+    - go_version_check.stdout is not defined or ("go" + langs_go_version) not in go_version_check.stdout
+
+- name: Install Go to /usr/local
+  ansible.builtin.unarchive:
+    src: /tmp/go.tar.gz
+    dest: /usr/local
+    remote_src: true
+  when:
+    - langs_install_go
+    - go_version_check.stdout is not defined or ("go" + langs_go_version) not in go_version_check.stdout
+
+- name: Install Rust toolchain (rustup)
+  ansible.builtin.shell: |
+    set -e
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/rustc"
+  become: false
+  when: langs_install_rust
+
+- name: Install Java (default-jdk)
+  ansible.builtin.apt:
+    name: default-jdk
+    state: present
+    update_cache: true
+  when: langs_install_java
+
+- name: Langs summary
+  ansible.builtin.debug:
+    msg: "Languages installed (node={{ langs_install_node }}, pyenv={{ langs_install_python }}, ruby={{ langs_install_ruby }}, go={{ langs_install_go }}, rust={{ langs_install_rust }}, java={{ langs_install_java }})."

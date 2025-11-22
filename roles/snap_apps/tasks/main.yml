@@ -1,0 +1,28 @@
+---
+- name: Skip Snap apps when disabled
+  ansible.builtin.debug:
+    msg: "Snap apps skipped (snap_apps_install=false)."
+  when: not snap_apps_install
+
+- name: Ensure snap is available
+  ansible.builtin.command: snap version
+  register: snap_version
+  changed_when: false
+  failed_when: snap_version.rc != 0
+  when: snap_apps_install
+
+- name: Install snap applications
+  ansible.builtin.shell: |
+    set -e
+    snap install "{{ item }}"
+  args:
+    executable: /bin/bash
+  loop: "{{ snap_apps_list }}"
+  when:
+    - snap_apps_install
+    - snap_apps_list | length > 0
+
+- name: Snap apps summary
+  ansible.builtin.debug:
+    msg: "Snap apps processed (enabled={{ snap_apps_install }}, count={{ snap_apps_list | length }})."
+  when: snap_apps_install

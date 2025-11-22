@@ -1,0 +1,50 @@
+---
+- name: Skip JetBrains Toolbox when disabled
+  ansible.builtin.debug:
+    msg: "JetBrains Toolbox install skipped (jetbrains_toolbox_install=false)."
+  when: not jetbrains_toolbox_install
+
+- name: Install JetBrains Toolbox
+  ansible.builtin.shell: |
+    set -euo pipefail
+    arch_key="{{ jetbrains_toolbox_arch_map[ansible_architecture] | default('') }}"
+    if [[ -z "$arch_key" ]]; then
+      echo "Unsupported architecture: {{ ansible_architecture }}" >&2
+      exit 1
+    fi
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+    cd "$tmp"
+    url="$(python3 - <<'PY'
+import json, urllib.request, sys
+u="https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release"
+try:
+    with urllib.request.urlopen(u) as r:
+        j=json.load(r)
+    arch_key=sys.argv[1]
+    d=j["TBA"][0]["downloads"]
+    print(d.get(arch_key, d.get("linux", {})).get("link",""))
+except Exception as e:
+    print("", end="")
+PY
+ "{{ jetbrains_toolbox_arch_map[ansible_architecture] | default('') }}")"
+    if [[ -z "$url" ]]; then
+      echo "Could not resolve Toolbox download URL" >&2
+      exit 2
+    fi
+    curl -fsSLo toolbox.tar.gz "$url"
+    tar -xzf toolbox.tar.gz
+    dir="$(find . -maxdepth 1 -type d -name 'jetbrains-toolbox*' | head -n1)"
+    chmod +x "$dir/jetbrains-toolbox"
+    setsid "$dir/jetbrains-toolbox" >/dev/null 2>&1 & disown || true
+  args:
+    executable: /bin/bash
+  register: toolbox_result
+  changed_when: toolbox_result.rc == 0
+  become: false
+  when: jetbrains_toolbox_install
+
+- name: JetBrains Toolbox summary
+  ansible.builtin.debug:
+    msg: "JetBrains Toolbox install attempted (jetbrains_toolbox_install={{ jetbrains_toolbox_install }})."
+  when: jetbrains_toolbox_install

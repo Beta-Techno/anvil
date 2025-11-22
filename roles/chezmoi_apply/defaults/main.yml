@@ -1,0 +1,3 @@
+---
+chezmoi_apply: false
+chezmoi_repo: "{{ lookup('env', 'DOTFILES_REPO') | default('https://github.com/Beta-Techno/dotfiles.git', true) }}"

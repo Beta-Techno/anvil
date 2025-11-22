@@ -1,0 +1,4 @@
+---
+terminals_install_alacritty: true
+terminals_install_from_source: false  # apt by default; set true to handle source build later
+terminals_source_dir: "{{ ansible_env.HOME | default('~') + '/alacritty' }}"

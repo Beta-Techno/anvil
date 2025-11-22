@@ -1,0 +1,35 @@
+---
+- name: Ensure keyring directory exists
+  ansible.builtin.file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Add Tailscale GPG key
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/ubuntu/{{ tailscale_repo_codename }}.noarmor.gpg"
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    mode: "0644"
+
+- name: Add Tailscale apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/ubuntu {{ tailscale_repo_codename }} main"
+    state: present
+    filename: tailscale
+
+- name: Install Tailscale package
+  ansible.builtin.apt:
+    name: tailscale
+    state: "{{ tailscale_package_state }}"
+    update_cache: true
+
+- name: Enable and start tailscaled service (optional)
+  ansible.builtin.systemd:
+    name: tailscaled
+    enabled: "{{ tailscale_enable_service }}"
+    state: started
+  when: tailscale_enable_service
+
+- name: Tailscale install summary
+  ansible.builtin.debug:
+    msg: "Tailscale installed. Enable and login when ready: sudo systemctl enable --now tailscaled && sudo tailscale up"

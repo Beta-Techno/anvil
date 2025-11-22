@@ -1,0 +1,4 @@
+---
+tailscale_repo_codename: "{{ apt_codename }}"
+tailscale_package_state: present
+tailscale_enable_service: false

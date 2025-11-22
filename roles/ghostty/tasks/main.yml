@@ -1,0 +1,20 @@
+---
+- name: Skip Ghostty install when disabled
+  ansible.builtin.debug:
+    msg: "Ghostty install skipped (ghostty_install=false)."
+  when: not ghostty_install
+
+- name: Install Ghostty terminal
+  ansible.builtin.shell: |
+    set -e
+    bash -c "$(curl -fsSL "{{ ghostty_install_url }}")"
+  args:
+    executable: /bin/bash
+  register: ghostty_result
+  changed_when: ghostty_result.rc == 0
+  when: ghostty_install
+
+- name: Ghostty install summary
+  ansible.builtin.debug:
+    msg: "Ghostty install attempted (ghostty_install={{ ghostty_install }})."
+  when: ghostty_install

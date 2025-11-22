@@ -1,0 +1,27 @@
+---
+- name: Determine if driver installation should be skipped (containers)
+  ansible.builtin.set_fact:
+    drivers_skip: "{{ ansible_virtualization_type in ['lxc', 'docker', 'container'] }}"
+
+- name: Skip driver install on virtualized/container hosts
+  ansible.builtin.debug:
+    msg: "Skipping driver installation on virtualized/container host ({{ ansible_virtualization_type | default('unknown') }})"
+  when: drivers_skip
+
+- name: Autoinstall recommended drivers (best effort)
+  ansible.builtin.command: ubuntu-drivers autoinstall
+  register: drivers_autoinstall
+  changed_when: "'installed' in drivers_autoinstall.stdout | lower"
+  failed_when: false
+  when:
+    - not drivers_skip
+    - drivers_enable_autoinstall
+
+- name: Install Broadcom wireless meta-package (best effort)
+  ansible.builtin.apt:
+    name: bcmwl-kernel-source
+    state: present
+  ignore_errors: true
+  when:
+    - not drivers_skip
+    - drivers_enable_bcmwl

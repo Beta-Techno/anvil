@@ -1,0 +1,24 @@
+---
+- name: Skip Flatpak apps when disabled
+  ansible.builtin.debug:
+    msg: "Flatpak apps skipped (flatpak_apps_install=false)."
+  when: not flatpak_apps_install
+
+- name: Install Flatpak applications
+  ansible.builtin.shell: |
+    set -e
+    if flatpak info "{{ item }}" >/dev/null 2>&1; then
+      exit 0
+    fi
+    flatpak install -y flathub "{{ item }}"
+  args:
+    executable: /bin/bash
+  loop: "{{ flatpak_apps_list }}"
+  when:
+    - flatpak_apps_install
+    - flatpak_apps_list | length > 0
+
+- name: Flatpak apps summary
+  ansible.builtin.debug:
+    msg: "Flatpak apps processed (enabled={{ flatpak_apps_install }}, count={{ flatpak_apps_list | length }})."
+  when: flatpak_apps_install

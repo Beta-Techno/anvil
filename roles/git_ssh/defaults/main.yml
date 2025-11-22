@@ -1,0 +1,8 @@
+---
+git_user_name: "{{ lookup('env', 'GIT_USER_NAME') | default(ansible_user_id, true) }}"
+git_user_email: "{{ lookup('env', 'GIT_USER_EMAIL') | default('', true) }}"
+git_init_default_branch: main
+git_pull_ff_only: true
+git_color_ui: auto
+git_enable_ssh_signing: true
+git_ssh_key_path: "{{ ansible_env.HOME | default('~') + '/.ssh/id_ed25519' }}"

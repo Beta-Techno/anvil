@@ -1,0 +1,3 @@
+---
+drivers_enable_autoinstall: true
+drivers_enable_bcmwl: true

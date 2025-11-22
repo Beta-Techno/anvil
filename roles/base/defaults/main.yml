@@ -1,0 +1,17 @@
+---
+base_upgrade: true
+base_install_restricted_extras: false
+base_packages:
+  - build-essential
+  - ca-certificates
+  - curl
+  - wget
+  - git
+  - gnupg
+  - software-properties-common
+  - unzip
+  - ripgrep
+  - fzf
+  - htop
+  - net-tools
+  - tmux

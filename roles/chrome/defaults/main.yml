@@ -1,0 +1,4 @@
+---
+chrome_install: false
+chrome_repo_url: http://dl.google.com/linux/chrome/deb/
+chrome_package_state: present

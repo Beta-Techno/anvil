@@ -1,0 +1,33 @@
+---
+- name: Ensure fonts directory exists
+  ansible.builtin.file:
+    path: "{{ fonts_dir }}"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Download JetBrainsMono Nerd Font (zip)
+  ansible.builtin.get_url:
+    url: "{{ fonts_jetbrainsmono_url }}"
+    dest: /tmp/JetBrainsMono.zip
+    mode: "0644"
+    checksum: "{{ fonts_jetbrainsmono_checksum if fonts_jetbrainsmono_checksum | length > 0 else omit }}"
+  when: fonts_install_jetbrainsmono
+
+- name: Install JetBrainsMono Nerd Font
+  ansible.builtin.unarchive:
+    src: /tmp/JetBrainsMono.zip
+    dest: "{{ fonts_dir }}"
+    remote_src: true
+  when: fonts_install_jetbrainsmono
+  become: false
+
+- name: Refresh font cache
+  ansible.builtin.command: fc-cache -fv
+  changed_when: false
+  become: false
+  when: fonts_install_jetbrainsmono
+
+- name: Fonts summary
+  ansible.builtin.debug:
+    msg: "Fonts installed to {{ fonts_dir }} (JetBrainsMono Nerd Font={{ 'yes' if fonts_install_jetbrainsmono else 'no' }})."

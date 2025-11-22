@@ -1,0 +1,38 @@
+---
+langs_install_node: true
+langs_nvm_version: v0.39.7
+langs_node_default: "lts/*"
+
+langs_install_python: true
+langs_pyenv_python_version: "3.11.0"
+langs_pyenv_root: "{{ ansible_env.HOME | default('~') + '/.pyenv' }}"
+langs_pyenv_build_deps:
+  - build-essential
+  - libssl-dev
+  - zlib1g-dev
+  - libbz2-dev
+  - libreadline-dev
+  - libsqlite3-dev
+  - libffi-dev
+  - liblzma-dev
+  - tk-dev
+
+langs_install_ruby: true
+langs_rbenv_ruby_version: "3.1.0"
+langs_rbenv_root: "{{ ansible_env.HOME | default('~') + '/.rbenv' }}"
+langs_ruby_build_deps:
+  - make
+  - build-essential
+  - libssl-dev
+  - libreadline-dev
+  - zlib1g-dev
+  - libyaml-dev
+  - libffi-dev
+
+langs_install_go: true
+langs_go_version: "1.21.0"
+langs_go_download_url: "https://go.dev/dl/go{{ langs_go_version }}.linux-{{ apt_arch }}.tar.gz"
+
+langs_install_rust: true
+
+langs_install_java: true

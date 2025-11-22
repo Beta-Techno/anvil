@@ -1,0 +1,58 @@
+---
+- name: Skip NoMachine when disabled
+  ansible.builtin.debug:
+    msg: "NoMachine install skipped (nomachine_install=false)."
+  when: not nomachine_install
+
+- name: Ensure amd64 architecture for NoMachine
+  ansible.builtin.assert:
+    that:
+      - apt_arch == 'amd64'
+    fail_msg: "NoMachine package URL is for amd64 but apt_arch={{ apt_arch }}"
+  when: nomachine_install
+
+- name: Download NoMachine package
+  ansible.builtin.get_url:
+    url: "{{ nomachine_deb_url }}"
+    dest: /tmp/nomachine.deb
+    mode: "0644"
+  when: nomachine_install
+
+- name: Verify MD5 checksum (best effort)
+  ansible.builtin.shell: |
+    set -e
+    md5sum /tmp/nomachine.deb | awk '{print $1}'
+  register: nomachine_md5
+  changed_when: false
+  failed_when: false
+  when: nomachine_install
+
+- name: Fail if checksum mismatch
+  ansible.builtin.fail:
+    msg: "NoMachine MD5 mismatch: expected {{ nomachine_expected_md5 }}, got {{ nomachine_md5.stdout }}"
+  when:
+    - nomachine_install
+    - nomachine_expected_md5 | length > 0
+    - nomachine_md5.stdout is defined
+    - nomachine_md5.stdout | lower != nomachine_expected_md5 | lower
+
+- name: Install NoMachine
+  ansible.builtin.apt:
+    deb: /tmp/nomachine.deb
+    state: present
+    update_cache: true
+  when: nomachine_install
+
+- name: Allow NX service through ufw when active
+  ansible.builtin.shell: |
+    sudo ufw status | grep -q "Status: active" && sudo ufw allow 4000/tcp || true
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+  when: nomachine_install
+
+- name: NoMachine summary
+  ansible.builtin.debug:
+    msg: "NoMachine install attempted (nomachine_install={{ nomachine_install }})."
+  when: nomachine_install

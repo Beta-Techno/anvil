@@ -1,0 +1,38 @@
+---
+- name: Install flatpak
+  ansible.builtin.apt:
+    name: flatpak
+    state: present
+    update_cache: true
+  when: flatpak_enable
+
+- name: Add Flathub remote (system-wide)
+  ansible.builtin.command: flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  register: flathub_result
+  changed_when: "'Added' in flathub_result.stdout"
+  failed_when: false
+  when: flatpak_enable and flatpak_add_flathub
+
+- name: Ensure snapd is installed
+  ansible.builtin.apt:
+    name: snapd
+    state: present
+    update_cache: true
+  when: snap_enable
+
+- name: Ensure snap socket is enabled
+  ansible.builtin.systemd:
+    name: snapd.socket
+    enabled: true
+    state: started
+  when: snap_enable
+
+- name: Refresh snaps (best effort)
+  ansible.builtin.command: snap refresh
+  changed_when: false
+  failed_when: false
+  when: snap_enable and snap_refresh
+
+- name: Flatpak/Snap summary
+  ansible.builtin.debug:
+    msg: "Flatpak {{ 'enabled' if flatpak_enable else 'skipped' }}, Flathub {{ 'configured' if flatpak_add_flathub else 'not added' }}; Snap {{ 'enabled' if snap_enable else 'skipped' }}."

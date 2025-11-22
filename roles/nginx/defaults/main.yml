@@ -1,0 +1,3 @@
+---
+nginx_package_state: present
+nginx_enable_service: true

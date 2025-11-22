@@ -1,0 +1,3 @@
+---
+cloudflared_repo_codename: "{{ apt_codename }}"
+cloudflared_package_state: present

@@ -1,0 +1,7 @@
+---
+jetbrains_toolbox_install: false
+jetbrains_toolbox_arch_map:
+  x86_64: linux
+  amd64: linux
+  aarch64: linuxArm64
+  arm64: linuxArm64

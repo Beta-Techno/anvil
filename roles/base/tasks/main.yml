@@ -1,0 +1,27 @@
+---
+- name: Ensure apt cache is up to date
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Upgrade base system packages
+  ansible.builtin.apt:
+    upgrade: dist
+  when: base_upgrade
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name: "{{ base_packages }}"
+    state: present
+    install_recommends: true
+
+- name: Install community codecs (optional)
+  ansible.builtin.apt:
+    name: ubuntu-restricted-extras
+    state: present
+  when: base_install_restricted_extras
+  ignore_errors: true  # may fail in minimal repos; best-effort
+
+- name: Report completion
+  ansible.builtin.debug:
+    msg: "[OK] Base system packages installed."

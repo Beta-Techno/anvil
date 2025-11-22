@@ -1,0 +1,7 @@
+---
+# Global defaults and knobs shared across roles.
+debian_frontend: noninteractive
+
+# Common architecture/codename helpers.
+apt_codename: "{{ ansible_lsb.codename | default('noble') }}"
+apt_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'amd64' }}"

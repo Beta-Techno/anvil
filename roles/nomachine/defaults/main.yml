@@ -1,0 +1,4 @@
+---
+nomachine_install: false
+nomachine_deb_url: https://web9001.nomachine.com/download/9.1/Linux/nomachine_9.1.24_6_amd64.deb
+nomachine_expected_md5: "0b4162766d6e12e80c7d53d361813e08"

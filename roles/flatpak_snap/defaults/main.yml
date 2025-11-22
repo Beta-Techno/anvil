@@ -1,0 +1,5 @@
+---
+flatpak_enable: true
+flatpak_add_flathub: true
+snap_enable: true
+snap_refresh: true

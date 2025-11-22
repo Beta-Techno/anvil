@@ -1,0 +1,3 @@
+---
+chezmoi_install: false
+chezmoi_bin_dir: "{{ ansible_env.HOME | default('~') + '/.local/bin' }}"

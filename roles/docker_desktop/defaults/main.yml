@@ -1,0 +1,5 @@
+---
+docker_desktop_install: false
+docker_desktop_urls:
+  amd64: https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb
+  arm64: https://desktop.docker.com/linux/main/arm64/docker-desktop-arm64.deb

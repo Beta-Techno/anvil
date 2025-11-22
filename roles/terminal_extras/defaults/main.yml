@@ -1,0 +1,12 @@
+---
+terminal_extras_install: false
+terminal_extras_packages:
+  - gnome-tweaks
+  - gnome-shell-extensions
+  - tilix
+  - zsh
+  - fd-find
+  - bat
+  - tree
+  - xclip
+terminal_extras_install_ohmyzsh: true

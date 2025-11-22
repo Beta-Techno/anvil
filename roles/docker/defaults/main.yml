@@ -1,0 +1,7 @@
+---
+docker_repo_codename: "{{ apt_codename }}"
+docker_repo_arch: "{{ apt_arch }}"
+docker_package_state: present
+docker_users:
+  - "{{ ansible_user_id }}"
+docker_enable_service: true

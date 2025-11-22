@@ -1,0 +1,9 @@
+---
+lazyvim_install: true
+lazyvim_nvim_appimage_url: https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
+lazyvim_nvim_dest: /usr/local/bin/nvim
+lazyvim_backup_existing: true
+lazyvim_use_nvm: true
+lazyvim_pipx_pynvim: true
+lazyvim_config_repo: https://github.com/LazyVim/starter
+lazyvim_config_dir: "{{ ansible_env.HOME | default('~') + '/.config/nvim' }}"

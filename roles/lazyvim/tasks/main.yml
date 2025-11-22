@@ -1,0 +1,178 @@
+---
+- name: Skip LazyVim when disabled
+  ansible.builtin.debug:
+    msg: "LazyVim install skipped (lazyvim_install=false)."
+  when: not lazyvim_install
+
+- name: Install LazyVim dependencies
+  ansible.builtin.apt:
+    name:
+      - curl
+      - git
+      - unzip
+      - ca-certificates
+      - build-essential
+      - ripgrep
+      - fd-find
+      - fzf
+      - xclip
+      - python3-venv
+      - pipx
+    state: present
+    update_cache: true
+  when: lazyvim_install
+
+- name: Ensure ~/.local/bin exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: "0755"
+  become: false
+  when: lazyvim_install
+
+- name: Locate fdfind binary (for fd alias)
+  ansible.builtin.command: command -v fdfind
+  register: fdfind_path
+  changed_when: false
+  failed_when: false
+  when: lazyvim_install
+
+- name: Symlink fdfind to fd
+  ansible.builtin.file:
+    src: "{{ fdfind_path.stdout }}"
+    dest: "{{ ansible_env.HOME }}/.local/bin/fd"
+    state: link
+    force: true
+  become: false
+  when:
+    - lazyvim_install
+    - fdfind_path.stdout is defined
+    - fdfind_path.stdout | length > 0
+
+- name: Ensure ~/.local/bin is on PATH in shell rc files
+  ansible.builtin.blockinfile:
+    path: "{{ item }}"
+    block: |
+      export PATH="$HOME/.local/bin:$PATH"
+    create: true
+  loop:
+    - "{{ ansible_env.HOME }}/.bashrc"
+    - "{{ ansible_env.HOME }}/.zshrc"
+  become: false
+  when: lazyvim_install
+
+- name: Download Neovim AppImage
+  ansible.builtin.get_url:
+    url: "{{ lazyvim_nvim_appimage_url }}"
+    dest: /tmp/nvim.appimage
+    mode: "0755"
+  when: lazyvim_install
+
+- name: Install Neovim AppImage to destination
+  ansible.builtin.copy:
+    src: /tmp/nvim.appimage
+    dest: "{{ lazyvim_nvim_dest }}"
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: true
+  when: lazyvim_install
+
+- name: Ensure nvm LTS Node is available for Neovim
+  ansible.builtin.shell: |
+    set -e
+    export NVM_DIR="{{ ansible_env.HOME }}/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    nvm use --lts || nvm install --lts
+    npm install -g neovim
+  args:
+    executable: /bin/bash
+  become: false
+  when:
+    - lazyvim_install
+    - lazyvim_use_nvm
+
+- name: Install pynvim via pipx
+  ansible.builtin.shell: |
+    set -e
+    pipx ensurepath || true
+    pipx install --python python3 pynvim || pipx upgrade pynvim
+  args:
+    executable: /bin/bash
+  become: false
+  when:
+    - lazyvim_install
+    - lazyvim_pipx_pynvim
+
+- name: Ensure Neovim config path state
+  ansible.builtin.stat:
+    path: "{{ lazyvim_config_dir }}"
+  register: lazyvim_config_stat
+  become: false
+  when: lazyvim_install
+
+- name: Backup existing Neovim config if present
+  ansible.builtin.command: mv "{{ lazyvim_config_dir }}" "{{ lazyvim_config_dir }}.bak-{{ ansible_date_time.iso8601_basic_short }}"
+  args:
+    removes: "{{ lazyvim_config_dir }}"
+  become: false
+  when:
+    - lazyvim_install
+    - lazyvim_backup_existing
+    - lazyvim_config_stat.stat.exists
+  check_mode: false
+  changed_when: true
+
+- name: Clone LazyVim starter
+  ansible.builtin.git:
+    repo: "{{ lazyvim_config_repo }}"
+    dest: "{{ lazyvim_config_dir }}"
+    version: HEAD
+    depth: 1
+  become: false
+  when: lazyvim_install
+
+- name: Remove git metadata from LazyVim config
+  ansible.builtin.file:
+    path: "{{ lazyvim_config_dir }}/.git"
+    state: absent
+  become: false
+  when: lazyvim_install
+
+- name: Configure python3 host for Neovim (pipx pynvim)
+  ansible.builtin.copy:
+    dest: "{{ lazyvim_config_dir }}/lua/config/providers.lua"
+    mode: "0644"
+    content: |
+      local host = vim.fn.expand("{{ ansible_env.HOME }}/.local/pipx/venvs/pynvim/bin/python3")
+      if vim.fn.executable(host) == 1 then
+        vim.g.python3_host_prog = host
+      end
+  become: false
+  when: lazyvim_install
+
+- name: Create extras placeholder
+  ansible.builtin.copy:
+    dest: "{{ lazyvim_config_dir }}/lua/plugins/extras.lua"
+    mode: "0644"
+    content: |
+      return {
+        -- { import = "lazyvim.plugins.extras.lang.typescript" },
+        -- { import = "lazyvim.plugins.extras.lang.python" },
+        -- { import = "lazyvim.plugins.extras.coding.copilot" },
+      }
+  become: false
+  when: lazyvim_install
+
+- name: Pre-sync LazyVim plugins (best effort)
+  ansible.builtin.command: nvim --headless "+Lazy! sync" "+qa"
+  register: lazyvim_sync
+  failed_when: false
+  changed_when: lazyvim_sync.rc == 0
+  become: false
+  when: lazyvim_install
+
+- name: LazyVim summary
+  ansible.builtin.debug:
+    msg: "LazyVim installed with Neovim AppImage at {{ lazyvim_nvim_dest }}; config at {{ lazyvim_config_dir }}."
+  when: lazyvim_install

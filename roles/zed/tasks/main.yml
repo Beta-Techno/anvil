@@ -1,0 +1,21 @@
+---
+- name: Skip Zed install when disabled
+  ansible.builtin.debug:
+    msg: "Zed install skipped (zed_install=false)."
+  when: not zed_install
+
+- name: Install Zed editor
+  ansible.builtin.shell: |
+    set -e
+    curl -fsSL "{{ zed_install_url }}" | sh
+  args:
+    executable: /bin/bash
+  register: zed_result
+  changed_when: "'Installed Zed' in zed_result.stdout or zed_result.rc == 0"
+  become: false
+  when: zed_install
+
+- name: Zed install summary
+  ansible.builtin.debug:
+    msg: "Zed install attempted (zed_install={{ zed_install }})."
+  when: zed_install

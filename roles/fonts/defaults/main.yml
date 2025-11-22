@@ -1,0 +1,6 @@
+---
+fonts_install_jetbrainsmono: true
+fonts_jetbrainsmono_url: https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip
+# Optional checksum (set to sha256:...); leave blank to skip verification
+fonts_jetbrainsmono_checksum: ""
+fonts_dir: "{{ ansible_env.HOME | default('~') + '/.local/share/fonts' }}"

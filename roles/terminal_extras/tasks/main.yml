@@ -1,0 +1,37 @@
+---
+- name: Skip terminal extras when disabled
+  ansible.builtin.debug:
+    msg: "Terminal extras skipped (terminal_extras_install=false)."
+  when: not terminal_extras_install
+
+- name: Install terminal enhancement packages
+  ansible.builtin.apt:
+    name: "{{ terminal_extras_packages }}"
+    state: present
+    update_cache: true
+  when: terminal_extras_install
+
+- name: Add convenient alternatives for fd and bat
+  ansible.builtin.shell: |
+    sudo update-alternatives --install /usr/local/bin/bat batcat /usr/bin/batcat 10 || true
+    sudo update-alternatives --install /usr/local/bin/fd fdfind /usr/bin/fdfind 10 || true
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+  when: terminal_extras_install
+
+- name: Install Oh My Zsh (unattended)
+  ansible.builtin.shell: |
+    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  args:
+    executable: /bin/bash
+  when:
+    - terminal_extras_install
+    - terminal_extras_install_ohmyzsh
+  become: false
+
+- name: Terminal extras summary
+  ansible.builtin.debug:
+    msg: "Terminal extras applied (terminal_extras_install={{ terminal_extras_install }})."
+  when: terminal_extras_install

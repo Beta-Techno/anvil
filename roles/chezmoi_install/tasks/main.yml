@@ -1,0 +1,46 @@
+---
+- name: Skip chezmoi install when disabled
+  ansible.builtin.debug:
+    msg: "chezmoi install skipped (chezmoi_install=false)."
+  when: not chezmoi_install
+
+- name: Assert not running as root
+  ansible.builtin.assert:
+    that:
+      - ansible_user_id != 'root'
+    fail_msg: "Run chezmoi install as a regular user, not root."
+  when: chezmoi_install
+
+- name: Ensure chezmoi bin dir exists
+  ansible.builtin.file:
+    path: "{{ chezmoi_bin_dir }}"
+    state: directory
+    mode: "0755"
+  when: chezmoi_install
+
+- name: Ensure ~/.local/bin on PATH in shell rc files
+  ansible.builtin.blockinfile:
+    path: "{{ item }}"
+    block: |
+      export PATH="{{ chezmoi_bin_dir }}:$PATH"
+    create: true
+  loop:
+    - "{{ ansible_env.HOME }}/.bashrc"
+    - "{{ ansible_env.HOME }}/.zshrc"
+  become: false
+  when: chezmoi_install
+
+- name: Install chezmoi
+  ansible.builtin.shell: |
+    set -e
+    sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "{{ chezmoi_bin_dir }}"
+  args:
+    executable: /bin/bash
+  changed_when: true
+  become: false
+  when: chezmoi_install
+
+- name: chezmoi install summary
+  ansible.builtin.debug:
+    msg: "chezmoi installed to {{ chezmoi_bin_dir }} (chezmoi_install={{ chezmoi_install }})."
+  when: chezmoi_install
