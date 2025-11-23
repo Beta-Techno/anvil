@@ -1,3 +1,4 @@
 ---
 ghostty_install: false
 ghostty_install_url: https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh
+ghostty_install_checksum: ""

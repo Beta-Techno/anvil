@@ -4,16 +4,28 @@
     msg: "Zed install skipped (zed_install=false)."
   when: not zed_install
 
+- name: Download Zed installer script
+  ansible.builtin.get_url:
+    url: "{{ zed_install_url }}"
+    dest: /tmp/zed-install.sh
+    mode: "0755"
+    checksum: "{{ zed_install_checksum if zed_install_checksum | length > 0 else omit }}"
+  when: zed_install
+  become: false
+
 - name: Install Zed editor
-  ansible.builtin.shell: |
-    set -e
-    curl -fsSL "{{ zed_install_url }}" | sh
-  args:
-    executable: /bin/bash
+  ansible.builtin.command: /bin/bash /tmp/zed-install.sh
   register: zed_result
-  changed_when: "'Installed Zed' in zed_result.stdout or zed_result.rc == 0"
+  changed_when: zed_result.rc == 0
   become: false
   when: zed_install
+
+- name: Remove Zed installer script
+  ansible.builtin.file:
+    path: /tmp/zed-install.sh
+    state: absent
+  when: zed_install
+  become: false
 
 - name: Zed install summary
   ansible.builtin.debug:

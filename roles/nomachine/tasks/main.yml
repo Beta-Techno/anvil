@@ -43,6 +43,12 @@
     update_cache: true
   when: nomachine_install
 
+- name: Remove downloaded NoMachine package
+  ansible.builtin.file:
+    path: /tmp/nomachine.deb
+    state: absent
+  when: nomachine_install
+
 - name: Allow NX service through ufw when active
   ansible.builtin.shell: |
     sudo ufw status | grep -q "Status: active" && sudo ufw allow 4000/tcp || true

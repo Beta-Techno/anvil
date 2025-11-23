@@ -1,3 +1,5 @@
 ---
 cursor_install: false
 cursor_download_page: https://cursor.com/download
+cursor_deb_url: ""
+cursor_deb_checksum: ""

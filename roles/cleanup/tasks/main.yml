@@ -15,8 +15,11 @@
     autoremove: true
   when: cleanup_run
 
-- name: Remove common temp artifacts
-  ansible.builtin.shell: rm -f /tmp/*.deb /tmp/*.tar.gz
+- name: Remove downloaded temp artifacts
+  ansible.builtin.shell: |
+    rm -f /tmp/cursor.deb /tmp/nomachine.deb /tmp/docker-desktop.deb \
+          /tmp/jetbrains-toolbox.tar.gz /tmp/JetBrainsMono.zip /tmp/go.tar.gz \
+          /tmp/nvim.appimage /tmp/ghostty-install.sh /tmp/zed-install.sh
   args:
     executable: /bin/bash
   changed_when: false

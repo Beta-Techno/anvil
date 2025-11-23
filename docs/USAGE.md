@@ -50,6 +50,8 @@ Profiles mapped in `bootstrap.sh`:
 
 Optional extras are available via tags (e.g., `ANSIBLE_TAGS="chrome,zed,cursor,ghostty,toolbox,terminal_extras,docker_desktop,nomachine,flatpak_apps,cleanup"`). Most extras default to off; set corresponding `*_install` vars to true if you include the tag.
 
+Installer integrity: many roles accept optional checksum/URL overrides (e.g., `zed_install_checksum`, `ghostty_install_checksum`, `cursor_deb_checksum`, `jetbrains_toolbox_checksum`, `docker_desktop_checksum`) if you want to pin downloads. Leave blank to skip verification.
+
 Chezmoi usage example:
 - Install chezmoi: `ANSIBLE_TAGS="chezmoi_install" ANSIBLE_EXTRA_VARS="chezmoi_install=true" ./bootstrap.sh workstation`
 - Apply dotfiles: `ANSIBLE_TAGS="chezmoi_apply" ANSIBLE_EXTRA_VARS="chezmoi_apply=true chezmoi_repo=https://github.com/you/dotfiles.git" ./bootstrap.sh workstation`

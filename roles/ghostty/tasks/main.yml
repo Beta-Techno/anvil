@@ -4,15 +4,28 @@
     msg: "Ghostty install skipped (ghostty_install=false)."
   when: not ghostty_install
 
+- name: Download Ghostty installer script
+  ansible.builtin.get_url:
+    url: "{{ ghostty_install_url }}"
+    dest: /tmp/ghostty-install.sh
+    mode: "0755"
+    checksum: "{{ ghostty_install_checksum if ghostty_install_checksum | length > 0 else omit }}"
+  when: ghostty_install
+  become: false
+
 - name: Install Ghostty terminal
-  ansible.builtin.shell: |
-    set -e
-    bash -c "$(curl -fsSL "{{ ghostty_install_url }}")"
-  args:
-    executable: /bin/bash
+  ansible.builtin.command: /bin/bash /tmp/ghostty-install.sh
   register: ghostty_result
   changed_when: ghostty_result.rc == 0
+  become: false
   when: ghostty_install
+
+- name: Remove Ghostty installer script
+  ansible.builtin.file:
+    path: /tmp/ghostty-install.sh
+    state: absent
+  when: ghostty_install
+  become: false
 
 - name: Ghostty install summary
   ansible.builtin.debug:

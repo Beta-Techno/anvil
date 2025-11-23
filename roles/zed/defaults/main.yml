@@ -1,3 +1,4 @@
 ---
 zed_install: false
 zed_install_url: https://zed.dev/install.sh
+zed_install_checksum: ""

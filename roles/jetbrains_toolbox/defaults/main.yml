@@ -5,3 +5,5 @@ jetbrains_toolbox_arch_map:
   amd64: linux
   aarch64: linuxArm64
   arm64: linuxArm64
+jetbrains_toolbox_download_url: ""
+jetbrains_toolbox_checksum: ""

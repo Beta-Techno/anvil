@@ -7,15 +7,14 @@
 - name: Install JetBrains Toolbox
   ansible.builtin.shell: |
     set -euo pipefail
-    arch_key="{{ jetbrains_toolbox_arch_map[ansible_architecture] | default('') }}"
-    if [[ -z "$arch_key" ]]; then
-      echo "Unsupported architecture: {{ ansible_architecture }}" >&2
-      exit 1
-    fi
-    tmp="$(mktemp -d)"
-    trap 'rm -rf "$tmp"' EXIT
-    cd "$tmp"
-    url="$(python3 - <<'PY'
+    url="{{ jetbrains_toolbox_download_url }}"
+    if [[ -z "$url" ]]; then
+      arch_key="{{ jetbrains_toolbox_arch_map[ansible_architecture] | default('') }}"
+      if [[ -z "$arch_key" ]]; then
+        echo "Unsupported architecture: {{ ansible_architecture }}" >&2
+        exit 1
+      fi
+      url="$(python3 - <<'PY'
 import json, urllib.request, sys
 u="https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release"
 try:
@@ -24,24 +23,51 @@ try:
     arch_key=sys.argv[1]
     d=j["TBA"][0]["downloads"]
     print(d.get(arch_key, d.get("linux", {})).get("link",""))
-except Exception as e:
+except Exception:
     print("", end="")
 PY
  "{{ jetbrains_toolbox_arch_map[ansible_architecture] | default('') }}")"
-    if [[ -z "$url" ]]; then
-      echo "Could not resolve Toolbox download URL" >&2
-      exit 2
+      if [[ -z "$url" ]]; then
+        echo "Could not resolve Toolbox download URL" >&2
+        exit 2
+      fi
     fi
-    curl -fsSLo toolbox.tar.gz "$url"
-    tar -xzf toolbox.tar.gz
-    dir="$(find . -maxdepth 1 -type d -name 'jetbrains-toolbox*' | head -n1)"
+    echo "$url"
+  args:
+    executable: /bin/bash
+  register: toolbox_url
+  changed_when: false
+  become: false
+  when: jetbrains_toolbox_install
+
+- name: Download JetBrains Toolbox archive
+  ansible.builtin.get_url:
+    url: "{{ toolbox_url.stdout }}"
+    dest: /tmp/jetbrains-toolbox.tar.gz
+    mode: "0644"
+    checksum: "{{ jetbrains_toolbox_checksum if jetbrains_toolbox_checksum | length > 0 else omit }}"
+  when: jetbrains_toolbox_install
+
+- name: Extract and launch JetBrains Toolbox installer
+  ansible.builtin.shell: |
+    set -e
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+    tar -xzf /tmp/jetbrains-toolbox.tar.gz -C "$tmp"
+    dir="$(find "$tmp" -maxdepth 1 -type d -name 'jetbrains-toolbox*' | head -n1)"
     chmod +x "$dir/jetbrains-toolbox"
     setsid "$dir/jetbrains-toolbox" >/dev/null 2>&1 & disown || true
   args:
     executable: /bin/bash
   register: toolbox_result
-  changed_when: toolbox_result.rc == 0
+  changed_when: true
   become: false
+  when: jetbrains_toolbox_install
+
+- name: Remove downloaded JetBrains Toolbox archive
+  ansible.builtin.file:
+    path: /tmp/jetbrains-toolbox.tar.gz
+    state: absent
   when: jetbrains_toolbox_install
 
 - name: JetBrains Toolbox summary

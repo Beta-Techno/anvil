@@ -4,16 +4,20 @@
     msg: "Cursor install skipped (cursor_install=false)."
   when: not cursor_install
 
-- name: Install Cursor IDE
+- name: Determine Cursor download URL
+  ansible.builtin.set_fact:
+    cursor_resolved_url: "{{ cursor_deb_url }}"
+  when: cursor_install
+
+- name: Scrape Cursor download URL when not provided
   ansible.builtin.shell: |
     set -euo pipefail
-    arch="$(dpkg --print-architecture)"
+    arch="{{ apt_arch }}"
     case "$arch" in
       amd64) tok='(amd64|x64|x86_64)' ;;
       arm64) tok='(arm64|aarch64)' ;;
       *) echo "Unsupported arch: $arch" >&2; exit 1 ;;
     esac
-
     page="$(curl -fsSL "{{ cursor_download_page }}" || true)"
     urls="$(printf '%s' "$page" | grep -Eo 'https://[^"]+\.deb' || true)"
     url="$(printf '%s\n' "$urls" | grep -Ei "$tok" | head -n1)"
@@ -21,17 +25,42 @@
       echo "No matching .deb found for arch=$arch" >&2
       exit 2
     fi
-
-    tmpdir="$(mktemp -d)"
-    trap 'rm -rf "$tmpdir"' EXIT
-    cd "$tmpdir"
-    curl -fLo cursor.deb "$url"
-    chmod 644 cursor.deb
-    sudo apt install -y ./cursor.deb
+    echo "$url"
   args:
     executable: /bin/bash
+  register: cursor_scrape
+  changed_when: false
+  when:
+    - cursor_install
+    - cursor_deb_url | length == 0
+
+- name: Set scraped Cursor URL
+  ansible.builtin.set_fact:
+    cursor_resolved_url: "{{ cursor_scrape.stdout }}"
+  when:
+    - cursor_install
+    - cursor_deb_url | length == 0
+
+- name: Download Cursor package
+  ansible.builtin.get_url:
+    url: "{{ cursor_resolved_url }}"
+    dest: /tmp/cursor.deb
+    mode: "0644"
+    checksum: "{{ cursor_deb_checksum if cursor_deb_checksum | length > 0 else omit }}"
+  when: cursor_install
+
+- name: Install Cursor IDE
+  ansible.builtin.apt:
+    deb: /tmp/cursor.deb
+    state: present
+    update_cache: true
   register: cursor_result
-  changed_when: cursor_result.rc == 0
+  when: cursor_install
+
+- name: Remove downloaded Cursor package
+  ansible.builtin.file:
+    path: /tmp/cursor.deb
+    state: absent
   when: cursor_install
 
 - name: Cursor install summary
