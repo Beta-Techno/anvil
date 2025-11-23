@@ -78,6 +78,7 @@
     mode: "0755"
     remote_src: true
   become: true
+  become_method: sudo
   when: lazyvim_install
 
 - name: Ensure nvm LTS Node is available for Neovim
