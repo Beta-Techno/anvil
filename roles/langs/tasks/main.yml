@@ -111,8 +111,8 @@
       eval "$(rbenv init - bash)"
     create: true
   loop:
-    - "{{ ansible_env.HOME }}/.bashrc"
-    - "{{ ansible_env.HOME }}/.zshrc"
+    - "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.bashrc"
+    - "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.zshrc"
   become: false
   when: langs_install_ruby
 
