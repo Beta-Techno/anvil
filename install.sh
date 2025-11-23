@@ -27,6 +27,12 @@ if ! command -v git >/dev/null 2>&1; then
   sudo apt install -y git
 fi
 
+# Prime sudo credentials early if needed
+if ! sudo -n true >/dev/null 2>&1; then
+  echo "[install] sudo password required to proceed…"
+  sudo -v
+fi
+
 rm -rf "$TARGET_DIR"
 git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$TARGET_DIR"
 
