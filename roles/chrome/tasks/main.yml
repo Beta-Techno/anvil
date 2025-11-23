@@ -6,41 +6,43 @@
 
 - name: Ensure apt keyring directory exists
   ansible.builtin.file:
-    path: /etc/apt/keyrings
+    path: /usr/share/keyrings
     state: directory
     mode: "0755"
   when: chrome_install
 
-- name: Download Google Chrome GPG key (armored)
-  ansible.builtin.get_url:
-    url: https://dl.google.com/linux/linux_signing_key.pub
-    dest: /etc/apt/keyrings/google-linux.asc
-    mode: "0644"
-    force: true
+- name: Remove stale Chrome keyrings
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /usr/share/keyrings/google-chrome.gpg
+    - /etc/apt/keyrings/google-linux.gpg
+    - /etc/apt/keyrings/google-linux.asc
   when: chrome_install
 
-- name: Convert Google Chrome key to dearmored keyring
-  ansible.builtin.command: gpg --dearmor -o /etc/apt/keyrings/google-linux.gpg /etc/apt/keyrings/google-linux.asc
+- name: Download and install Google Chrome GPG key
+  ansible.builtin.shell: |
+    set -e
+    curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
+    chmod a+r /usr/share/keyrings/google-chrome.gpg
   args:
-    creates: /etc/apt/keyrings/google-linux.gpg
-  register: chrome_gpg
-  changed_when: chrome_gpg.rc == 0
+    executable: /bin/bash
+  register: chrome_key
+  changed_when: chrome_key.rc == 0
   when: chrome_install
   notify: reload apt cache
 
-- name: Ensure Chrome keyring permissions
-  ansible.builtin.file:
-    path: /etc/apt/keyrings/google-linux.gpg
-    mode: "0644"
-    owner: root
-    group: root
-  when: chrome_install
-
 - name: Add Google Chrome apt repository
   ansible.builtin.apt_repository:
-    repo: "deb [arch={{ apt_arch }} signed-by=/etc/apt/keyrings/google-linux.gpg] {{ chrome_repo_url }} stable main"
+    repo: "deb [arch={{ apt_arch }} signed-by=/usr/share/keyrings/google-chrome.gpg] {{ chrome_repo_url }} stable main"
     filename: google-chrome
     state: present
+  when: chrome_install
+
+- name: Update apt cache after adding Chrome repo
+  ansible.builtin.apt:
+    update_cache: true
   when: chrome_install
 
 - name: Install google-chrome-stable
