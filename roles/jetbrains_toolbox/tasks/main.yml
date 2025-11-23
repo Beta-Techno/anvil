@@ -144,7 +144,7 @@
     path: /tmp/jetbrains-toolbox.tar.gz
     state: absent
   when: jetbrains_toolbox_install
-  become: false
+  become: true
 
 - name: Remove temporary Toolbox extract dir
   ansible.builtin.file:
@@ -153,7 +153,7 @@
   when:
     - jetbrains_toolbox_install
     - toolbox_tmpdir is defined
-  become: false
+  become: true
 
 - name: JetBrains Toolbox summary
   ansible.builtin.debug:
