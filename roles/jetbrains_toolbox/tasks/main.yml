@@ -81,7 +81,10 @@
     remote_src: true
     creates: /tmp/jetbrains-toolbox-extract
   become: false
-  when: jetbrains_toolbox_install
+  when:
+    - jetbrains_toolbox_install
+    - toolbox_download is defined
+    - not toolbox_download.failed | default(false)
 
 - name: Find JetBrains Toolbox binary
   ansible.builtin.find:
