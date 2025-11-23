@@ -37,6 +37,8 @@
       - docker-compose-plugin
     state: "{{ docker_package_state }}"
     update_cache: true
+    dpkg_options:
+      - "Dpkg::Progress-Fancy=1"
 
 - name: Ensure docker group exists
   ansible.builtin.group:

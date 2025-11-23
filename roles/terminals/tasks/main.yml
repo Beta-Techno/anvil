@@ -4,6 +4,8 @@
     name: alacritty
     state: present
     update_cache: true
+    dpkg_options:
+      - "Dpkg::Progress-Fancy=1"
   when:
     - terminals_install_alacritty
     - not terminals_install_from_source
@@ -29,6 +31,8 @@
       - libegl1-mesa-dev
     state: present
     update_cache: true
+    dpkg_options:
+      - "Dpkg::Progress-Fancy=1"
   when:
     - terminals_install_alacritty
     - terminals_install_from_source

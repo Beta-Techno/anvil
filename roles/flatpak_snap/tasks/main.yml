@@ -4,6 +4,8 @@
     name: flatpak
     state: present
     update_cache: true
+    dpkg_options:
+      - "Dpkg::Progress-Fancy=1"
   when: flatpak_enable
 
 - name: Add Flathub remote (system-wide)
@@ -18,6 +20,8 @@
     name: snapd
     state: present
     update_cache: true
+    dpkg_options:
+      - "Dpkg::Progress-Fancy=1"
   when: snap_enable
 
 - name: Ensure snap socket is enabled
