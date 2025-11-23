@@ -4,6 +4,7 @@
     name: "{{ langs_pyenv_build_deps }}"
     state: present
     update_cache: true
+  become: true
   when: langs_install_python
 
 - name: Install nvm
@@ -69,6 +70,7 @@
     name: "{{ langs_ruby_build_deps }}"
     state: present
     update_cache: true
+  become: true
   when: langs_install_ruby
 
 - name: Install rbenv from source
@@ -127,6 +129,7 @@
   ansible.builtin.file:
     path: /usr/local/go
     state: absent
+  become: true
   when:
     - langs_install_go
     - go_version_check.stdout is defined
@@ -146,6 +149,7 @@
     src: /tmp/go.tar.gz
     dest: /usr/local
     remote_src: true
+  become: true
   when:
     - langs_install_go
     - go_version_check.stdout is not defined or ("go" + langs_go_version) not in go_version_check.stdout
@@ -165,6 +169,7 @@
     name: default-jdk
     state: present
     update_cache: true
+  become: true
   when: langs_install_java
 
 - name: Langs summary
