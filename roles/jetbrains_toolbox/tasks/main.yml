@@ -4,45 +4,60 @@
     msg: "JetBrains Toolbox install skipped (jetbrains_toolbox_install=false)."
   when: not jetbrains_toolbox_install
 
-- name: Resolve JetBrains Toolbox download URL
-  ansible.builtin.shell: |
-    set -euo pipefail
-    url="{{ jetbrains_toolbox_download_url }}"
-    if [[ -z "$url" ]]; then
-      arch_key="{{ jetbrains_toolbox_arch_map[ansible_architecture] | default('') }}"
-      if [[ -z "$arch_key" ]]; then
-        echo "Unsupported architecture: {{ ansible_architecture }}" >&2
-        exit 1
-      fi
-      url="$(python3 - <<'PY'
-import json, urllib.request, sys
-u="https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release"
-try:
-    with urllib.request.urlopen(u) as r:
-        j=json.load(r)
-    arch_key=sys.argv[1]
-    d=j["TBA"][0]["downloads"]
-    print(d.get(arch_key, d.get("linux", {})).get("link",""))
-except Exception:
-    print("", end="")
-PY
- "{{ jetbrains_toolbox_arch_map[ansible_architecture] | default('') }}")"
-      if [[ -z "$url" ]]; then
-        echo "Could not resolve Toolbox download URL" >&2
-        exit 2
-      fi
-    fi
-    echo "$url"
-  args:
-    executable: /bin/bash
-  register: toolbox_url
-  changed_when: false
-  become: false
-  when: jetbrains_toolbox_install
+- name: Set Toolbox URL when provided
+  ansible.builtin.set_fact:
+    jetbrains_toolbox_resolved_url: "{{ jetbrains_toolbox_download_url }}"
+  when:
+    - jetbrains_toolbox_install
+    - jetbrains_toolbox_download_url | length > 0
+
+- name: Resolve architecture key for Toolbox download
+  ansible.builtin.set_fact:
+    jetbrains_toolbox_arch_key: "{{ jetbrains_toolbox_arch_map[ansible_architecture] | default('') }}"
+  when:
+    - jetbrains_toolbox_install
+    - jetbrains_toolbox_download_url | length == 0
+
+- name: Fail if architecture not supported
+  ansible.builtin.fail:
+    msg: "Unsupported architecture for JetBrains Toolbox: {{ ansible_architecture }}"
+  when:
+    - jetbrains_toolbox_install
+    - jetbrains_toolbox_download_url | length == 0
+    - jetbrains_toolbox_arch_key | length == 0
+
+- name: Fetch Toolbox release metadata (latest)
+  ansible.builtin.uri:
+    url: https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release
+    return_content: true
+  register: toolbox_release
+  when:
+    - jetbrains_toolbox_install
+    - jetbrains_toolbox_download_url | length == 0
+
+- name: Parse and set Toolbox download URL from metadata
+  ansible.builtin.set_fact:
+    jetbrains_toolbox_resolved_url: >-
+      {{
+        (
+          (toolbox_release.content | from_json).TBA[0].downloads[jetbrains_toolbox_arch_key].link
+          | default((toolbox_release.content | from_json).TBA[0].downloads['linux'].link | default(''))
+        )
+      }}
+  when:
+    - jetbrains_toolbox_install
+    - jetbrains_toolbox_download_url | length == 0
+
+- name: Fail if Toolbox URL could not be resolved
+  ansible.builtin.fail:
+    msg: "Could not resolve JetBrains Toolbox download URL."
+  when:
+    - jetbrains_toolbox_install
+    - jetbrains_toolbox_resolved_url is not defined or jetbrains_toolbox_resolved_url | length == 0
 
 - name: Download JetBrains Toolbox archive
   ansible.builtin.get_url:
-    url: "{{ toolbox_url.stdout }}"
+    url: "{{ jetbrains_toolbox_resolved_url }}"
     dest: /tmp/jetbrains-toolbox.tar.gz
     mode: "0644"
     checksum: "{{ jetbrains_toolbox_checksum if jetbrains_toolbox_checksum | length > 0 else omit }}"
