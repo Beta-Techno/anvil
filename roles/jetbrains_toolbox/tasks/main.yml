@@ -84,24 +84,36 @@
     - toolbox_download is defined
     - not toolbox_download.failed | default(false)
 
-- name: Extract JetBrains Toolbox archive
-  ansible.builtin.unarchive:
-    src: /tmp/jetbrains-toolbox.tar.gz
-    dest: /tmp/jetbrains-toolbox-extract
-    remote_src: true
-  become: false
+- name: Create temporary directory for Toolbox extract
+  ansible.builtin.command: mktemp -d
+  register: toolbox_tmpdir
+  changed_when: true
   when:
     - jetbrains_toolbox_install
     - toolbox_download is defined
     - not toolbox_download.failed | default(false)
 
+- name: Extract JetBrains Toolbox archive to temp dir
+  ansible.builtin.unarchive:
+    src: /tmp/jetbrains-toolbox.tar.gz
+    dest: "{{ toolbox_tmpdir.stdout }}"
+    remote_src: true
+  become: false
+  when:
+    - jetbrains_toolbox_install
+    - toolbox_tmpdir is defined
+    - toolbox_download is defined
+    - not toolbox_download.failed | default(false)
+
 - name: Find JetBrains Toolbox binary
   ansible.builtin.find:
-    paths: /tmp/jetbrains-toolbox-extract
+    paths: "{{ toolbox_tmpdir.stdout }}"
     patterns: jetbrains-toolbox
     file_type: file
   register: toolbox_find
-  when: jetbrains_toolbox_install
+  when:
+    - jetbrains_toolbox_install
+    - toolbox_tmpdir is defined
 
 - name: Skip JetBrains Toolbox launch when binary not found
   ansible.builtin.debug:
@@ -122,8 +134,6 @@
   become: false
   when:
     - jetbrains_toolbox_install
-    - toolbox_download is defined
-    - not toolbox_download.failed | default(false)
     - toolbox_find.files | length > 0
 
 - name: Remove downloaded JetBrains Toolbox archive
@@ -132,11 +142,13 @@
     state: absent
   when: jetbrains_toolbox_install
 
-- name: Remove extracted JetBrains Toolbox directory
+- name: Remove temporary Toolbox extract dir
   ansible.builtin.file:
-    path: /tmp/jetbrains-toolbox-extract
+    path: "{{ toolbox_tmpdir.stdout | default('') }}"
     state: absent
-  when: jetbrains_toolbox_install
+  when:
+    - jetbrains_toolbox_install
+    - toolbox_tmpdir is defined
 
 - name: JetBrains Toolbox summary
   ansible.builtin.debug:
