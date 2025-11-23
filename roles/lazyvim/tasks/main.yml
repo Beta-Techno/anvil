@@ -20,6 +20,7 @@
       - pipx
     state: present
     update_cache: true
+  become: true
   when: lazyvim_install
 
 - name: Ensure ~/.local/bin exists
