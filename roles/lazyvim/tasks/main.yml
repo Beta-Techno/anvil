@@ -77,6 +77,7 @@
     group: root
     mode: "0755"
     remote_src: true
+  become: true
   when: lazyvim_install
 
 - name: Ensure nvm LTS Node is available for Neovim
