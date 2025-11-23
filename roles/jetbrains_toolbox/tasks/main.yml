@@ -88,6 +88,7 @@
   ansible.builtin.command: mktemp -d
   register: toolbox_tmpdir
   changed_when: true
+  become: false
   when:
     - jetbrains_toolbox_install
     - toolbox_download is defined
@@ -111,6 +112,7 @@
     patterns: jetbrains-toolbox
     file_type: file
   register: toolbox_find
+  become: false
   when:
     - jetbrains_toolbox_install
     - toolbox_tmpdir is defined
@@ -122,6 +124,7 @@
     - jetbrains_toolbox_install
     - toolbox_find.files | length == 0
   changed_when: false
+  become: false
 
 - name: Launch JetBrains Toolbox installer
   ansible.builtin.shell: |
@@ -141,6 +144,7 @@
     path: /tmp/jetbrains-toolbox.tar.gz
     state: absent
   when: jetbrains_toolbox_install
+  become: false
 
 - name: Remove temporary Toolbox extract dir
   ansible.builtin.file:
@@ -149,6 +153,7 @@
   when:
     - jetbrains_toolbox_install
     - toolbox_tmpdir is defined
+  become: false
 
 - name: JetBrains Toolbox summary
   ansible.builtin.debug:
