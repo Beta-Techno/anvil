@@ -30,6 +30,13 @@
   changed_when: docker_gpg.rc == 0
   notify: reload apt cache
 
+- name: Ensure Docker keyring permissions
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/docker.gpg
+    mode: "0644"
+    owner: root
+    group: root
+
 - name: Add Docker apt repository
   ansible.builtin.apt_repository:
     repo: "deb [arch={{ docker_repo_arch }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ docker_repo_codename }} stable"
