@@ -41,6 +41,7 @@
     deb: /tmp/nomachine.deb
     state: present
     update_cache: true
+  failed_when: false
   when: nomachine_install
 
 - name: Remove downloaded NoMachine package
