@@ -58,15 +58,15 @@ ensure_ansible() {
 
 run_play() {
   cd "$here"
-  local ask_pass_flag=()
+  local ask_pass_flag=(--ask-become-pass)
   local cmd=(ansible-playbook -i localhost, -c local playbook.yml --tags "$tags")
   if [[ -n "${ANSIBLE_EXTRA_VARS:-}" ]]; then
     cmd+=(--extra-vars "$ANSIBLE_EXTRA_VARS")
   fi
-  if sudo -n true >/dev/null 2>&1; then
+  if [[ -n "${ANSIBLE_BECOME_PASSWORD:-}" ]]; then
     ask_pass_flag=()
-  elif [[ "$ansible_args" != *"-K"* && "$ansible_args" != *"--ask-become-pass"* ]]; then
-    ask_pass_flag=(--ask-become-pass)
+  elif [[ "$ansible_args" == *"-K"* || "$ansible_args" == *"--ask-become-pass"* ]]; then
+    ask_pass_flag=()
   fi
   if [[ -n "$ansible_args" ]]; then
     # shellcheck disable=SC2206
