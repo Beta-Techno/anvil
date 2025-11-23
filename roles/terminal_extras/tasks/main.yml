@@ -29,7 +29,14 @@
   when:
     - terminal_extras_install
     - terminal_extras_install_ohmyzsh
+    - ohmyzsh_dir.stat.exists == false
   become: false
+
+- name: Check if Oh My Zsh is already installed
+  ansible.builtin.stat:
+    path: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.oh-my-zsh"
+  register: ohmyzsh_dir
+  when: terminal_extras_install
 
 - name: Terminal extras summary
   ansible.builtin.debug:
