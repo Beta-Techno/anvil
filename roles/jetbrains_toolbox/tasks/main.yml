@@ -61,7 +61,18 @@
     dest: /tmp/jetbrains-toolbox.tar.gz
     mode: "0644"
     checksum: "{{ jetbrains_toolbox_checksum if jetbrains_toolbox_checksum | length > 0 else omit }}"
+  register: toolbox_download
+  failed_when: toolbox_download.status is defined and toolbox_download.status not in [200, 304]
   when: jetbrains_toolbox_install
+
+- name: Skip Toolbox install when download failed
+  ansible.builtin.debug:
+    msg: "JetBrains Toolbox download failed (status={{ toolbox_download.status | default('unknown') }}); skipping launch."
+  when:
+    - jetbrains_toolbox_install
+    - toolbox_download is defined
+    - toolbox_download.failed | default(false)
+  changed_when: false
 
 - name: Extract JetBrains Toolbox archive
   ansible.builtin.unarchive:
@@ -97,6 +108,8 @@
   become: false
   when:
     - jetbrains_toolbox_install
+    - toolbox_download is defined
+    - not toolbox_download.failed | default(false)
     - toolbox_find.files | length > 0
 
 - name: Remove downloaded JetBrains Toolbox archive
