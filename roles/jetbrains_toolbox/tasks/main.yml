@@ -4,7 +4,7 @@
     msg: "JetBrains Toolbox install skipped (jetbrains_toolbox_install=false)."
   when: not jetbrains_toolbox_install
 
-- name: Install JetBrains Toolbox
+- name: Resolve JetBrains Toolbox download URL
   ansible.builtin.shell: |
     set -euo pipefail
     url="{{ jetbrains_toolbox_download_url }}"
