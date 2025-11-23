@@ -9,8 +9,6 @@
     name: "{{ terminal_extras_packages }}"
     state: present
     update_cache: true
-    dpkg_options:
-      - "Dpkg::Progress-Fancy=1"
   when: terminal_extras_install
 
 - name: Add convenient alternatives for fd and bat

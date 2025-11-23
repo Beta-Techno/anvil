@@ -41,8 +41,6 @@
     deb: /tmp/nomachine.deb
     state: present
     update_cache: true
-    dpkg_options:
-      - "Dpkg::Progress-Fancy=1"
   when: nomachine_install
 
 - name: Remove downloaded NoMachine package

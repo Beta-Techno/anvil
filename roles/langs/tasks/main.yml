@@ -4,8 +4,6 @@
     name: "{{ langs_pyenv_build_deps }}"
     state: present
     update_cache: true
-    dpkg_options:
-      - "Dpkg::Progress-Fancy=1"
   when: langs_install_python
 
 - name: Install nvm
@@ -71,8 +69,6 @@
     name: "{{ langs_ruby_build_deps }}"
     state: present
     update_cache: true
-    dpkg_options:
-      - "Dpkg::Progress-Fancy=1"
   when: langs_install_ruby
 
 - name: Install rbenv from source
@@ -169,8 +165,6 @@
     name: default-jdk
     state: present
     update_cache: true
-    dpkg_options:
-      - "Dpkg::Progress-Fancy=1"
   when: langs_install_java
 
 - name: Langs summary

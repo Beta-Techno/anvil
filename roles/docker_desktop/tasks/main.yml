@@ -44,8 +44,6 @@
     deb: /tmp/docker-desktop.deb
     state: present
     update_cache: true
-    dpkg_options:
-      - "Dpkg::Progress-Fancy=1"
   when: docker_desktop_install
 
 - name: Add user to kvm group for Docker Desktop

@@ -7,10 +7,6 @@
 - name: Upgrade base system packages
   ansible.builtin.apt:
     upgrade: dist
-    dpkg_options:
-      - "force-confdef"
-      - "force-confold"
-      - "Dpkg::Progress-Fancy=1"
   when: base_upgrade
 
 - name: Install base packages
@@ -18,15 +14,11 @@
     name: "{{ base_packages }}"
     state: present
     install_recommends: true
-    dpkg_options:
-      - "Dpkg::Progress-Fancy=1"
 
 - name: Install community codecs (optional)
   ansible.builtin.apt:
     name: ubuntu-restricted-extras
     state: present
-    dpkg_options:
-      - "Dpkg::Progress-Fancy=1"
   when: base_install_restricted_extras
   ignore_errors: true  # may fail in minimal repos; best-effort
 
