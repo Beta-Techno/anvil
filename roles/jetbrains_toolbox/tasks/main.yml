@@ -63,25 +63,51 @@
     checksum: "{{ jetbrains_toolbox_checksum if jetbrains_toolbox_checksum | length > 0 else omit }}"
   when: jetbrains_toolbox_install
 
-- name: Extract and launch JetBrains Toolbox installer
+- name: Extract JetBrains Toolbox archive
+  ansible.builtin.unarchive:
+    src: /tmp/jetbrains-toolbox.tar.gz
+    dest: /tmp/jetbrains-toolbox-extract
+    remote_src: true
+  when: jetbrains_toolbox_install
+
+- name: Find JetBrains Toolbox binary
+  ansible.builtin.find:
+    paths: /tmp/jetbrains-toolbox-extract
+    patterns: jetbrains-toolbox
+    file_type: file
+  register: toolbox_find
+  when: jetbrains_toolbox_install
+
+- name: Skip JetBrains Toolbox launch when binary not found
+  ansible.builtin.debug:
+    msg: "JetBrains Toolbox binary not found in extracted archive; skipping launch."
+  when:
+    - jetbrains_toolbox_install
+    - toolbox_find.files | length == 0
+  changed_when: false
+
+- name: Launch JetBrains Toolbox installer
   ansible.builtin.shell: |
     set -e
-    tmp="$(mktemp -d)"
-    trap 'rm -rf "$tmp"' EXIT
-    tar -xzf /tmp/jetbrains-toolbox.tar.gz -C "$tmp"
-    dir="$(find "$tmp" -maxdepth 1 -type d -name 'jetbrains-toolbox*' | head -n1)"
-    chmod +x "$dir/jetbrains-toolbox"
-    setsid "$dir/jetbrains-toolbox" >/dev/null 2>&1 & disown || true
+    setsid "{{ toolbox_find.files[0].path }}" >/dev/null 2>&1 < /dev/null & disown || true
   args:
     executable: /bin/bash
   register: toolbox_result
   changed_when: true
   become: false
-  when: jetbrains_toolbox_install
+  when:
+    - jetbrains_toolbox_install
+    - toolbox_find.files | length > 0
 
 - name: Remove downloaded JetBrains Toolbox archive
   ansible.builtin.file:
     path: /tmp/jetbrains-toolbox.tar.gz
+    state: absent
+  when: jetbrains_toolbox_install
+
+- name: Remove extracted JetBrains Toolbox directory
+  ansible.builtin.file:
+    path: /tmp/jetbrains-toolbox-extract
     state: absent
   when: jetbrains_toolbox_install
 
