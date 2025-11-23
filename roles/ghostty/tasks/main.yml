@@ -17,7 +17,7 @@
   ansible.builtin.command: /bin/bash /tmp/ghostty-install.sh
   register: ghostty_result
   changed_when: ghostty_result.rc == 0
-  become: false
+  become: true
   when: ghostty_install
 
 - name: Remove Ghostty installer script
