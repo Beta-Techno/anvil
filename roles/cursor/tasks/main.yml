@@ -4,42 +4,41 @@
     msg: "Cursor install skipped (cursor_install=false)."
   when: not cursor_install
 
-- name: Determine Cursor download URL
+- name: Determine Cursor download URL (prefer explicit)
   ansible.builtin.set_fact:
     cursor_resolved_url: "{{ cursor_deb_url }}"
   when: cursor_install
 
-- name: Scrape Cursor download URL when not provided
-  ansible.builtin.shell: |
-    set -euo pipefail
-    arch="{{ apt_arch }}"
-    case "$arch" in
-      amd64) tok='(amd64|x64|x86_64)' ;;
-      arm64) tok='(arm64|aarch64)' ;;
-      *) echo "Unsupported arch: $arch" >&2; exit 1 ;;
-    esac
-    page="$(curl -fsSL "{{ cursor_download_page }}" || true)"
-    urls="$(printf '%s' "$page" | grep -Eo 'https://[^"]+\.deb' || true)"
-    url="$(printf '%s\n' "$urls" | grep -Ei "$tok" | head -n1)"
-    if [[ -z "${url:-}" ]]; then
-      echo "No matching .deb found for arch=$arch" >&2
-      exit 2
-    fi
-    echo "$url"
-  args:
-    executable: /bin/bash
-  register: cursor_scrape
-  changed_when: false
+- name: Fetch Cursor download page when URL not provided
+  ansible.builtin.uri:
+    url: "{{ cursor_download_page }}"
+    return_content: true
+  register: cursor_page
   when:
     - cursor_install
     - cursor_deb_url | length == 0
 
-- name: Set scraped Cursor URL
+- name: Extract Cursor .deb URL from page
   ansible.builtin.set_fact:
-    cursor_resolved_url: "{{ cursor_scrape.stdout }}"
+    cursor_resolved_url: >-
+      {{
+        (cursor_page.content | default('') | regex_findall('https://[^"]+\\.deb'))
+        | select('search', tok_pattern)
+        | list
+        | first
+      }}
+  vars:
+    tok_pattern: "{{ '(amd64|x64|x86_64)' if apt_arch == 'amd64' else '(arm64|aarch64)' }}"
   when:
     - cursor_install
     - cursor_deb_url | length == 0
+
+- name: Fail if Cursor URL could not be resolved
+  ansible.builtin.fail:
+    msg: "No matching Cursor .deb found for arch={{ apt_arch }}."
+  when:
+    - cursor_install
+    - cursor_resolved_url is not defined or cursor_resolved_url | length == 0
 
 - name: Download Cursor package
   ansible.builtin.get_url:
