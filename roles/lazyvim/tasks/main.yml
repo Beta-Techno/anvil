@@ -24,7 +24,7 @@
 
 - name: Ensure ~/.local/bin exists
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.local/bin"
+    path: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.local/bin"
     state: directory
     mode: "0755"
   become: false
@@ -40,7 +40,7 @@
 - name: Symlink fdfind to fd
   ansible.builtin.file:
     src: "{{ fdfind_path.stdout }}"
-    dest: "{{ ansible_env.HOME }}/.local/bin/fd"
+    dest: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.local/bin/fd"
     state: link
     force: true
   become: false
@@ -56,8 +56,8 @@
       export PATH="$HOME/.local/bin:$PATH"
     create: true
   loop:
-    - "{{ ansible_env.HOME }}/.bashrc"
-    - "{{ ansible_env.HOME }}/.zshrc"
+    - "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.bashrc"
+    - "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.zshrc"
   become: false
   when: lazyvim_install
 
@@ -81,7 +81,7 @@
 - name: Ensure nvm LTS Node is available for Neovim
   ansible.builtin.shell: |
     set -e
-    export NVM_DIR="{{ ansible_env.HOME }}/.nvm"
+    export NVM_DIR="{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
     nvm use --lts || nvm install --lts
     npm install -g neovim
