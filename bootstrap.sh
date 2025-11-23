@@ -72,5 +72,14 @@ run_play() {
   "${cmd[@]}"
 }
 
+ensure_collections() {
+  cd "$here"
+  if [[ -f requirements.yml ]]; then
+    echo "[bootstrap] Installing Ansible collections…"
+    ansible-galaxy collection install -r requirements.yml --force
+  fi
+}
+
 ensure_ansible
+ensure_collections
 run_play
