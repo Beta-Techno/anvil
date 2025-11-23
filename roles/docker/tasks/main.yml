@@ -15,22 +15,12 @@
     state: directory
     mode: "0755"
 
-- name: Download and install Docker GPG key (dearmored)
-  ansible.builtin.shell: |
-    set -e
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor | sudo tee /etc/apt/keyrings/docker.gpg >/dev/null
-  args:
-    executable: /bin/bash
-  register: docker_gpg
-  changed_when: docker_gpg.rc == 0
+- name: Install Docker GPG key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+    keyring: /etc/apt/keyrings/docker.gpg
   notify: reload apt cache
-
-- name: Ensure Docker keyring permissions
-  ansible.builtin.file:
-    path: /etc/apt/keyrings/docker.gpg
-    mode: "0644"
-    owner: root
-    group: root
 
 - name: Add Docker apt repository
   ansible.builtin.apt_repository:
