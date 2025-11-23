@@ -79,6 +79,8 @@
     src: /tmp/jetbrains-toolbox.tar.gz
     dest: /tmp/jetbrains-toolbox-extract
     remote_src: true
+    creates: /tmp/jetbrains-toolbox-extract
+  become: false
   when: jetbrains_toolbox_install
 
 - name: Find JetBrains Toolbox binary
