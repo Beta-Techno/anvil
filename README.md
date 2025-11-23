@@ -1,0 +1,44 @@
+# Anvil — Ubuntu Workstation/Server Bootstrap (Ansible)
+
+One-liner bootstrap for an Ubuntu box with optional workstation extras, IDEs, and dotfiles.
+
+## Quick start (recommended)
+```bash
+curl -fsSL https://raw.githubusercontent.com/Beta-Techno/anvil/main/install.sh | bash
+```
+Defaults: profile `devheavy`, tags `all`, vars file `vars/all.yml` (auto-copied from `vars/all.example.yml` if missing). Override with env: `BRANCH`, `PROFILE`, `TAGS`, `VARS_FILE`, `TARGET_DIR`.
+
+## Local run
+```bash
+cp vars/all.example.yml vars/all.yml   # edit toggles/checksums
+./run.sh                               # uses TAGS=all, PROFILE=devheavy, VARS_FILE=vars/all.yml
+```
+Override with `TAGS=... VARS_FILE=... PROFILE=... ./run.sh`.
+
+## Tags (summary)
+- Core: `base`, `drivers`, `docker`, `tailscale`, `git`, `langs`, `lazyvim`, `cloudflared`, `nginx`, `flatpak_snap`, `fonts`, `terminals`
+- Extras: `chrome`, `zed`, `cursor`, `ghostty`, `toolbox`, `docker_desktop`, `nomachine`, `terminal_extras`, `flatpak_apps`, `snap_apps`, `chezmoi_install`, `chezmoi_apply`, `cleanup`
+- `TAGS=all` runs everything; install toggles live in `vars/all.yml` (`*_install` flags).
+
+## Vars
+- Copy `vars/all.example.yml` → `vars/all.yml` and set `*_install` flags, app lists, dotfiles repo, optional checksums (sha256:…).
+- Default chezmoi repo: `https://github.com/Beta-Techno/dotfiles.git`.
+- Optional integrity: set `zed_install_checksum`, `ghostty_install_checksum`, `cursor_deb_checksum`, `jetbrains_toolbox_checksum`, `docker_desktop_checksum`.
+
+## Notes / constraints
+- Target: Ubuntu with sudo + network.
+- Docker Desktop needs `/dev/kvm` (not LXC); NoMachine is amd64-only. Disable those installs if not applicable.
+- GUI/IDE installs assume a desktop environment; fine to skip via flags.
+
+## What’s installed (when enabled)
+- Core: updates, base packages, Docker Engine, Tailscale, Git/SSH setup, language runtimes (Node via nvm, Python via pyenv, Ruby via rbenv, Go, Rust, Java), LazyVim, fonts, flatpak/snap, nginx, cloudflared, Alacritty (apt or source)
+- Extras: Chrome, Zed, Cursor, Ghostty, JetBrains Toolbox, Docker Desktop, NoMachine, terminal extras (tilix, zsh, oh-my-zsh), Flatpak/Snap apps, chezmoi dotfiles, cleanup
+
+## Repo structure (high level)
+- `bootstrap.sh` — entrypoint; installs Ansible if needed, runs `playbook.yml`.
+- `run.sh` — local runner: sets `TAGS`/`PROFILE`/`VARS_FILE` (defaults: all/devheavy/vars/all.yml) then calls `bootstrap.sh`.
+- `install.sh` — curlable installer: installs git if needed, clones repo, copies vars template, calls `run.sh`.
+- `vars/all.example.yml` — sample vars file with all toggles/checksums/app lists/dotfiles repo.
+- `playbook.yml` — applies roles on localhost with tags.
+- `roles/` — individual roles for base, drivers, docker, etc.
+- `group_vars/all.yml` — shared defaults (apt codename/arch, noninteractive).

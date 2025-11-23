@@ -1,0 +1,30 @@
+---
+# Toggle installs (set to true to enable)
+chrome_install: true
+zed_install: true
+cursor_install: true
+ghostty_install: true
+jetbrains_toolbox_install: true
+docker_desktop_install: true     # requires /dev/kvm and not LXC
+nomachine_install: true          # amd64 only
+terminal_extras_install: true
+flatpak_apps_install: true
+snap_apps_install: true
+chezmoi_install: true
+chezmoi_apply: true
+
+# App lists
+flatpak_apps_list:
+  - com.discordapp.Discord
+snap_apps_list:
+  - bitwarden
+
+# Dotfiles repo
+chezmoi_repo: https://github.com/Beta-Techno/dotfiles.git
+
+# Optional checksums (sha256:...); leave blank to skip verification
+zed_install_checksum: ""
+ghostty_install_checksum: ""
+cursor_deb_checksum: ""
+jetbrains_toolbox_checksum: ""
+docker_desktop_checksum: ""
