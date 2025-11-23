@@ -41,7 +41,7 @@
 
 - name: Ensure minimal GitHub host stanza
   ansible.builtin.blockinfile:
-    path: "{{ ansible_env.HOME }}/.ssh/config"
+    path: "{{ git_ssh_key_path | dirname }}/config"
     mode: "0600"
     create: true
     block: |
