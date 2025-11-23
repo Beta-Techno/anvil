@@ -5,5 +5,5 @@ jetbrains_toolbox_arch_map:
   amd64: linux
   aarch64: linuxArm64
   arm64: linuxArm64
-jetbrains_toolbox_download_url: ""
+jetbrains_toolbox_download_url: "https://download.jetbrains.com/toolbox/jetbrains-toolbox-3.1.0.63220.tar.gz"
 jetbrains_toolbox_checksum: ""
