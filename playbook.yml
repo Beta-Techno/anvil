@@ -2,34 +2,34 @@
 # Legacy Ubuntu bootstrap via Ansible (run locally)
 - hosts: localhost
   gather_facts: true
-  become: true
+  become: false
   environment:
     DEBIAN_FRONTEND: noninteractive
   vars:
     ansible_python_interpreter: /usr/bin/python3
   roles:
-    - { role: base, tags: [base] }
-    - { role: drivers, tags: [drivers] }
-    - { role: docker, tags: [docker, server] }
-    - { role: tailscale, tags: [tailscale, server] }
+    - { role: base, tags: [base], become: true }
+    - { role: drivers, tags: [drivers], become: true }
+    - { role: docker, tags: [docker, server], become: true }
+    - { role: tailscale, tags: [tailscale, server], become: true }
     - { role: git_ssh, tags: [git] }
     - { role: langs, tags: [langs] }
     - { role: lazyvim, tags: [lazyvim] }
-    - { role: cloudflared, tags: [cloudflared] }
-    - { role: nginx, tags: [nginx] }
-    - { role: flatpak_snap, tags: [flatpak_snap, workstation] }
+    - { role: cloudflared, tags: [cloudflared], become: true }
+    - { role: nginx, tags: [nginx], become: true }
+    - { role: flatpak_snap, tags: [flatpak_snap, workstation], become: true }
     - { role: fonts, tags: [fonts, workstation] }
-    - { role: terminals, tags: [terminals, workstation] }
-    - { role: chrome, tags: [chrome, workstation] }
+    - { role: terminals, tags: [terminals, workstation], become: true }
+    - { role: chrome, tags: [chrome, workstation], become: true }
     - { role: zed, tags: [zed, workstation] }
     - { role: cursor, tags: [cursor, workstation] }
-    - { role: ghostty, tags: [ghostty, workstation] }
+    - { role: ghostty, tags: [ghostty, workstation], become: true }
     - { role: jetbrains_toolbox, tags: [toolbox, workstation] }
-    - { role: docker_desktop, tags: [docker_desktop, workstation] }
-    - { role: nomachine, tags: [nomachine, workstation] }
-    - { role: terminal_extras, tags: [terminal_extras, workstation] }
-    - { role: flatpak_apps, tags: [flatpak_apps, workstation] }
-    - { role: snap_apps, tags: [snap_apps, workstation] }
+    - { role: docker_desktop, tags: [docker_desktop, workstation], become: true }
+    - { role: nomachine, tags: [nomachine, workstation], become: true }
+    - { role: terminal_extras, tags: [terminal_extras, workstation], become: true }
+    - { role: flatpak_apps, tags: [flatpak_apps, workstation], become: true }
+    - { role: snap_apps, tags: [snap_apps, workstation], become: true }
     - { role: chezmoi_install, tags: [chezmoi_install, workstation] }
     - { role: chezmoi_apply, tags: [chezmoi_apply, workstation] }
-    - { role: cleanup, tags: [cleanup] }
+    - { role: cleanup, tags: [cleanup], become: true }
