@@ -11,11 +11,28 @@
     mode: "0755"
   when: chrome_install
 
-- name: Add Google Chrome GPG key
+- name: Download Google Chrome GPG key (armored)
   ansible.builtin.get_url:
     url: https://dl.google.com/linux/linux_signing_key.pub
-    dest: /etc/apt/keyrings/google-linux.gpg
+    dest: /etc/apt/keyrings/google-linux.asc
     mode: "0644"
+    force: true
+  when: chrome_install
+
+- name: Convert Google Chrome key to dearmored keyring
+  ansible.builtin.command: gpg --dearmor -o /etc/apt/keyrings/google-linux.gpg /etc/apt/keyrings/google-linux.asc
+  args:
+    creates: /etc/apt/keyrings/google-linux.gpg
+  register: chrome_gpg
+  changed_when: chrome_gpg.rc == 0
+  when: chrome_install
+
+- name: Ensure Chrome keyring permissions
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/google-linux.gpg
+    mode: "0644"
+    owner: root
+    group: root
   when: chrome_install
 
 - name: Add Google Chrome apt repository
