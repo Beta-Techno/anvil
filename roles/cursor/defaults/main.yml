@@ -1,5 +1,5 @@
 ---
 cursor_install: false
 cursor_download_page: https://cursor.com/download
-cursor_deb_url: ""
+cursor_deb_url: "https://api2.cursor.sh/updates/download/golden/linux-x64-deb/cursor/2.1"
 cursor_deb_checksum: ""
