@@ -74,23 +74,22 @@
     - toolbox_download.failed | default(false)
   changed_when: false
 
-- name: Extract JetBrains Toolbox archive
-  ansible.builtin.unarchive:
-    src: /tmp/jetbrains-toolbox.tar.gz
-    dest: /tmp/jetbrains-toolbox-extract
-    remote_src: true
-    creates: /tmp/jetbrains-toolbox-extract
-  become: false
-  when:
-    - jetbrains_toolbox_install
-    - toolbox_download is defined
-    - not toolbox_download.failed | default(false)
-
 - name: Ensure Toolbox extract dir exists
   ansible.builtin.file:
     path: /tmp/jetbrains-toolbox-extract
     state: directory
     mode: "0755"
+  when:
+    - jetbrains_toolbox_install
+    - toolbox_download is defined
+    - not toolbox_download.failed | default(false)
+
+- name: Extract JetBrains Toolbox archive
+  ansible.builtin.unarchive:
+    src: /tmp/jetbrains-toolbox.tar.gz
+    dest: /tmp/jetbrains-toolbox-extract
+    remote_src: true
+  become: false
   when:
     - jetbrains_toolbox_install
     - toolbox_download is defined
