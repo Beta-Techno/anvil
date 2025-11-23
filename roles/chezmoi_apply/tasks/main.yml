@@ -4,25 +4,38 @@
     msg: "chezmoi apply skipped (chezmoi_apply=false)."
   when: not chezmoi_apply
 
+- name: Skip chezmoi apply when running as root
+  ansible.builtin.debug:
+    msg: "chezmoi apply skipped because current user is root."
+  when:
+    - chezmoi_apply
+    - ansible_user_id == 'root'
+
 - name: Assert chezmoi is installed
   ansible.builtin.command: chezmoi --version
   register: chezmoi_version
   changed_when: false
   failed_when: chezmoi_version.rc != 0
-  when: chezmoi_apply
+  when:
+    - chezmoi_apply
+    - ansible_user_id != 'root'
 
 - name: Assert not running as root
   ansible.builtin.assert:
     that:
       - ansible_user_id != 'root'
     fail_msg: "Run chezmoi apply as a regular user, not root."
-  when: chezmoi_apply
+  when:
+    - chezmoi_apply
+    - ansible_user_id != 'root'
 
 - name: Determine chezmoi source path
   ansible.builtin.command: chezmoi source-path
   register: chezmoi_source
   changed_when: false
-  when: chezmoi_apply
+  when:
+    - chezmoi_apply
+    - ansible_user_id != 'root'
 
 - name: Check if chezmoi source is already a git repo
   ansible.builtin.stat:
@@ -35,6 +48,7 @@
   changed_when: true
   when:
     - chezmoi_apply
+    - ansible_user_id != 'root'
     - chezmoi_src_git.stat.exists
 
 - name: Initialize chezmoi from repo when not present
@@ -42,12 +56,15 @@
   changed_when: true
   when:
     - chezmoi_apply
+    - ansible_user_id != 'root'
     - not chezmoi_src_git.stat.exists
 
 - name: Apply chezmoi state
   ansible.builtin.command: chezmoi apply
   changed_when: true
-  when: chezmoi_apply
+  when:
+    - chezmoi_apply
+    - ansible_user_id != 'root'
 
 - name: chezmoi apply summary
   ansible.builtin.debug:

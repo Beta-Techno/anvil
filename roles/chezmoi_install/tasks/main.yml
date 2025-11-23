@@ -4,12 +4,21 @@
     msg: "chezmoi install skipped (chezmoi_install=false)."
   when: not chezmoi_install
 
+- name: Skip chezmoi install when running as root
+  ansible.builtin.debug:
+    msg: "chezmoi install skipped because current user is root."
+  when:
+    - chezmoi_install
+    - ansible_user_id == 'root'
+
 - name: Assert not running as root
   ansible.builtin.assert:
     that:
       - ansible_user_id != 'root'
     fail_msg: "Run chezmoi install as a regular user, not root."
-  when: chezmoi_install
+  when:
+    - chezmoi_install
+    - ansible_user_id != 'root'
 
 - name: Ensure chezmoi bin dir exists
   ansible.builtin.file:
