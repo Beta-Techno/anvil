@@ -5,4 +5,4 @@ git_init_default_branch: main
 git_pull_ff_only: true
 git_color_ui: auto
 git_enable_ssh_signing: true
-git_ssh_key_path: "{{ ansible_env.HOME | default('~') + '/.ssh/id_ed25519' }}"
+git_ssh_key_path: "{{ lookup('env', 'HOME') | default(ansible_env.HOME, true) + '/.ssh/id_ed25519' }}"
