@@ -86,6 +86,16 @@
     - toolbox_download is defined
     - not toolbox_download.failed | default(false)
 
+- name: Ensure Toolbox extract dir exists
+  ansible.builtin.file:
+    path: /tmp/jetbrains-toolbox-extract
+    state: directory
+    mode: "0755"
+  when:
+    - jetbrains_toolbox_install
+    - toolbox_download is defined
+    - not toolbox_download.failed | default(false)
+
 - name: Find JetBrains Toolbox binary
   ansible.builtin.find:
     paths: /tmp/jetbrains-toolbox-extract
