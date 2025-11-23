@@ -55,6 +55,7 @@
     state: present
     update_cache: true
   register: cursor_result
+  become: true
   when: cursor_install
 
 - name: Remove downloaded Cursor package
