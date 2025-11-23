@@ -33,12 +33,13 @@
     - cursor_install
     - cursor_deb_url | length == 0
 
-- name: Fail if Cursor URL could not be resolved
-  ansible.builtin.fail:
-    msg: "No matching Cursor .deb found for arch={{ apt_arch }}."
+- name: Skip Cursor if URL could not be resolved
+  ansible.builtin.debug:
+    msg: "No matching Cursor .deb found for arch={{ apt_arch }}; skipping Cursor install."
   when:
     - cursor_install
     - cursor_resolved_url is not defined or cursor_resolved_url | length == 0
+  changed_when: false
 
 - name: Download Cursor package
   ansible.builtin.get_url:
