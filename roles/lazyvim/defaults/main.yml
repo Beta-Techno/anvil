@@ -6,4 +6,4 @@ lazyvim_backup_existing: true
 lazyvim_use_nvm: true
 lazyvim_pipx_pynvim: true
 lazyvim_config_repo: https://github.com/LazyVim/starter
-lazyvim_config_dir: "{{ ansible_env.HOME | default('~') + '/.config/nvim' }}"
+lazyvim_config_dir: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) + '/.config/nvim' }}"
