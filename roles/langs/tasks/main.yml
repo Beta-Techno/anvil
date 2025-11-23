@@ -9,7 +9,7 @@
 - name: Install nvm
   ansible.builtin.git:
     repo: https://github.com/nvm-sh/nvm.git
-    dest: "{{ ansible_env.HOME }}/.nvm"
+    dest: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.nvm"
     version: "{{ langs_nvm_version }}"
   become: false
   when: langs_install_node
@@ -17,13 +17,13 @@
 - name: Install Node.js LTS with nvm
   ansible.builtin.shell: |
     set -e
-    export NVM_DIR="{{ ansible_env.HOME }}/.nvm"
+    export NVM_DIR="{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
     nvm install --lts
     nvm alias default "{{ langs_node_default }}"
   args:
     executable: /bin/bash
-    creates: "{{ ansible_env.HOME }}/.nvm/alias/default"
+    creates: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.nvm/alias/default"
   become: false
   when: langs_install_node
 
@@ -43,8 +43,8 @@
       eval "$(pyenv init -)"
     create: true
   loop:
-    - "{{ ansible_env.HOME }}/.bashrc"
-    - "{{ ansible_env.HOME }}/.zshrc"
+    - "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.bashrc"
+    - "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.zshrc"
   become: false
   when: langs_install_python
 

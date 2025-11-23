@@ -5,7 +5,7 @@ langs_node_default: "lts/*"
 
 langs_install_python: true
 langs_pyenv_python_version: "3.11.0"
-langs_pyenv_root: "{{ ansible_env.HOME | default('~') + '/.pyenv' }}"
+langs_pyenv_root: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) + '/.pyenv' }}"
 langs_pyenv_build_deps:
   - build-essential
   - libssl-dev
@@ -19,7 +19,7 @@ langs_pyenv_build_deps:
 
 langs_install_ruby: true
 langs_rbenv_ruby_version: "3.1.0"
-langs_rbenv_root: "{{ ansible_env.HOME | default('~') + '/.rbenv' }}"
+langs_rbenv_root: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) + '/.rbenv' }}"
 langs_ruby_build_deps:
   - make
   - build-essential
