@@ -15,11 +15,19 @@
     state: directory
     mode: "0755"
 
-- name: Add Docker apt GPG key
+- name: Download Docker apt GPG key (armored)
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
-    dest: /etc/apt/keyrings/docker.gpg
+    dest: /etc/apt/keyrings/docker.asc
     mode: "0644"
+
+- name: Convert Docker GPG key to dearmored keyring
+  ansible.builtin.command: gpg --dearmor -o /etc/apt/keyrings/docker.gpg /etc/apt/keyrings/docker.asc
+  args:
+    creates: /etc/apt/keyrings/docker.gpg
+  register: docker_gpg
+  changed_when: docker_gpg.rc == 0
+  notify: reload apt cache
 
 - name: Add Docker apt repository
   ansible.builtin.apt_repository:
