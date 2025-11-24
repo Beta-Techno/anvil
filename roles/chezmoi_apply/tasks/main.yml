@@ -60,7 +60,7 @@
     - not chezmoi_src_git.stat.exists
 
 - name: Apply chezmoi state
-  ansible.builtin.command: chezmoi apply
+  ansible.builtin.command: chezmoi apply --force
   changed_when: true
   when:
     - chezmoi_apply
