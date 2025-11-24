@@ -44,7 +44,7 @@
   when: chezmoi_apply
 
 - name: Update chezmoi source if git repo exists
-  ansible.builtin.command: chezmoi git pull --ff-only
+  ansible.builtin.command: chezmoi git -- pull --ff-only
   changed_when: true
   when:
     - chezmoi_apply

@@ -53,6 +53,7 @@
 - name: Ensure ~/.local/bin is on PATH in shell rc files
   ansible.builtin.blockinfile:
     path: "{{ item }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - local bin"
     block: |
       export PATH="$HOME/.local/bin:$PATH"
     create: true

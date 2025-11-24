@@ -31,6 +31,7 @@
 - name: Ensure nvm init is present in shell rc files
   ansible.builtin.blockinfile:
     path: "{{ item }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - nvm"
     block: |
       export NVM_DIR="$HOME/.nvm"
       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
@@ -52,6 +53,7 @@
 - name: Ensure pyenv init is present in shell rc files
   ansible.builtin.blockinfile:
     path: "{{ item }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - pyenv"
     block: |
       export PYENV_ROOT="{{ langs_pyenv_root }}"
       command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
@@ -121,6 +123,7 @@
 - name: Ensure rbenv init is present in shell rc files
   ansible.builtin.blockinfile:
     path: "{{ item }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - rbenv"
     block: |
       export RBENV_ROOT="{{ langs_rbenv_root }}"
       export PATH="$RBENV_ROOT/bin:$PATH"
