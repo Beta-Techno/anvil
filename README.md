@@ -6,19 +6,23 @@ One-liner bootstrap for an Ubuntu box with optional workstation extras, IDEs, an
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Beta-Techno/anvil/main/install.sh | bash
 ```
-Defaults: profile `devheavy`, tags `all`, vars file `vars/all.yml` (auto-copied from `vars/all.example.yml` if missing). Override with env: `BRANCH`, `PROFILE`, `TAGS`, `VARS_FILE`, `TARGET_DIR`.
+Defaults: profile `devheavy`, tags `essential`, vars file `vars/all.yml` (auto-copied from `vars/all.example.yml` if missing). Override with env: `BRANCH`, `PROFILE`, `TAGS`, `VARS_FILE`, `TARGET_DIR`.
 
 ## Local run
 ```bash
 cp vars/all.example.yml vars/all.yml   # edit toggles/checksums
-./run.sh                               # uses TAGS=all, PROFILE=devheavy, VARS_FILE=vars/all.yml
+./run.sh                               # uses TAGS=essential, PROFILE=devheavy, VARS_FILE=vars/all.yml
 ```
 Override with `TAGS=... VARS_FILE=... PROFILE=... ./run.sh`.
 
 ## Tags (summary)
-- Core: `base`, `drivers`, `docker`, `tailscale`, `git`, `langs`, `lazyvim`, `cloudflared`, `nginx`, `flatpak_snap`, `fonts`, `terminals`
-- Extras: `chrome`, `zed`, `cursor`, `ghostty`, `toolbox`, `docker_desktop`, `nomachine`, `terminal_extras`, `flatpak_apps`, `snap_apps`, `chezmoi_install`, `chezmoi_apply`, `cleanup`
-- `TAGS=all` runs everything; install toggles live in `vars/all.yml` (`*_install` flags).
+- **Essential** (`essential`): Core development setup - `base`, `drivers`, `docker`, `git`, `langs` (Node/Python/Ruby/Go/Rust/Java)
+- **Individual roles**: `tailscale`, `lazyvim`, `cloudflared`, `nginx`, `flatpak_snap`, `fonts`, `terminals`, `chrome`, `zed`, `cursor`, `ghostty`, `toolbox`, `docker_desktop`, `nomachine`, `terminal_extras`, `flatpak_apps`, `snap_apps`, `chezmoi_install`, `chezmoi_apply`, `cleanup`
+- **Examples**:
+  - `TAGS=essential` — Default; fast core dev setup (recommended)
+  - `TAGS=all` — Runs everything (all 27 roles)
+  - `TAGS=chrome,cursor` — Install specific apps only
+- Install toggles live in `vars/all.yml` (`*_install` flags).
 
 ## Vars
 - Copy `vars/all.example.yml` → `vars/all.yml` and set `*_install` flags, app lists, dotfiles repo, optional checksums (sha256:…).
@@ -36,7 +40,7 @@ Override with `TAGS=... VARS_FILE=... PROFILE=... ./run.sh`.
 
 ## Repo structure (high level)
 - `bootstrap.sh` — entrypoint; installs Ansible if needed, runs `playbook.yml`.
-- `run.sh` — local runner: sets `TAGS`/`PROFILE`/`VARS_FILE` (defaults: all/devheavy/vars/all.yml) then calls `bootstrap.sh`.
+- `run.sh` — local runner: sets `TAGS`/`PROFILE`/`VARS_FILE` (defaults: essential/devheavy/vars/all.yml) then calls `bootstrap.sh`.
 - `install.sh` — curlable installer: installs git if needed, clones repo, copies vars template, calls `run.sh`.
 - `vars/all.example.yml` — sample vars file with all toggles/checksums/app lists/dotfiles repo.
 - `playbook.yml` — applies roles on localhost with tags.

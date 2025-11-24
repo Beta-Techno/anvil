@@ -8,12 +8,12 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3
   roles:
-    - { role: base, tags: [base, all], become: true }
-    - { role: drivers, tags: [drivers, all], become: true }
-    - { role: docker, tags: [docker, server, all], become: true }
+    - { role: base, tags: [base, essential], become: true }
+    - { role: drivers, tags: [drivers, essential], become: true }
+    - { role: docker, tags: [docker, server, essential], become: true }
     - { role: tailscale, tags: [tailscale, server], become: true }
-    - { role: git_ssh, tags: [git, all] }
-    - { role: langs, tags: [langs, all] }
+    - { role: git_ssh, tags: [git, essential] }
+    - { role: langs, tags: [langs, essential] }
     - { role: lazyvim, tags: [lazyvim] }
     - { role: cloudflared, tags: [cloudflared], become: true }
     - { role: nginx, tags: [nginx], become: true }
