@@ -29,6 +29,39 @@ Override with `TAGS=... VARS_FILE=... PROFILE=... ./run.sh`.
 - Default chezmoi repo: `https://github.com/Beta-Techno/dotfiles.git`.
 - Optional integrity: set `zed_install_checksum`, `ghostty_install_checksum`, `cursor_deb_checksum`, `jetbrains_toolbox_checksum`, `docker_desktop_checksum`.
 
+## Shell Configuration Architecture
+
+Anvil uses a clean separation between system configs (managed by Ansible) and user configs (managed by you or chezmoi):
+
+- **Ansible manages**: `~/.config/shell/*.sh` - Tool-specific configurations (nvm, pyenv, rbenv, PATH)
+- **You manage**: `~/.bashrc`, `~/.zshrc` - Your personal dotfiles and customizations
+
+Your `.bashrc`/`.zshrc` gets one minimal block that sources all configs from `~/.config/shell/`:
+```bash
+# Source all shell configurations from ~/.config/shell/
+if [ -d "$HOME/.config/shell" ]; then
+  for config in "$HOME/.config/shell"/*.sh; do
+    [ -r "$config" ] && . "$config"
+  done
+fi
+```
+
+**Benefits:**
+- ✅ No conflicts with dotfile managers (chezmoi, yadm, etc.)
+- ✅ Your `.bashrc` stays clean and customizable
+- ✅ Tool configs are modular and isolated
+- ✅ Adding/removing tools doesn't modify your `.bashrc`
+
+## Working with chezmoi
+
+If you manage dotfiles with chezmoi:
+1. Your custom `.bashrc` can include the source block above (or Ansible adds it)
+2. Tool configs in `~/.config/shell/` are managed by Ansible, not chezmoi
+3. Add to your `.chezmoiignore` (optional):
+   ```
+   .config/shell/
+   ```
+
 ## Notes / constraints
 - Target: Ubuntu with sudo + network.
 - Docker Desktop needs `/dev/kvm` (not LXC); NoMachine is amd64-only. Disable those installs if not applicable.
