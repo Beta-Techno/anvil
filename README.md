@@ -33,7 +33,10 @@ Override with `TAGS=... VARS_FILE=... PROFILE=... ./run.sh`.
 
 Anvil uses a clean separation between system configs (managed by Ansible) and user configs (managed by you or chezmoi):
 
-- **Ansible manages**: `~/.config/shell/*.sh` - Tool-specific configurations (nvm, pyenv, rbenv, PATH)
+- **Ansible manages**:
+  - `~/.config/shell/*.sh` - Tool-specific configurations (nvm, pyenv, rbenv, PATH)
+  - `~/.ssh/config` - SSH configuration for GitHub and other hosts
+  - `~/.gitconfig` - Git global configuration
 - **You manage**: `~/.bashrc`, `~/.zshrc` - Your personal dotfiles and customizations
 
 Your `.bashrc`/`.zshrc` gets one minimal block that sources all configs from `~/.config/shell/`:
@@ -68,9 +71,10 @@ This ensures your `.bashrc` has the source loop **before** tool configs are crea
 1. Fork [Beta-Techno/dotfiles](https://github.com/Beta-Techno/dotfiles) or create your own repo
 2. Include the source block in your `.bashrc` (see above)
 3. Update `chezmoi_dotfiles_repo` in `vars/all.yml`
-4. Add to `.chezmoiignore` (optional):
+4. Add to `.chezmoiignore` to prevent conflicts:
    ```
-   .config/shell/
+   .config/shell/    # Tool configs managed by Ansible langs role
+   .ssh/config       # SSH config managed by Ansible git_ssh role
    ```
 
 ## Notes / constraints

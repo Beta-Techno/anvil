@@ -44,6 +44,7 @@
     path: "{{ git_ssh_key_path | dirname }}/config"
     mode: "0600"
     create: true
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - github ssh"
     block: |
       Host github.com
         HostName github.com
