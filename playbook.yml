@@ -13,6 +13,8 @@
     - { role: docker, tags: [docker, server, essential], become: true }
     - { role: tailscale, tags: [tailscale, server], become: true }
     - { role: git_ssh, tags: [git, essential] }
+    - { role: chezmoi_install, tags: [chezmoi_install, essential] }
+    - { role: chezmoi_apply, tags: [chezmoi_apply, essential] }
     - { role: langs, tags: [langs, essential] }
     - { role: lazyvim, tags: [lazyvim] }
     - { role: cloudflared, tags: [cloudflared], become: true }
@@ -30,6 +32,4 @@
     - { role: terminal_extras, tags: [terminal_extras, workstation], become: true }
     - { role: flatpak_apps, tags: [flatpak_apps, workstation], become: true }
     - { role: snap_apps, tags: [snap_apps, workstation], become: true }
-    - { role: chezmoi_install, tags: [chezmoi_install, workstation] }
-    - { role: chezmoi_apply, tags: [chezmoi_apply, workstation] }
     - { role: cleanup, tags: [cleanup], become: true }

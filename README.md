@@ -16,8 +16,8 @@ cp vars/all.example.yml vars/all.yml   # edit toggles/checksums
 Override with `TAGS=... VARS_FILE=... PROFILE=... ./run.sh`.
 
 ## Tags (summary)
-- **Essential** (`essential`): Core development setup - `base`, `drivers`, `docker`, `git`, `langs` (Node/Python/Ruby/Go/Rust/Java)
-- **Individual roles**: `tailscale`, `lazyvim`, `cloudflared`, `nginx`, `flatpak_snap`, `fonts`, `terminals`, `chrome`, `zed`, `cursor`, `ghostty`, `toolbox`, `docker_desktop`, `nomachine`, `terminal_extras`, `flatpak_apps`, `snap_apps`, `chezmoi_install`, `chezmoi_apply`, `cleanup`
+- **Essential** (`essential`): Core development setup - `base`, `drivers`, `docker`, `git`, `chezmoi` (dotfiles), `langs` (Node/Python/Ruby/Go/Rust/Java)
+- **Individual roles**: `tailscale`, `lazyvim`, `cloudflared`, `nginx`, `flatpak_snap`, `fonts`, `terminals`, `chrome`, `zed`, `cursor`, `ghostty`, `toolbox`, `docker_desktop`, `nomachine`, `terminal_extras`, `flatpak_apps`, `snap_apps`, `cleanup`
 - **Examples**:
   - `TAGS=essential` — Default; fast core dev setup (recommended)
   - `TAGS=all` — Runs everything (all 27 roles)
@@ -54,10 +54,21 @@ fi
 
 ## Working with chezmoi
 
-If you manage dotfiles with chezmoi:
-1. Your custom `.bashrc` can include the source block above (or Ansible adds it)
-2. Tool configs in `~/.config/shell/` are managed by Ansible, not chezmoi
-3. Add to your `.chezmoiignore` (optional):
+Anvil includes curated dotfiles from [Beta-Techno/dotfiles](https://github.com/Beta-Techno/dotfiles) by default. The execution order is designed to ensure compatibility:
+
+**Execution order:**
+1. Infrastructure roles (base, drivers, docker, git_ssh)
+2. **chezmoi** - Applies dotfiles (includes the source loop for ~/.config/shell/)
+3. **langs** - Creates tool configs in ~/.config/shell/ (nvm.sh, pyenv.sh, rbenv.sh, path.sh)
+4. Everything else
+
+This ensures your `.bashrc` has the source loop **before** tool configs are created.
+
+**If you manage your own dotfiles:**
+1. Fork [Beta-Techno/dotfiles](https://github.com/Beta-Techno/dotfiles) or create your own repo
+2. Include the source block in your `.bashrc` (see above)
+3. Update `chezmoi_dotfiles_repo` in `vars/all.yml`
+4. Add to `.chezmoiignore` (optional):
    ```
    .config/shell/
    ```
