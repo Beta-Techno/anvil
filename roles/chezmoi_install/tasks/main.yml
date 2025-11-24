@@ -27,19 +27,6 @@
     mode: "0755"
   when: chezmoi_install
 
-- name: Ensure ~/.local/bin on PATH in shell rc files
-  ansible.builtin.blockinfile:
-    path: "{{ item }}"
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - local bin"
-    block: |
-      export PATH="{{ chezmoi_bin_dir }}:$PATH"
-    create: true
-  loop:
-    - "{{ ansible_env.HOME }}/.bashrc"
-    - "{{ ansible_env.HOME }}/.zshrc"
-  become: false
-  when: chezmoi_install
-
 - name: Install chezmoi
   ansible.builtin.shell: |
     set -e

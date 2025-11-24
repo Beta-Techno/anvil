@@ -50,19 +50,6 @@
     - fdfind_path.stdout is defined
     - fdfind_path.stdout | length > 0
 
-- name: Ensure ~/.local/bin is on PATH in shell rc files
-  ansible.builtin.blockinfile:
-    path: "{{ item }}"
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - local bin"
-    block: |
-      export PATH="$HOME/.local/bin:$PATH"
-    create: true
-  loop:
-    - "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.bashrc"
-    - "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.zshrc"
-  become: false
-  when: lazyvim_install
-
 - name: Download Neovim AppImage
   ansible.builtin.get_url:
     url: "{{ lazyvim_nvim_appimage_url }}"
