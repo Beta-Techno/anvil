@@ -8,14 +8,14 @@ set -euo pipefail
 #   REPO_URL   (required) git URL of this repo
 #   BRANCH     (default: main)
 #   PROFILE    (default: devheavy)
-#   TAGS       (default: essential)
+#   TAGS       (default: all)
 #   VARS_FILE  (default: vars/all.yml)
 #   TARGET_DIR (default: /tmp/<repo-name>-ansible)
 
 REPO_URL="${REPO_URL:-https://github.com/Beta-Techno/anvil.git}"
 BRANCH="${BRANCH:-main}"
 PROFILE="${PROFILE:-devheavy}"
-TAGS="${TAGS:-essential}"
+TAGS="${TAGS:-all}"
 VARS_FILE="${VARS_FILE:-vars/all.yml}"
 
 repo_name="$(basename "$REPO_URL" .git)"

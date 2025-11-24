@@ -6,12 +6,12 @@ One-liner bootstrap for an Ubuntu box with optional workstation extras, IDEs, an
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Beta-Techno/anvil/main/install.sh | bash
 ```
-Defaults: profile `devheavy`, tags `essential`, vars file `vars/all.yml` (auto-copied from `vars/all.example.yml` if missing). Override with env: `BRANCH`, `PROFILE`, `TAGS`, `VARS_FILE`, `TARGET_DIR`.
+Defaults: profile `devheavy`, tags `all`, vars file `vars/all.yml` (auto-copied from `vars/all.example.yml` if missing). Override with env: `BRANCH`, `PROFILE`, `TAGS`, `VARS_FILE`, `TARGET_DIR`.
 
 ## Local run
 ```bash
 cp vars/all.example.yml vars/all.yml   # edit toggles/checksums
-./run.sh                               # uses TAGS=essential, PROFILE=devheavy, VARS_FILE=vars/all.yml
+./run.sh                               # uses TAGS=all, PROFILE=devheavy, VARS_FILE=vars/all.yml
 ```
 Override with `TAGS=... VARS_FILE=... PROFILE=... ./run.sh`.
 
@@ -19,8 +19,8 @@ Override with `TAGS=... VARS_FILE=... PROFILE=... ./run.sh`.
 - **Essential** (`essential`): Core development setup - `base`, `drivers`, `docker`, `git`, `chezmoi` (dotfiles), `langs` (Node/Python/Ruby/Go/Rust/Java)
 - **Individual roles**: `tailscale`, `lazyvim`, `cloudflared`, `nginx`, `flatpak_snap`, `fonts`, `terminals`, `chrome`, `zed`, `cursor`, `ghostty`, `toolbox`, `docker_desktop`, `nomachine`, `terminal_extras`, `flatpak_apps`, `snap_apps`, `cleanup`
 - **Examples**:
-  - `TAGS=essential` — Default; fast core dev setup (recommended)
-  - `TAGS=all` — Runs everything (all 27 roles)
+  - `TAGS=all` — Default; runs everything (all 27 roles)
+  - `TAGS=essential` — Fast core dev setup only (base, docker, git, chezmoi, langs)
   - `TAGS=chrome,cursor` — Install specific apps only
 - Install toggles live in `vars/all.yml` (`*_install` flags).
 
