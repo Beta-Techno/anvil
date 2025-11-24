@@ -28,6 +28,20 @@
   become: false
   when: langs_install_node
 
+- name: Ensure nvm init is present in shell rc files
+  ansible.builtin.blockinfile:
+    path: "{{ item }}"
+    block: |
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    create: true
+  loop:
+    - "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.bashrc"
+    - "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.zshrc"
+  become: false
+  when: langs_install_node
+
 - name: Install pyenv
   ansible.builtin.git:
     repo: https://github.com/pyenv/pyenv.git

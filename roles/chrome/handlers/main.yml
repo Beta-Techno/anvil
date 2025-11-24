@@ -1,4 +1,0 @@
----
-- name: reload apt cache
-  ansible.builtin.command: apt-get update
-  changed_when: false
