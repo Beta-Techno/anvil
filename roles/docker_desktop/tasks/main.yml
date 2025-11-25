@@ -2,33 +2,33 @@
 - name: Skip Docker Desktop when disabled
   ansible.builtin.debug:
     msg: "Docker Desktop install skipped (docker_desktop_install=false)."
-  when: not (docker_desktop_install | default(false) | bool)
+  when: not docker_desktop_install
 
 - name: Check virtualization environment
   ansible.builtin.command: systemd-detect-virt
   register: dd_virt
   changed_when: false
   failed_when: false
-  when: docker_desktop_install | default(false) | bool
+  when: docker_desktop_install
 
 - name: Fail if running inside unsupported virtualization
   ansible.builtin.fail:
     msg: "Docker Desktop not supported in virtualization '{{ dd_virt.stdout }}'."
   when:
-    - docker_desktop_install | default(false) | bool
+    - docker_desktop_install
     - dd_virt.stdout | lower in ['lxc']
 
 - name: Ensure KVM device exists
   ansible.builtin.stat:
     path: /dev/kvm
   register: kvm_stat
-  when: docker_desktop_install | default(false) | bool
+  when: docker_desktop_install
 
 - name: Fail when KVM not available
   ansible.builtin.fail:
     msg: "/dev/kvm is required for Docker Desktop."
   when:
-    - docker_desktop_install | default(false) | bool
+    - docker_desktop_install
     - not kvm_stat.stat.exists
 
 - name: Download Docker Desktop package
@@ -37,36 +37,36 @@
     dest: /tmp/docker-desktop.deb
     mode: "0644"
     checksum: "{{ docker_desktop_checksum if docker_desktop_checksum | length > 0 else omit }}"
-  when: docker_desktop_install | default(false) | bool
+  when: docker_desktop_install
 
 - name: Install Docker Desktop
   ansible.builtin.apt:
     deb: /tmp/docker-desktop.deb
     state: present
     update_cache: true
-  when: docker_desktop_install | default(false) | bool
+  when: docker_desktop_install
 
 - name: Add user to kvm group for Docker Desktop
   ansible.builtin.user:
     name: "{{ ansible_user_id }}"
     groups: kvm
     append: true
-  when: docker_desktop_install | default(false) | bool
+  when: docker_desktop_install
 
 - name: Enable user linger for Docker Desktop
   ansible.builtin.command: loginctl enable-linger "{{ ansible_user_id }}"
   changed_when: "'linger added' in linger_result.stdout | default('')"
   register: linger_result
-  when: docker_desktop_install | default(false) | bool
+  when: docker_desktop_install
   failed_when: false
 
 - name: Remove downloaded Docker Desktop package
   ansible.builtin.file:
     path: /tmp/docker-desktop.deb
     state: absent
-  when: docker_desktop_install | default(false) | bool
+  when: docker_desktop_install
 
 - name: Docker Desktop summary
   ansible.builtin.debug:
     msg: "Docker Desktop install attempted (docker_desktop_install={{ docker_desktop_install }})."
-  when: docker_desktop_install | default(false) | bool
+  when: docker_desktop_install
