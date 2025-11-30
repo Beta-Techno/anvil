@@ -59,7 +59,11 @@ ensure_ansible() {
 run_play() {
   cd "$here"
   local ask_pass_flag=(--ask-become-pass)
-  local cmd=(ansible-playbook -i localhost, -c local playbook.yml --tags "$tags")
+  local cmd=(ansible-playbook -i localhost, -c local playbook.yml)
+  # Only add --tags if not "all" (all = run everything, no filter)
+  if [[ "$tags" != "all" ]]; then
+    cmd+=(--tags "$tags")
+  fi
   if [[ -n "${ANSIBLE_EXTRA_VARS:-}" ]]; then
     cmd+=(--extra-vars "$ANSIBLE_EXTRA_VARS")
   fi
