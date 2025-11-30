@@ -13,7 +13,8 @@ if [[ ! -f "$VARS_FILE" ]]; then
 fi
 
 export ANSIBLE_TAGS="$TAGS"
-export ANSIBLE_ARGS="${ANSIBLE_ARGS:-"-e @$VARS_FILE"}"
+# Always include vars file, then append any user-provided args
+export ANSIBLE_ARGS="-e @$VARS_FILE ${ANSIBLE_ARGS:-}"
 
 cd "$ROOT_DIR"
 ./bootstrap.sh "$PROFILE"
