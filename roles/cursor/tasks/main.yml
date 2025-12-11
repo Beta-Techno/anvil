@@ -4,10 +4,26 @@
     msg: "Cursor install skipped (cursor_install=false)."
   when: not cursor_install
 
+- name: Check if Cursor is already installed
+  ansible.builtin.command: dpkg -l cursor
+  register: cursor_check
+  changed_when: false
+  failed_when: false
+  when: cursor_install
+
+- name: Skip Cursor if already installed
+  ansible.builtin.debug:
+    msg: "Cursor already installed, skipping."
+  when:
+    - cursor_install
+    - cursor_check.rc == 0
+
 - name: Determine Cursor download URL (prefer explicit)
   ansible.builtin.set_fact:
     cursor_resolved_url: "{{ cursor_deb_url }}"
-  when: cursor_install
+  when:
+    - cursor_install
+    - cursor_check.rc != 0
 
 - name: Fetch Cursor download page when URL not provided
   ansible.builtin.uri:
@@ -16,6 +32,7 @@
   register: cursor_page
   when:
     - cursor_install
+    - cursor_check.rc != 0
     - cursor_deb_url | length == 0
 
 - name: Extract Cursor .deb URL from page
@@ -31,6 +48,7 @@
     tok_pattern: "{{ '(amd64|x64|x86_64)' if apt_arch == 'amd64' else '(arm64|aarch64)' }}"
   when:
     - cursor_install
+    - cursor_check.rc != 0
     - cursor_deb_url | length == 0
 
 - name: Skip Cursor if URL could not be resolved
@@ -38,6 +56,7 @@
     msg: "No matching Cursor .deb found for arch={{ apt_arch }}; skipping Cursor install."
   when:
     - cursor_install
+    - cursor_check.rc != 0
     - cursor_resolved_url is not defined or cursor_resolved_url | length == 0
   changed_when: false
 
@@ -47,7 +66,9 @@
     dest: /tmp/cursor.deb
     mode: "0644"
     checksum: "{{ cursor_deb_checksum if cursor_deb_checksum | length > 0 else omit }}"
-  when: cursor_install
+  when:
+    - cursor_install
+    - cursor_check.rc != 0
 
 - name: Install Cursor IDE
   ansible.builtin.apt:
@@ -56,13 +77,17 @@
     update_cache: true
   register: cursor_result
   become: true
-  when: cursor_install
+  when:
+    - cursor_install
+    - cursor_check.rc != 0
 
 - name: Remove downloaded Cursor package
   ansible.builtin.file:
     path: /tmp/cursor.deb
     state: absent
-  when: cursor_install
+  when:
+    - cursor_install
+    - cursor_check.rc != 0
 
 - name: Cursor install summary
   ansible.builtin.debug:

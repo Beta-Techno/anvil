@@ -4,12 +4,28 @@
     msg: "Chrome install skipped (chrome_install=false)."
   when: not chrome_install
 
+- name: Check if Chrome is already installed
+  ansible.builtin.command: dpkg -l google-chrome-stable
+  register: chrome_check
+  changed_when: false
+  failed_when: false
+  when: chrome_install
+
+- name: Skip Chrome if already installed
+  ansible.builtin.debug:
+    msg: "Chrome already installed, skipping."
+  when:
+    - chrome_install
+    - chrome_check.rc == 0
+
 - name: Ensure apt keyring directory exists
   ansible.builtin.file:
     path: /usr/share/keyrings
     state: directory
     mode: "0755"
-  when: chrome_install
+  when:
+    - chrome_install
+    - chrome_check.rc != 0
 
 - name: Remove stale Chrome keyrings
   ansible.builtin.file:
@@ -19,7 +35,9 @@
     - /usr/share/keyrings/google-chrome.gpg
     - /etc/apt/keyrings/google-linux.gpg
     - /etc/apt/keyrings/google-linux.asc
-  when: chrome_install
+  when:
+    - chrome_install
+    - chrome_check.rc != 0
 
 - name: Download and install Google Chrome GPG key
   ansible.builtin.shell: |
@@ -30,7 +48,9 @@
     executable: /bin/bash
   register: chrome_key
   changed_when: chrome_key.rc == 0
-  when: chrome_install
+  when:
+    - chrome_install
+    - chrome_check.rc != 0
   notify: reload apt cache
 
 - name: Add Google Chrome apt repository
@@ -38,19 +58,25 @@
     repo: "deb [arch={{ apt_arch }} signed-by=/usr/share/keyrings/google-chrome.gpg] {{ chrome_repo_url }} stable main"
     filename: google-chrome
     state: present
-  when: chrome_install
+  when:
+    - chrome_install
+    - chrome_check.rc != 0
 
 - name: Update apt cache after adding Chrome repo
   ansible.builtin.apt:
     update_cache: true
-  when: chrome_install
+  when:
+    - chrome_install
+    - chrome_check.rc != 0
 
 - name: Install google-chrome-stable
   ansible.builtin.apt:
     name: google-chrome-stable
     state: "{{ chrome_package_state }}"
     update_cache: true
-  when: chrome_install
+  when:
+    - chrome_install
+    - chrome_check.rc != 0
 
 - name: Chrome install summary
   ansible.builtin.debug:

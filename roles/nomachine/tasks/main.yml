@@ -11,12 +11,28 @@
     fail_msg: "NoMachine package URL is for amd64 but apt_arch={{ apt_arch }}"
   when: nomachine_install
 
+- name: Check if NoMachine is already installed
+  ansible.builtin.command: dpkg -l nomachine
+  register: nomachine_check
+  changed_when: false
+  failed_when: false
+  when: nomachine_install
+
+- name: Skip NoMachine if already installed
+  ansible.builtin.debug:
+    msg: "NoMachine already installed, skipping."
+  when:
+    - nomachine_install
+    - nomachine_check.rc == 0
+
 - name: Download NoMachine package
   ansible.builtin.get_url:
     url: "{{ nomachine_deb_url }}"
     dest: /tmp/nomachine.deb
     mode: "0644"
-  when: nomachine_install
+  when:
+    - nomachine_install
+    - nomachine_check.rc != 0
 
 - name: Verify MD5 checksum (best effort)
   ansible.builtin.shell: |
@@ -25,13 +41,16 @@
   register: nomachine_md5
   changed_when: false
   failed_when: false
-  when: nomachine_install
+  when:
+    - nomachine_install
+    - nomachine_check.rc != 0
 
 - name: Fail if checksum mismatch
   ansible.builtin.fail:
     msg: "NoMachine MD5 mismatch: expected {{ nomachine_expected_md5 }}, got {{ nomachine_md5.stdout }}"
   when:
     - nomachine_install
+    - nomachine_check.rc != 0
     - nomachine_expected_md5 | length > 0
     - nomachine_md5.stdout is defined
     - nomachine_md5.stdout | lower != nomachine_expected_md5 | lower
@@ -42,13 +61,17 @@
     state: present
     update_cache: true
   failed_when: false
-  when: nomachine_install
+  when:
+    - nomachine_install
+    - nomachine_check.rc != 0
 
 - name: Remove downloaded NoMachine package
   ansible.builtin.file:
     path: /tmp/nomachine.deb
     state: absent
-  when: nomachine_install
+  when:
+    - nomachine_install
+    - nomachine_check.rc != 0
 
 - name: Allow NX service through ufw when active
   ansible.builtin.shell: |
@@ -57,7 +80,9 @@
     executable: /bin/bash
   changed_when: false
   failed_when: false
-  when: nomachine_install
+  when:
+    - nomachine_install
+    - nomachine_check.rc != 0
 
 - name: NoMachine summary
   ansible.builtin.debug:
