@@ -20,7 +20,7 @@
   become: true
   when: dev_tools_install
 
-- name: Install YAML/JSON processing tools
+- name: Install data processing tools
   ansible.builtin.apt:
     name: "{{ dev_tools_data_tools }}"
     state: present
@@ -36,6 +36,14 @@
   become: true
   when: dev_tools_install
 
+- name: Install modern CLI tools
+  ansible.builtin.apt:
+    name: "{{ dev_tools_modern_cli }}"
+    state: present
+    update_cache: true
+  become: true
+  when: dev_tools_install
+
 - name: Dev tools summary
   ansible.builtin.debug:
     msg: |
@@ -44,4 +52,5 @@
         - Git extras: {{ dev_tools_git_extras | join(', ') }}
         - Data tools: {{ dev_tools_data_tools | join(', ') }}
         - Network tools: {{ dev_tools_network_tools | join(', ') }}
+        - Modern CLI: {{ dev_tools_modern_cli | join(', ') }}
   when: dev_tools_install

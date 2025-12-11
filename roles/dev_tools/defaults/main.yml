@@ -13,11 +13,21 @@ dev_tools_git_extras:
   - gh                # GitHub CLI
   - git-lfs           # Git Large File Storage
 
-# YAML/JSON processing (jq already in base)
+# Data processing tools
 dev_tools_data_tools:
+  - jq                # JSON query/processor
   - yq                # YAML query/processor
 
 # Network and API tools
 dev_tools_network_tools:
   - httpie            # User-friendly HTTP client
   - netcat-openbsd    # TCP/UDP networking utility (modern netcat)
+
+# Modern CLI tools
+dev_tools_modern_cli:
+  - fd-find           # Fast file finder (alternative to find)
+  - bat               # Cat with syntax highlighting
+  - eza               # Modern ls replacement
+  - zoxide            # Smarter cd with ranking
+  - direnv            # Per-directory environment variables
+  - just              # Command runner for project tasks
