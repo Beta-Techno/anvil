@@ -1,0 +1,23 @@
+---
+dev_tools_install: true
+
+# Database clients
+dev_tools_database_clients:
+  - postgresql-client
+  - mysql-client
+  - redis-tools
+  - sqlite3
+
+# Git enhancements
+dev_tools_git_extras:
+  - gh                # GitHub CLI
+  - git-lfs           # Git Large File Storage
+
+# YAML/JSON processing (jq already in base)
+dev_tools_data_tools:
+  - yq                # YAML query/processor
+
+# Network and API tools
+dev_tools_network_tools:
+  - httpie            # User-friendly HTTP client
+  - netcat            # TCP/UDP networking utility

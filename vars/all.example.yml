@@ -13,6 +13,9 @@ snap_apps_install: true
 chezmoi_install: true
 chezmoi_apply: true
 
+# Developer Tools
+dev_tools_install: true          # Database clients, gh CLI, httpie, etc.
+
 # AI Coding Agents
 ai_agents_install_claude: true   # Claude Code CLI (interactive auth)
 ai_agents_install_codex: true    # OpenAI Codex CLI (requires Node.js >= 18, interactive auth)

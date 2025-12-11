@@ -1,0 +1,47 @@
+---
+- name: Skip dev tools when disabled
+  ansible.builtin.debug:
+    msg: "Dev tools install skipped (dev_tools_install=false)."
+  when: not dev_tools_install
+
+- name: Install database clients
+  ansible.builtin.apt:
+    name: "{{ dev_tools_database_clients }}"
+    state: present
+    update_cache: true
+  become: true
+  when: dev_tools_install
+
+- name: Install git enhancements
+  ansible.builtin.apt:
+    name: "{{ dev_tools_git_extras }}"
+    state: present
+    update_cache: true
+  become: true
+  when: dev_tools_install
+
+- name: Install YAML/JSON processing tools
+  ansible.builtin.apt:
+    name: "{{ dev_tools_data_tools }}"
+    state: present
+    update_cache: true
+  become: true
+  when: dev_tools_install
+
+- name: Install network and API tools
+  ansible.builtin.apt:
+    name: "{{ dev_tools_network_tools }}"
+    state: present
+    update_cache: true
+  become: true
+  when: dev_tools_install
+
+- name: Dev tools summary
+  ansible.builtin.debug:
+    msg: |
+      Dev tools installed (dev_tools_install={{ dev_tools_install }}):
+        - Database clients: {{ dev_tools_database_clients | join(', ') }}
+        - Git extras: {{ dev_tools_git_extras | join(', ') }}
+        - Data tools: {{ dev_tools_data_tools | join(', ') }}
+        - Network tools: {{ dev_tools_network_tools | join(', ') }}
+  when: dev_tools_install

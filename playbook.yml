@@ -13,6 +13,7 @@
     - { role: docker, tags: [docker, server, essential], become: true }
     - { role: tailscale, tags: [tailscale, server], become: true }
     - { role: git_ssh, tags: [git, essential] }
+    - { role: dev_tools, tags: [dev_tools, essential], become: true }
     - { role: chezmoi_install, tags: [chezmoi_install, essential] }
     - { role: chezmoi_apply, tags: [chezmoi_apply, essential] }
     - { role: langs, tags: [langs, essential] }
