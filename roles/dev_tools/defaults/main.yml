@@ -20,4 +20,4 @@ dev_tools_data_tools:
 # Network and API tools
 dev_tools_network_tools:
   - httpie            # User-friendly HTTP client
-  - netcat            # TCP/UDP networking utility
+  - netcat-openbsd    # TCP/UDP networking utility (modern netcat)
