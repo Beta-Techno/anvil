@@ -14,7 +14,10 @@ chezmoi_install: true
 chezmoi_apply: true
 
 # Developer Tools
-dev_tools_install: true          # Database clients, gh CLI, httpie, etc.
+dev_tools_install: true          # Database clients, gh CLI, httpie, jq, yq, fd, bat, etc.
+dev_tools_install_terraform: true      # Terraform (via HashiCorp apt repo)
+dev_tools_install_terragrunt: true     # Terragrunt (binary download)
+dev_tools_install_ngrok: true          # ngrok (via ngrok apt repo)
 
 # AI Coding Agents
 ai_agents_install_claude: true   # Claude Code CLI (interactive auth)

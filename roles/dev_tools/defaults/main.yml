@@ -31,3 +31,21 @@ dev_tools_modern_cli:
   - zoxide            # Smarter cd with ranking
   - direnv            # Per-directory environment variables
   - just              # Command runner for project tasks
+
+# Infrastructure tools
+dev_tools_install_terraform: true
+dev_tools_install_terragrunt: true
+dev_tools_install_ngrok: true
+
+# Terraform installation (via HashiCorp apt repository)
+dev_tools_terraform_gpg_url: https://apt.releases.hashicorp.com/gpg
+dev_tools_terraform_repo: "deb [arch={{ apt_arch }}] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+
+# Terragrunt installation (binary download)
+dev_tools_terragrunt_version: "0.68.16"
+dev_tools_terragrunt_url: "https://github.com/gruntwork-io/terragrunt/releases/download/v{{ dev_tools_terragrunt_version }}/terragrunt_linux_{{ apt_arch }}"
+dev_tools_terragrunt_install_path: /usr/local/bin/terragrunt
+
+# ngrok installation (via ngrok apt repository)
+dev_tools_ngrok_gpg_url: https://ngrok-agent.s3.amazonaws.com/ngrok.asc
+dev_tools_ngrok_repo: "deb [arch={{ apt_arch }}] https://ngrok-agent.s3.amazonaws.com buster main"

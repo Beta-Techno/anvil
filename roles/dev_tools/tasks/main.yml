@@ -44,6 +44,86 @@
   become: true
   when: dev_tools_install
 
+# Terraform installation
+- name: Add HashiCorp GPG key for Terraform
+  ansible.builtin.apt_key:
+    url: "{{ dev_tools_terraform_gpg_url }}"
+    state: present
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_terraform
+
+- name: Add HashiCorp repository for Terraform
+  ansible.builtin.apt_repository:
+    repo: "{{ dev_tools_terraform_repo }}"
+    state: present
+    filename: hashicorp
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_terraform
+
+- name: Install Terraform
+  ansible.builtin.apt:
+    name: terraform
+    state: present
+    update_cache: true
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_terraform
+
+# Terragrunt installation
+- name: Check if Terragrunt is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_terragrunt_install_path }}"
+  register: terragrunt_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_terragrunt
+
+- name: Download Terragrunt binary
+  ansible.builtin.get_url:
+    url: "{{ dev_tools_terragrunt_url }}"
+    dest: "{{ dev_tools_terragrunt_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_terragrunt
+    - not terragrunt_binary.stat.exists
+
+# ngrok installation
+- name: Add ngrok GPG key
+  ansible.builtin.apt_key:
+    url: "{{ dev_tools_ngrok_gpg_url }}"
+    state: present
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_ngrok
+
+- name: Add ngrok repository
+  ansible.builtin.apt_repository:
+    repo: "{{ dev_tools_ngrok_repo }}"
+    state: present
+    filename: ngrok
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_ngrok
+
+- name: Install ngrok
+  ansible.builtin.apt:
+    name: ngrok
+    state: present
+    update_cache: true
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_ngrok
+
 - name: Dev tools summary
   ansible.builtin.debug:
     msg: |
@@ -53,4 +133,7 @@
         - Data tools: {{ dev_tools_data_tools | join(', ') }}
         - Network tools: {{ dev_tools_network_tools | join(', ') }}
         - Modern CLI: {{ dev_tools_modern_cli | join(', ') }}
+        - Terraform: {{ dev_tools_install_terraform }}
+        - Terragrunt: {{ dev_tools_install_terragrunt }}
+        - ngrok: {{ dev_tools_install_ngrok }}
   when: dev_tools_install
