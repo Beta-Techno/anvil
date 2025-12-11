@@ -44,6 +44,14 @@
   become: true
   when: dev_tools_install
 
+- name: Install system monitoring tools
+  ansible.builtin.apt:
+    name: "{{ dev_tools_monitoring }}"
+    state: present
+    update_cache: true
+  become: true
+  when: dev_tools_install
+
 # Terraform installation
 - name: Add HashiCorp GPG key for Terraform
   ansible.builtin.apt_key:
@@ -133,6 +141,7 @@
         - Data tools: {{ dev_tools_data_tools | join(', ') }}
         - Network tools: {{ dev_tools_network_tools | join(', ') }}
         - Modern CLI: {{ dev_tools_modern_cli | join(', ') }}
+        - Monitoring: {{ dev_tools_monitoring | join(', ') }}
         - Terraform: {{ dev_tools_install_terraform }}
         - Terragrunt: {{ dev_tools_install_terragrunt }}
         - ngrok: {{ dev_tools_install_ngrok }}

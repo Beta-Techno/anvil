@@ -32,6 +32,13 @@ dev_tools_modern_cli:
   - direnv            # Per-directory environment variables
   - just              # Command runner for project tasks
 
+# System monitoring and performance tools
+dev_tools_monitoring:
+  - btop              # Modern system monitor (CPU, RAM, disk, net)
+  - iotop             # IO usage by process
+  - ncdu              # Disk usage explorer (TUI)
+  - dust              # Fast disk usage analyzer
+
 # Infrastructure tools
 dev_tools_install_terraform: true
 dev_tools_install_terragrunt: true
