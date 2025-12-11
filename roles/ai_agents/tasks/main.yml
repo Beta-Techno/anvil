@@ -1,0 +1,88 @@
+---
+- name: Skip Claude Code when disabled
+  ansible.builtin.debug:
+    msg: "Claude Code install skipped (ai_agents_install_claude=false)."
+  when: not ai_agents_install_claude
+
+- name: Install Claude Code CLI
+  ansible.builtin.shell: |
+    set -e
+    curl -fsSL {{ ai_agents_claude_install_url }} | bash
+  args:
+    executable: /bin/bash
+    creates: "{{ ai_agents_claude_binary_path }}"
+  become: false
+  when: ai_agents_install_claude
+  register: claude_install
+
+- name: Claude Code install summary
+  ansible.builtin.debug:
+    msg: "Claude Code CLI installed at {{ ai_agents_claude_binary_path }}. Run 'claude' to authenticate."
+  when: ai_agents_install_claude
+
+- name: Skip Codex when disabled
+  ansible.builtin.debug:
+    msg: "OpenAI Codex install skipped (ai_agents_install_codex=false)."
+  when: not ai_agents_install_codex
+
+- name: Check if Node.js is available for Codex
+  ansible.builtin.shell: |
+    set -e
+    source {{ ansible_env.HOME }}/.nvm/nvm.sh 2>/dev/null || true
+    command -v node >/dev/null 2>&1 && node --version || echo "none"
+  args:
+    executable: /bin/bash
+  register: node_check
+  changed_when: false
+  failed_when: false
+  become: false
+  when: ai_agents_install_codex
+
+- name: Parse Node.js version
+  ansible.builtin.set_fact:
+    node_version_major: "{{ node_check.stdout | regex_replace('^v?(\\d+)\\..*', '\\1') | int }}"
+  when:
+    - ai_agents_install_codex
+    - node_check.stdout is defined
+    - node_check.stdout != "none"
+  failed_when: false
+
+- name: Skip Codex if Node.js not found or version too old
+  ansible.builtin.debug:
+    msg: "Codex requires Node.js >= {{ ai_agents_codex_min_node_version }}. Current: {{ node_check.stdout | default('not found') }}. Install via langs role first."
+  when:
+    - ai_agents_install_codex
+    - node_version_major is not defined or node_version_major | int < ai_agents_codex_min_node_version
+
+- name: Install OpenAI Codex CLI via npm
+  ansible.builtin.shell: |
+    set -e
+    source {{ ansible_env.HOME }}/.nvm/nvm.sh
+    npm install -g @openai/codex
+  args:
+    executable: /bin/bash
+  become: false
+  when:
+    - ai_agents_install_codex
+    - node_version_major is defined
+    - node_version_major | int >= ai_agents_codex_min_node_version
+  register: codex_install
+  changed_when: "'added' in codex_install.stdout or 'updated' in codex_install.stdout"
+  failed_when: false
+
+- name: Codex install summary
+  ansible.builtin.debug:
+    msg: "OpenAI Codex CLI installed. Run 'codex' to authenticate and start."
+  when:
+    - ai_agents_install_codex
+    - codex_install is defined
+    - not codex_install.failed
+
+- name: AI Agents summary
+  ansible.builtin.debug:
+    msg: |
+      AI Agents installed:
+        - Claude Code: {{ 'yes' if ai_agents_install_claude else 'skipped' }}
+        - OpenAI Codex: {{ 'yes' if (ai_agents_install_codex and codex_install is defined and not codex_install.failed) else 'skipped' }}
+
+      Run 'claude' or 'codex' to authenticate via browser and start using.

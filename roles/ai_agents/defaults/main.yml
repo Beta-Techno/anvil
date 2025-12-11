@@ -1,0 +1,15 @@
+---
+ai_agents_install_claude: true
+ai_agents_install_codex: true
+
+# Claude Code installation
+ai_agents_claude_install_url: https://claude.ai/install.sh
+ai_agents_claude_binary_path: "{{ ansible_env.HOME }}/.local/bin/claude"
+
+# Codex installation
+# Requires Node.js >= 18 (installed via langs role)
+ai_agents_codex_min_node_version: 18
+
+# Authentication:
+# Both CLIs support interactive authentication (browser-based login)
+# Run 'claude' or 'codex' to authenticate on first use

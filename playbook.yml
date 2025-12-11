@@ -16,6 +16,7 @@
     - { role: chezmoi_install, tags: [chezmoi_install, essential] }
     - { role: chezmoi_apply, tags: [chezmoi_apply, essential] }
     - { role: langs, tags: [langs, essential] }
+    - { role: ai_agents, tags: [ai_agents, essential] }
     - { role: lazyvim, tags: [lazyvim] }
     - { role: cloudflared, tags: [cloudflared], become: true }
     - { role: nginx, tags: [nginx], become: true }
