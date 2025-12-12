@@ -16,6 +16,9 @@ chezmoi_apply: true
 # Developer Tools
 dev_tools_install: true                   # Database clients, gh CLI, httpie, jq, yq, fd, bat, rsync, etc.
 dev_tools_install_sops: true              # sops secret encryption (via GitHub releases)
+dev_tools_install_lazygit: true           # lazygit TUI for git (via GitHub releases)
+dev_tools_install_delta: true             # delta syntax-highlighting pager for git (via GitHub releases)
+dev_tools_install_ghorg: true             # ghorg clone all repos from GitHub org (via GitHub releases)
 dev_tools_install_terraform: true         # Terraform (via HashiCorp apt repo)
 dev_tools_install_terragrunt: true        # Terragrunt (binary download)
 dev_tools_install_ngrok: true             # ngrok (via ngrok apt repo)

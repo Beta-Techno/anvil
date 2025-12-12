@@ -12,6 +12,7 @@ dev_tools_database_clients:
 dev_tools_git_extras:
   - gh                # GitHub CLI
   - git-lfs           # Git Large File Storage
+  - pre-commit        # Git hooks framework
 
 # Data processing tools
 dev_tools_data_tools:
@@ -62,9 +63,29 @@ dev_tools_install_k9s: true
 dev_tools_install_aws_cli: true
 dev_tools_install_gcloud: true
 
+# Git tools
+dev_tools_install_lazygit: true
+dev_tools_install_delta: true
+dev_tools_install_ghorg: true
+
 # AWS CLI v2 installation (via official installer)
 dev_tools_aws_cli_zip_url: "https://awscli.amazonaws.com/awscli-exe-linux-{{ 'x86_64' if apt_arch == 'amd64' else 'aarch64' }}.zip"
 dev_tools_aws_cli_install_dir: /usr/local/aws-cli
+
+# lazygit installation (via GitHub releases)
+dev_tools_lazygit_version: "0.44.1"
+dev_tools_lazygit_url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ dev_tools_lazygit_version }}/lazygit_{{ dev_tools_lazygit_version }}_Linux_{{ 'x86_64' if apt_arch == 'amd64' else 'arm64' }}.tar.gz"
+dev_tools_lazygit_install_path: /usr/local/bin/lazygit
+
+# delta installation (via GitHub releases)
+dev_tools_delta_version: "0.18.2"
+dev_tools_delta_url: "https://github.com/dandavison/delta/releases/download/{{ dev_tools_delta_version }}/delta-{{ dev_tools_delta_version }}-{{ 'x86_64' if apt_arch == 'amd64' else 'aarch64' }}-unknown-linux-musl.tar.gz"
+dev_tools_delta_install_path: /usr/local/bin/delta
+
+# ghorg installation (via GitHub releases)
+dev_tools_ghorg_version: "1.9.13"
+dev_tools_ghorg_url: "https://github.com/gabrie30/ghorg/releases/download/v{{ dev_tools_ghorg_version }}/ghorg_{{ dev_tools_ghorg_version }}_linux_{{ apt_arch }}.tar.gz"
+dev_tools_ghorg_install_path: /usr/local/bin/ghorg
 
 # Optional Rust-based tools (requires cargo from langs role)
 dev_tools_install_dust: false

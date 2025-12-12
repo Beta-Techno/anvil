@@ -367,6 +367,137 @@
     - dev_tools_install
     - dev_tools_install_gcloud
 
+# lazygit installation
+- name: Check if lazygit is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_lazygit_install_path }}"
+  register: lazygit_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_lazygit
+
+- name: Download and extract lazygit
+  ansible.builtin.unarchive:
+    src: "{{ dev_tools_lazygit_url }}"
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_lazygit
+    - not lazygit_binary.stat.exists
+
+- name: Install lazygit binary
+  ansible.builtin.copy:
+    src: /tmp/lazygit
+    dest: "{{ dev_tools_lazygit_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_lazygit
+    - not lazygit_binary.stat.exists
+
+- name: Clean up lazygit temp files
+  ansible.builtin.file:
+    path: /tmp/lazygit
+    state: absent
+  when:
+    - dev_tools_install
+    - dev_tools_install_lazygit
+    - not lazygit_binary.stat.exists
+
+# delta installation
+- name: Check if delta is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_delta_install_path }}"
+  register: delta_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_delta
+
+- name: Download and extract delta
+  ansible.builtin.unarchive:
+    src: "{{ dev_tools_delta_url }}"
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_delta
+    - not delta_binary.stat.exists
+
+- name: Find extracted delta binary
+  ansible.builtin.find:
+    paths: /tmp
+    patterns: "delta-*"
+    file_type: directory
+  register: delta_dir
+  when:
+    - dev_tools_install
+    - dev_tools_install_delta
+    - not delta_binary.stat.exists
+
+- name: Install delta binary
+  ansible.builtin.copy:
+    src: "{{ delta_dir.files[0].path }}/delta"
+    dest: "{{ dev_tools_delta_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_delta
+    - not delta_binary.stat.exists
+    - delta_dir.files | length > 0
+
+- name: Clean up delta temp files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ delta_dir.files | map(attribute='path') | list }}"
+  when:
+    - dev_tools_install
+    - dev_tools_install_delta
+    - not delta_binary.stat.exists
+    - delta_dir.files | length > 0
+
+# ghorg installation
+- name: Check if ghorg is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_ghorg_install_path }}"
+  register: ghorg_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_ghorg
+
+- name: Download and extract ghorg
+  ansible.builtin.unarchive:
+    src: "{{ dev_tools_ghorg_url }}"
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_ghorg
+    - not ghorg_binary.stat.exists
+
+- name: Install ghorg binary
+  ansible.builtin.copy:
+    src: /tmp/ghorg
+    dest: "{{ dev_tools_ghorg_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_ghorg
+    - not ghorg_binary.stat.exists
+
+- name: Clean up ghorg temp files
+  ansible.builtin.file:
+    path: /tmp/ghorg
+    state: absent
+  when:
+    - dev_tools_install
+    - dev_tools_install_ghorg
+    - not ghorg_binary.stat.exists
+
 # dust installation (Rust tool via cargo)
 - name: Check if cargo is available for dust
   ansible.builtin.command: which cargo
@@ -407,6 +538,9 @@
         - Monitoring: {{ dev_tools_monitoring | join(', ') }}
         - Secrets: {{ dev_tools_secrets | join(', ') }}
         - sops: {{ dev_tools_install_sops }}
+        - lazygit: {{ dev_tools_install_lazygit }}
+        - delta: {{ dev_tools_install_delta }}
+        - ghorg: {{ dev_tools_install_ghorg }}
         - Terraform: {{ dev_tools_install_terraform }}
         - Terragrunt: {{ dev_tools_install_terragrunt }}
         - ngrok: {{ dev_tools_install_ngrok }}
