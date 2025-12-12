@@ -20,6 +20,20 @@ security_install_certbot: false           # Let's Encrypt SSL certificate manage
 security_install_auditd: false            # Linux audit framework
 security_install_lynis: false             # Security auditing tool
 
+# Observability (agents installed, disabled until connection details provided)
+observability_install_node_exporter: true      # Prometheus metrics exporter
+observability_install_promtail: true           # Loki log forwarder
+observability_install_osquery: true            # osquery agent for Fleet
+observability_install_fleetctl: false          # Fleet CLI (admin boxes only)
+# Leave blank to install agents but not configure (configure via ops CLI later)
+observability_loki_endpoint: ""                # e.g., "https://loki.example.com:3100"
+observability_fleet_endpoint: ""               # e.g., "https://fleet.example.com"
+observability_fleet_enroll_secret: ""          # Fleet enrollment secret
+
+# Wazuh HIDS (agent installed, disabled until manager configured)
+wazuh_install_agent: true                 # Install Wazuh agent
+wazuh_manager_address: ""                 # Wazuh manager hostname/IP (blank = not configured)
+
 # Developer Tools
 dev_tools_install: true                   # Database clients, gh CLI, httpie, jq, yq, fd, bat, rsync, etc.
 dev_tools_install_sops: true              # sops secret encryption (via GitHub releases)

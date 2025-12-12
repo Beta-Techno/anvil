@@ -1,0 +1,237 @@
+---
+# node_exporter installation
+- name: Install node_exporter
+  ansible.builtin.apt:
+    name: prometheus-node-exporter
+    state: present
+    update_cache: true
+  become: true
+  when: observability_install_node_exporter
+
+- name: Check if node_exporter should be enabled
+  ansible.builtin.set_fact:
+    node_exporter_configured: "{{ observability_prometheus_job_name | length > 0 }}"
+  when: observability_install_node_exporter
+
+- name: Enable and start node_exporter
+  ansible.builtin.systemd:
+    name: prometheus-node-exporter
+    enabled: true
+    state: started
+  become: true
+  when:
+    - observability_install_node_exporter
+    - node_exporter_configured | default(false)
+
+- name: Notify if node_exporter installed but not configured
+  ansible.builtin.debug:
+    msg: "node_exporter installed but not enabled. Configure Prometheus to scrape localhost:{{ observability_node_exporter_port }}, then enable with: sudo systemctl enable --now prometheus-node-exporter"
+  when:
+    - observability_install_node_exporter
+    - not (node_exporter_configured | default(false))
+
+# Promtail installation
+- name: Check if Promtail is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/promtail
+  register: promtail_binary
+  when: observability_install_promtail
+
+- name: Download and extract Promtail
+  ansible.builtin.unarchive:
+    src: "https://github.com/grafana/loki/releases/download/v3.3.2/promtail-linux-{{ 'amd64' if apt_arch == 'amd64' else 'arm64' }}.zip"
+    dest: /tmp
+    remote_src: true
+  when:
+    - observability_install_promtail
+    - not promtail_binary.stat.exists
+
+- name: Install Promtail binary
+  ansible.builtin.copy:
+    src: "/tmp/promtail-linux-{{ 'amd64' if apt_arch == 'amd64' else 'arm64' }}"
+    dest: /usr/local/bin/promtail
+    mode: "0755"
+  become: true
+  when:
+    - observability_install_promtail
+    - not promtail_binary.stat.exists
+
+- name: Create Promtail directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  become: true
+  loop:
+    - /etc/promtail
+    - /var/lib/promtail
+  when: observability_install_promtail
+
+- name: Check if Promtail should be configured
+  ansible.builtin.set_fact:
+    promtail_configured: "{{ observability_loki_endpoint | length > 0 }}"
+  when: observability_install_promtail
+
+- name: Configure Promtail
+  ansible.builtin.template:
+    src: promtail-config.yml.j2
+    dest: /etc/promtail/config.yml
+    mode: "0644"
+  become: true
+  when:
+    - observability_install_promtail
+    - promtail_configured | default(false)
+  notify: restart promtail
+
+- name: Create Promtail systemd service
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=Promtail service
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=root
+      ExecStart=/usr/local/bin/promtail -config.file=/etc/promtail/config.yml
+      Restart=on-failure
+      RestartSec=10
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/promtail.service
+    mode: "0644"
+  become: true
+  when: observability_install_promtail
+  notify: reload systemd
+
+- name: Enable and start Promtail
+  ansible.builtin.systemd:
+    name: promtail
+    enabled: true
+    state: started
+  become: true
+  when:
+    - observability_install_promtail
+    - promtail_configured | default(false)
+
+- name: Notify if Promtail installed but not configured
+  ansible.builtin.debug:
+    msg: "Promtail installed but not configured. Set observability_loki_endpoint to enable."
+  when:
+    - observability_install_promtail
+    - not (promtail_configured | default(false))
+
+# osquery installation
+- name: Add osquery GPG key
+  ansible.builtin.apt_key:
+    url: https://pkg.osquery.io/deb/pubkey.gpg
+    state: present
+  become: true
+  when: observability_install_osquery
+
+- name: Add osquery repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ apt_arch }}] https://pkg.osquery.io/deb deb main"
+    state: present
+    filename: osquery
+  become: true
+  when: observability_install_osquery
+
+- name: Install osquery
+  ansible.builtin.apt:
+    name: osquery
+    state: present
+    update_cache: true
+  become: true
+  when: observability_install_osquery
+
+- name: Check if osquery should be configured for Fleet
+  ansible.builtin.set_fact:
+    osquery_configured: "{{ observability_fleet_endpoint | length > 0 and observability_fleet_enroll_secret | length > 0 }}"
+  when: observability_install_osquery
+
+- name: Configure osquery for Fleet
+  ansible.builtin.template:
+    src: osquery-flagfile.j2
+    dest: /etc/osquery/osquery.flags
+    mode: "0644"
+  become: true
+  when:
+    - observability_install_osquery
+    - osquery_configured | default(false)
+  notify: restart osqueryd
+
+- name: Create Fleet enrollment secret file
+  ansible.builtin.copy:
+    content: "{{ observability_fleet_enroll_secret }}"
+    dest: /etc/osquery/fleet_enroll_secret
+    mode: "0600"
+  become: true
+  when:
+    - observability_install_osquery
+    - osquery_configured | default(false)
+
+- name: Enable and start osqueryd
+  ansible.builtin.systemd:
+    name: osqueryd
+    enabled: true
+    state: started
+  become: true
+  when:
+    - observability_install_osquery
+    - osquery_configured | default(false)
+
+- name: Notify if osquery installed but not configured
+  ansible.builtin.debug:
+    msg: "osquery installed but not configured. Set observability_fleet_endpoint and observability_fleet_enroll_secret to enroll with Fleet."
+  when:
+    - observability_install_osquery
+    - not (osquery_configured | default(false))
+
+# fleetctl installation (admin CLI)
+- name: Check if fleetctl is already installed
+  ansible.builtin.stat:
+    path: "{{ observability_fleetctl_install_path }}"
+  register: fleetctl_binary
+  when: observability_install_fleetctl
+
+- name: Download and extract fleetctl
+  ansible.builtin.unarchive:
+    src: "{{ observability_fleetctl_url }}"
+    dest: /tmp
+    remote_src: true
+  when:
+    - observability_install_fleetctl
+    - not fleetctl_binary.stat.exists
+
+- name: Install fleetctl binary
+  ansible.builtin.copy:
+    src: /tmp/fleetctl_v{{ observability_fleet_version }}_linux/fleetctl
+    dest: "{{ observability_fleetctl_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - observability_install_fleetctl
+    - not fleetctl_binary.stat.exists
+
+- name: Clean up fleetctl temp files
+  ansible.builtin.file:
+    path: /tmp/fleetctl_v{{ observability_fleet_version }}_linux
+    state: absent
+  when:
+    - observability_install_fleetctl
+    - not fleetctl_binary.stat.exists
+
+- name: Observability summary
+  ansible.builtin.debug:
+    msg: |
+      Observability agents installed:
+        - node_exporter: {{ observability_install_node_exporter }} (enabled: {{ node_exporter_configured | default(false) }})
+        - Promtail: {{ observability_install_promtail }} (enabled: {{ promtail_configured | default(false) }})
+        - osquery: {{ observability_install_osquery }} (enabled: {{ osquery_configured | default(false) }})
+        - fleetctl: {{ observability_install_fleetctl }}
+
+      To configure agents, provide connection details in vars:
+        - observability_loki_endpoint (for Promtail)
+        - observability_fleet_endpoint + observability_fleet_enroll_secret (for osquery)

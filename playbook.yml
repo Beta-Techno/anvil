@@ -10,6 +10,8 @@
   roles:
     - { role: base, tags: [base, essential], become: true }
     - { role: security, tags: [security, essential, server], become: true }
+    - { role: observability, tags: [observability, essential, server], become: true }
+    - { role: wazuh, tags: [wazuh, server], become: true }
     - { role: drivers, tags: [drivers, essential], become: true }
     - { role: docker, tags: [docker, server, essential], become: true }
     - { role: tailscale, tags: [tailscale, server], become: true }

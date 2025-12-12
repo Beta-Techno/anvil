@@ -1,0 +1,35 @@
+---
+# Install agents (always)
+observability_install_node_exporter: true
+observability_install_promtail: true
+observability_install_osquery: true
+observability_install_fleetctl: false  # Only on admin boxes
+
+# Connection details (leave blank to install but not configure)
+# Provide these to wire agents to your NixOS observability stack
+observability_loki_endpoint: ""              # e.g., "https://loki.example.com:3100"
+observability_prometheus_job_name: "node"    # Job name for node_exporter metrics
+observability_fleet_endpoint: ""             # e.g., "https://fleet.example.com"
+observability_fleet_enroll_secret: ""        # Fleet enrollment secret
+
+# node_exporter configuration
+observability_node_exporter_port: 9100
+observability_node_exporter_options: ""
+
+# Promtail configuration
+observability_promtail_port: 9080
+observability_promtail_positions_file: /var/lib/promtail/positions.yaml
+observability_promtail_logs:
+  - /var/log/syslog
+  - /var/log/auth.log
+  - /var/log/kern.log
+
+# osquery configuration
+observability_osquery_config_plugin: filesystem
+observability_osquery_logger_plugin: filesystem
+observability_osquery_enrollment_invalid_action: ""  # Set to "exit" to prevent running without Fleet
+
+# Fleet CLI version (if installing fleetctl)
+observability_fleet_version: "4.62.0"
+observability_fleetctl_url: "https://github.com/fleetdm/fleet/releases/download/fleet-v{{ observability_fleet_version }}/fleetctl_v{{ observability_fleet_version }}_linux.tar.gz"
+observability_fleetctl_install_path: /usr/local/bin/fleetctl

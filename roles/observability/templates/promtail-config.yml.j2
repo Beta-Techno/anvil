@@ -1,0 +1,19 @@
+server:
+  http_listen_port: {{ observability_promtail_port }}
+  grpc_listen_port: 0
+
+positions:
+  filename: {{ observability_promtail_positions_file }}
+
+clients:
+  - url: {{ observability_loki_endpoint }}/loki/api/v1/push
+
+scrape_configs:
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: systemlogs
+          host: {{ ansible_hostname }}
+          __path__: /var/log/*.log

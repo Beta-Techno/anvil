@@ -1,0 +1,18 @@
+---
+# Install Wazuh agent (always, but disabled until configured)
+wazuh_install_agent: true
+
+# Connection details (leave blank to install but not configure)
+# Provide these to wire agent to your NixOS Wazuh manager
+wazuh_manager_address: ""      # e.g., "wazuh.example.com" or IP address
+wazuh_manager_port: 1514
+wazuh_agent_name: "{{ ansible_hostname }}"
+wazuh_agent_groups: "default"   # Comma-separated list of groups
+
+# Wazuh repository
+wazuh_repo_gpg_url: https://packages.wazuh.com/key/GPG-KEY-WAZUH
+wazuh_repo_url: "deb https://packages.wazuh.com/4.x/apt/ stable main"
+
+# Agent configuration
+wazuh_agent_protocol: tcp       # tcp or udp
+wazuh_enrollment: true          # Auto-enroll with manager

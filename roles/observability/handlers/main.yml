@@ -1,0 +1,17 @@
+---
+- name: reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+
+- name: restart promtail
+  ansible.builtin.systemd:
+    name: promtail
+    state: restarted
+  become: true
+
+- name: restart osqueryd
+  ansible.builtin.systemd:
+    name: osqueryd
+    state: restarted
+  become: true

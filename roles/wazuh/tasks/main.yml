@@ -1,0 +1,101 @@
+---
+- name: Skip Wazuh when disabled
+  ansible.builtin.debug:
+    msg: "Wazuh agent install skipped (wazuh_install_agent=false)."
+  when: not wazuh_install_agent
+
+- name: Add Wazuh GPG key
+  ansible.builtin.apt_key:
+    url: "{{ wazuh_repo_gpg_url }}"
+    state: present
+  become: true
+  when: wazuh_install_agent
+
+- name: Add Wazuh repository
+  ansible.builtin.apt_repository:
+    repo: "{{ wazuh_repo_url }}"
+    state: present
+    filename: wazuh
+  become: true
+  when: wazuh_install_agent
+
+- name: Install Wazuh agent
+  ansible.builtin.apt:
+    name: wazuh-agent
+    state: present
+    update_cache: true
+  become: true
+  when: wazuh_install_agent
+
+- name: Check if Wazuh should be configured
+  ansible.builtin.set_fact:
+    wazuh_configured: "{{ wazuh_manager_address | length > 0 }}"
+  when: wazuh_install_agent
+
+- name: Configure Wazuh agent manager address
+  ansible.builtin.lineinfile:
+    path: /var/ossec/etc/ossec.conf
+    regexp: '<address>.*</address>'
+    line: "    <address>{{ wazuh_manager_address }}</address>"
+    insertafter: '<client>'
+  become: true
+  when:
+    - wazuh_install_agent
+    - wazuh_configured | default(false)
+  notify: restart wazuh-agent
+
+- name: Configure Wazuh agent port
+  ansible.builtin.lineinfile:
+    path: /var/ossec/etc/ossec.conf
+    regexp: '<port>.*</port>'
+    line: "    <port>{{ wazuh_manager_port }}</port>"
+    insertafter: '<address>'
+  become: true
+  when:
+    - wazuh_install_agent
+    - wazuh_configured | default(false)
+  notify: restart wazuh-agent
+
+- name: Configure Wazuh agent protocol
+  ansible.builtin.lineinfile:
+    path: /var/ossec/etc/ossec.conf
+    regexp: '<protocol>.*</protocol>'
+    line: "    <protocol>{{ wazuh_agent_protocol }}</protocol>"
+    insertafter: '<port>'
+  become: true
+  when:
+    - wazuh_install_agent
+    - wazuh_configured | default(false)
+  notify: restart wazuh-agent
+
+- name: Enable and start Wazuh agent
+  ansible.builtin.systemd:
+    name: wazuh-agent
+    enabled: true
+    state: started
+  become: true
+  when:
+    - wazuh_install_agent
+    - wazuh_configured | default(false)
+
+- name: Notify if Wazuh installed but not configured
+  ansible.builtin.debug:
+    msg: |
+      Wazuh agent installed but not configured.
+      Set wazuh_manager_address to your Wazuh manager, then enable with:
+        sudo systemctl enable --now wazuh-agent
+
+      The agent must be registered on the manager first. Use:
+        /var/ossec/bin/agent-auth -m <manager-address>
+      Or register manually on the manager and import the client.keys file.
+  when:
+    - wazuh_install_agent
+    - not (wazuh_configured | default(false))
+
+- name: Wazuh summary
+  ansible.builtin.debug:
+    msg: |
+      Wazuh agent installed: {{ wazuh_install_agent }}
+      Configured: {{ wazuh_configured | default(false) }}
+      Manager: {{ wazuh_manager_address if wazuh_configured | default(false) else 'not configured' }}
+  when: wazuh_install_agent
