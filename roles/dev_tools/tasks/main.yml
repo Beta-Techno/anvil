@@ -20,6 +20,14 @@
   become: true
   when: dev_tools_install
 
+- name: Install DevOps and CI/CD tools
+  ansible.builtin.apt:
+    name: "{{ dev_tools_devops }}"
+    state: present
+    update_cache: true
+  become: true
+  when: dev_tools_install
+
 - name: Install data processing tools
   ansible.builtin.apt:
     name: "{{ dev_tools_data_tools }}"
@@ -526,12 +534,173 @@
     - dev_tools_install_dust
     - cargo_check.rc != 0
 
+# doctl installation
+- name: Check if doctl is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_doctl_install_path }}"
+  register: doctl_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_doctl
+
+- name: Download and extract doctl
+  ansible.builtin.unarchive:
+    src: "{{ dev_tools_doctl_url }}"
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_doctl
+    - not doctl_binary.stat.exists
+
+- name: Install doctl binary
+  ansible.builtin.copy:
+    src: /tmp/doctl
+    dest: "{{ dev_tools_doctl_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_doctl
+    - not doctl_binary.stat.exists
+
+- name: Clean up doctl temp files
+  ansible.builtin.file:
+    path: /tmp/doctl
+    state: absent
+  when:
+    - dev_tools_install
+    - dev_tools_install_doctl
+    - not doctl_binary.stat.exists
+
+# act installation
+- name: Check if act is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_act_install_path }}"
+  register: act_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_act
+
+- name: Download and extract act
+  ansible.builtin.unarchive:
+    src: "{{ dev_tools_act_url }}"
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_act
+    - not act_binary.stat.exists
+
+- name: Install act binary
+  ansible.builtin.copy:
+    src: /tmp/act
+    dest: "{{ dev_tools_act_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_act
+    - not act_binary.stat.exists
+
+- name: Clean up act temp files
+  ansible.builtin.file:
+    path: /tmp/act
+    state: absent
+  when:
+    - dev_tools_install
+    - dev_tools_install_act
+    - not act_binary.stat.exists
+
+# Packer installation
+- name: Check if Packer is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_packer_install_path }}"
+  register: packer_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_packer
+
+- name: Download Packer zip
+  ansible.builtin.get_url:
+    url: "{{ dev_tools_packer_url }}"
+    dest: /tmp/packer.zip
+    mode: "0644"
+  when:
+    - dev_tools_install
+    - dev_tools_install_packer
+    - not packer_binary.stat.exists
+
+- name: Ensure unzip is installed for Packer
+  ansible.builtin.apt:
+    name: unzip
+    state: present
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_packer
+    - not packer_binary.stat.exists
+
+- name: Extract Packer
+  ansible.builtin.unarchive:
+    src: /tmp/packer.zip
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_packer
+    - not packer_binary.stat.exists
+
+- name: Install Packer binary
+  ansible.builtin.copy:
+    src: /tmp/packer
+    dest: "{{ dev_tools_packer_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_packer
+    - not packer_binary.stat.exists
+
+- name: Clean up Packer temp files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/packer.zip
+    - /tmp/packer
+  when:
+    - dev_tools_install
+    - dev_tools_install_packer
+    - not packer_binary.stat.exists
+
+# kind installation
+- name: Check if kind is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_kind_install_path }}"
+  register: kind_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_kind
+
+- name: Download kind binary
+  ansible.builtin.get_url:
+    url: "{{ dev_tools_kind_url }}"
+    dest: "{{ dev_tools_kind_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_kind
+    - not kind_binary.stat.exists
+
 - name: Dev tools summary
   ansible.builtin.debug:
     msg: |
       Dev tools installed (dev_tools_install={{ dev_tools_install }}):
         - Database clients: {{ dev_tools_database_clients | join(', ') }}
         - Git extras: {{ dev_tools_git_extras | join(', ') }}
+        - DevOps tools: {{ dev_tools_devops | join(', ') }}
         - Data tools: {{ dev_tools_data_tools | join(', ') }}
         - Network tools: {{ dev_tools_network_tools | join(', ') }}
         - Modern CLI: {{ dev_tools_modern_cli | join(', ') }}
@@ -548,6 +717,10 @@
         - kubectl: {{ dev_tools_install_kubectl }}
         - Helm: {{ dev_tools_install_helm }}
         - k9s: {{ dev_tools_install_k9s }}
+        - doctl: {{ dev_tools_install_doctl }}
+        - act: {{ dev_tools_install_act }}
+        - Packer: {{ dev_tools_install_packer }}
+        - kind: {{ dev_tools_install_kind }}
         - AWS CLI: {{ dev_tools_install_aws_cli }}
         - Google Cloud SDK: {{ dev_tools_install_gcloud }}
         - dust (cargo): {{ dev_tools_install_dust }}

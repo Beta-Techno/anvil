@@ -14,6 +14,11 @@ dev_tools_git_extras:
   - git-lfs           # Git Large File Storage
   - pre-commit        # Git hooks framework
 
+# DevOps & CI/CD tools
+dev_tools_devops:
+  - ansible-lint      # Static analysis for Ansible playbooks
+  - hadolint          # Dockerfile linter
+
 # Data processing tools
 dev_tools_data_tools:
   - jq                # JSON query/processor
@@ -77,6 +82,12 @@ dev_tools_install_lazygit: true
 dev_tools_install_delta: true
 dev_tools_install_ghorg: true
 
+# DevOps & IaC tools
+dev_tools_install_doctl: true     # DigitalOcean CLI
+dev_tools_install_act: true       # Run GitHub Actions locally
+dev_tools_install_packer: true    # Image builder for cloud/VM
+dev_tools_install_kind: true      # Kubernetes in Docker (local clusters)
+
 # AWS CLI v2 installation (via official installer)
 dev_tools_aws_cli_zip_url: "https://awscli.amazonaws.com/awscli-exe-linux-{{ 'x86_64' if apt_arch == 'amd64' else 'aarch64' }}.zip"
 dev_tools_aws_cli_install_dir: /usr/local/aws-cli
@@ -134,3 +145,23 @@ dev_tools_k9s_install_path: /usr/local/bin/k9s
 # Google Cloud SDK installation (via Google apt repository)
 dev_tools_gcloud_gpg_url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
 dev_tools_gcloud_repo: "deb [arch={{ apt_arch }}] https://packages.cloud.google.com/apt cloud-sdk main"
+
+# doctl installation (via GitHub releases)
+dev_tools_doctl_version: "1.119.0"
+dev_tools_doctl_url: "https://github.com/digitalocean/doctl/releases/download/v{{ dev_tools_doctl_version }}/doctl-{{ dev_tools_doctl_version }}-linux-{{ apt_arch }}.tar.gz"
+dev_tools_doctl_install_path: /usr/local/bin/doctl
+
+# act installation (via GitHub releases)
+dev_tools_act_version: "0.2.73"
+dev_tools_act_url: "https://github.com/nektos/act/releases/download/v{{ dev_tools_act_version }}/act_Linux_{{ 'x86_64' if apt_arch == 'amd64' else 'arm64' }}.tar.gz"
+dev_tools_act_install_path: /usr/local/bin/act
+
+# Packer installation (via HashiCorp releases)
+dev_tools_packer_version: "1.11.2"
+dev_tools_packer_url: "https://releases.hashicorp.com/packer/{{ dev_tools_packer_version }}/packer_{{ dev_tools_packer_version }}_linux_{{ apt_arch }}.zip"
+dev_tools_packer_install_path: /usr/local/bin/packer
+
+# kind installation (via GitHub releases)
+dev_tools_kind_version: "0.26.0"
+dev_tools_kind_url: "https://kind.sigs.k8s.io/dl/v{{ dev_tools_kind_version }}/kind-linux-{{ apt_arch }}"
+dev_tools_kind_install_path: /usr/local/bin/kind
