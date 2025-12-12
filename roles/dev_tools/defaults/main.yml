@@ -22,6 +22,10 @@ dev_tools_data_tools:
 dev_tools_network_tools:
   - httpie            # User-friendly HTTP client
   - netcat-openbsd    # TCP/UDP networking utility (modern netcat)
+  - rsync             # Fast file sync and transfer
+  - mtr               # Network diagnostic tool (traceroute + ping)
+  - nmap              # Network scanner and security auditing
+  - socat             # Advanced socket utilities
 
 # Modern CLI tools
 dev_tools_modern_cli:
@@ -51,6 +55,15 @@ dev_tools_install_terragrunt: true
 dev_tools_install_ngrok: true
 dev_tools_install_bitwarden_cli: true
 
+# Kubernetes tools
+dev_tools_install_kubectl: true
+dev_tools_install_helm: true
+dev_tools_install_k9s: true
+
+# Cloud provider CLIs
+dev_tools_install_aws_cli: true
+dev_tools_install_gcloud: true
+
 # Terraform installation (via HashiCorp apt repository)
 dev_tools_terraform_gpg_url: https://apt.releases.hashicorp.com/gpg
 dev_tools_terraform_repo: "deb [arch={{ apt_arch }}] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
@@ -63,3 +76,20 @@ dev_tools_terragrunt_install_path: /usr/local/bin/terragrunt
 # ngrok installation (via ngrok apt repository)
 dev_tools_ngrok_gpg_url: https://ngrok-agent.s3.amazonaws.com/ngrok.asc
 dev_tools_ngrok_repo: "deb [arch={{ apt_arch }}] https://ngrok-agent.s3.amazonaws.com buster main"
+
+# kubectl installation (via Kubernetes apt repository)
+dev_tools_kubectl_gpg_url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
+dev_tools_kubectl_repo: "deb [arch={{ apt_arch }}] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /"
+
+# Helm installation (via script)
+dev_tools_helm_install_script: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+dev_tools_helm_install_path: /usr/local/bin/helm
+
+# k9s installation (via GitHub releases)
+dev_tools_k9s_version: "0.32.7"
+dev_tools_k9s_url: "https://github.com/derailed/k9s/releases/download/v{{ dev_tools_k9s_version }}/k9s_Linux_{{ apt_arch }}.tar.gz"
+dev_tools_k9s_install_path: /usr/local/bin/k9s
+
+# Google Cloud SDK installation (via Google apt repository)
+dev_tools_gcloud_gpg_url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+dev_tools_gcloud_repo: "deb [arch={{ apt_arch }}] https://packages.cloud.google.com/apt cloud-sdk main"

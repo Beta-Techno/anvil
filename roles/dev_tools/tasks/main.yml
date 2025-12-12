@@ -168,6 +168,136 @@
     - dev_tools_install
     - dev_tools_install_ngrok
 
+# kubectl installation
+- name: Add Kubernetes GPG key for kubectl
+  ansible.builtin.apt_key:
+    url: "{{ dev_tools_kubectl_gpg_url }}"
+    state: present
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_kubectl
+
+- name: Add Kubernetes repository for kubectl
+  ansible.builtin.apt_repository:
+    repo: "{{ dev_tools_kubectl_repo }}"
+    state: present
+    filename: kubernetes
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_kubectl
+
+- name: Install kubectl
+  ansible.builtin.apt:
+    name: kubectl
+    state: present
+    update_cache: true
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_kubectl
+
+# Helm installation
+- name: Check if Helm is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_helm_install_path }}"
+  register: helm_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_helm
+
+- name: Install Helm via official script
+  ansible.builtin.shell: |
+    curl -fsSL {{ dev_tools_helm_install_script }} | bash
+  args:
+    executable: /bin/bash
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_helm
+    - not helm_binary.stat.exists
+
+# k9s installation
+- name: Check if k9s is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_k9s_install_path }}"
+  register: k9s_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_k9s
+
+- name: Download and extract k9s
+  ansible.builtin.unarchive:
+    src: "{{ dev_tools_k9s_url }}"
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_k9s
+    - not k9s_binary.stat.exists
+
+- name: Install k9s binary
+  ansible.builtin.copy:
+    src: /tmp/k9s
+    dest: "{{ dev_tools_k9s_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_k9s
+    - not k9s_binary.stat.exists
+
+- name: Clean up k9s temp files
+  ansible.builtin.file:
+    path: /tmp/k9s
+    state: absent
+  when:
+    - dev_tools_install
+    - dev_tools_install_k9s
+    - not k9s_binary.stat.exists
+
+# AWS CLI installation
+- name: Install AWS CLI
+  ansible.builtin.apt:
+    name: awscli
+    state: present
+    update_cache: true
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_aws_cli
+
+# Google Cloud SDK installation
+- name: Add Google Cloud GPG key
+  ansible.builtin.apt_key:
+    url: "{{ dev_tools_gcloud_gpg_url }}"
+    state: present
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_gcloud
+
+- name: Add Google Cloud SDK repository
+  ansible.builtin.apt_repository:
+    repo: "{{ dev_tools_gcloud_repo }}"
+    state: present
+    filename: google-cloud-sdk
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_gcloud
+
+- name: Install Google Cloud SDK
+  ansible.builtin.apt:
+    name: google-cloud-cli
+    state: present
+    update_cache: true
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_gcloud
+
 - name: Dev tools summary
   ansible.builtin.debug:
     msg: |
@@ -183,4 +313,9 @@
         - Terragrunt: {{ dev_tools_install_terragrunt }}
         - ngrok: {{ dev_tools_install_ngrok }}
         - Bitwarden CLI: {{ dev_tools_install_bitwarden_cli }}
+        - kubectl: {{ dev_tools_install_kubectl }}
+        - Helm: {{ dev_tools_install_helm }}
+        - k9s: {{ dev_tools_install_k9s }}
+        - AWS CLI: {{ dev_tools_install_aws_cli }}
+        - Google Cloud SDK: {{ dev_tools_install_gcloud }}
   when: dev_tools_install
