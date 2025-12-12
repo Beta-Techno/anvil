@@ -1,0 +1,8 @@
+---
+activitywatch_install: true
+
+# ActivityWatch installation (via GitHub releases)
+activitywatch_version: "0.13.2"
+activitywatch_url: "https://github.com/ActivityWatch/activitywatch/releases/download/v{{ activitywatch_version }}/activitywatch-v{{ activitywatch_version }}-linux-x86_64.zip"
+activitywatch_install_dir: "{{ ansible_env.HOME }}/.local/share/activitywatch"
+activitywatch_autostart: true

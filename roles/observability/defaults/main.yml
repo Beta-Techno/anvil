@@ -5,6 +5,9 @@ observability_install_promtail: true
 observability_install_osquery: true
 observability_install_fleetctl: false  # Only on admin boxes
 
+# Tier 1 - Per-node dashboards (opt-in)
+observability_install_netdata: false   # Real-time per-node web dashboard
+
 # Connection details (leave blank to install but not configure)
 # Provide these to wire agents to your NixOS observability stack
 observability_loki_endpoint: ""              # e.g., "https://loki.example.com:3100"

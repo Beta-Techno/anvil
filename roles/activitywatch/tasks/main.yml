@@ -1,0 +1,90 @@
+---
+- name: Skip ActivityWatch when disabled
+  ansible.builtin.debug:
+    msg: "ActivityWatch install skipped (activitywatch_install=false)."
+  when: not activitywatch_install
+
+- name: Check if ActivityWatch is already installed
+  ansible.builtin.stat:
+    path: "{{ activitywatch_install_dir }}"
+  register: activitywatch_dir
+  when: activitywatch_install
+
+- name: Create ActivityWatch installation directory
+  ansible.builtin.file:
+    path: "{{ activitywatch_install_dir }}"
+    state: directory
+    mode: "0755"
+  when:
+    - activitywatch_install
+    - not activitywatch_dir.stat.exists
+
+- name: Download and extract ActivityWatch
+  ansible.builtin.unarchive:
+    src: "{{ activitywatch_url }}"
+    dest: "{{ activitywatch_install_dir }}"
+    remote_src: true
+    extra_opts: [--strip-components=1]
+  when:
+    - activitywatch_install
+    - not activitywatch_dir.stat.exists
+
+- name: Create ActivityWatch desktop entry directory
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/share/applications"
+    state: directory
+    mode: "0755"
+  when: activitywatch_install
+
+- name: Create ActivityWatch desktop entry
+  ansible.builtin.copy:
+    content: |
+      [Desktop Entry]
+      Version=1.0
+      Type=Application
+      Name=ActivityWatch
+      Comment=Time tracking and productivity monitoring
+      Exec={{ activitywatch_install_dir }}/aw-qt
+      Icon={{ activitywatch_install_dir }}/media/logo/logo.png
+      Terminal=false
+      Categories=Utility;Office;
+    dest: "{{ ansible_env.HOME }}/.local/share/applications/activitywatch.desktop"
+    mode: "0644"
+  when: activitywatch_install
+
+- name: Create ActivityWatch autostart directory
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/autostart"
+    state: directory
+    mode: "0755"
+  when:
+    - activitywatch_install
+    - activitywatch_autostart
+
+- name: Create ActivityWatch autostart entry
+  ansible.builtin.copy:
+    content: |
+      [Desktop Entry]
+      Version=1.0
+      Type=Application
+      Name=ActivityWatch
+      Comment=Time tracking and productivity monitoring
+      Exec={{ activitywatch_install_dir }}/aw-qt
+      Icon={{ activitywatch_install_dir }}/media/logo/logo.png
+      Terminal=false
+      Categories=Utility;Office;
+      X-GNOME-Autostart-enabled=true
+    dest: "{{ ansible_env.HOME }}/.config/autostart/activitywatch.desktop"
+    mode: "0644"
+  when:
+    - activitywatch_install
+    - activitywatch_autostart
+
+- name: ActivityWatch summary
+  ansible.builtin.debug:
+    msg: |
+      ActivityWatch installed at {{ activitywatch_install_dir }}
+      Web UI: http://localhost:5600
+      Autostart: {{ activitywatch_autostart }}
+      Launch with: {{ activitywatch_install_dir }}/aw-qt
+  when: activitywatch_install

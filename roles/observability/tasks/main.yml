@@ -223,6 +223,28 @@
     - observability_install_fleetctl
     - not fleetctl_binary.stat.exists
 
+# Netdata installation (Tier 1 - opt-in)
+- name: Install Netdata
+  ansible.builtin.shell: |
+    curl -Ss https://my-netdata.io/kickstart.sh | bash -s -- --dont-wait --stable-channel
+  args:
+    creates: /usr/sbin/netdata
+  become: true
+  when: observability_install_netdata
+
+- name: Enable and start Netdata
+  ansible.builtin.systemd:
+    name: netdata
+    enabled: true
+    state: started
+  become: true
+  when: observability_install_netdata
+
+- name: Notify about Netdata access
+  ansible.builtin.debug:
+    msg: "Netdata installed and running at http://localhost:19999"
+  when: observability_install_netdata
+
 - name: Observability summary
   ansible.builtin.debug:
     msg: |
@@ -231,6 +253,7 @@
         - Promtail: {{ observability_install_promtail }} (enabled: {{ promtail_configured | default(false) }})
         - osquery: {{ observability_install_osquery }} (enabled: {{ osquery_configured | default(false) }})
         - fleetctl: {{ observability_install_fleetctl }}
+        - Netdata: {{ observability_install_netdata }}
 
       To configure agents, provide connection details in vars:
         - observability_loki_endpoint (for Promtail)

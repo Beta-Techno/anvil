@@ -35,6 +35,7 @@
     - { role: docker_desktop, tags: [docker_desktop, workstation], become: true }
     - { role: nomachine, tags: [nomachine, workstation], become: true }
     - { role: terminal_extras, tags: [terminal_extras, workstation], become: true }
+    - { role: activitywatch, tags: [activitywatch, workstation] }
     - { role: flatpak_apps, tags: [flatpak_apps, workstation], become: true }
     - { role: snap_apps, tags: [snap_apps, workstation], become: true }
     - { role: cleanup, tags: [cleanup], become: true }
