@@ -41,7 +41,6 @@ dev_tools_monitoring:
   - btop              # Modern system monitor (CPU, RAM, disk, net)
   - iotop             # IO usage by process
   - ncdu              # Disk usage explorer (TUI)
-  - dust              # Fast disk usage analyzer
 
 # Secret management tools
 dev_tools_secrets:
@@ -63,6 +62,9 @@ dev_tools_install_k9s: true
 # Cloud provider CLIs
 dev_tools_install_aws_cli: true
 dev_tools_install_gcloud: true
+
+# Optional Rust-based tools (requires cargo from langs role)
+dev_tools_install_dust: false
 
 # Terraform installation (via HashiCorp apt repository)
 dev_tools_terraform_gpg_url: https://apt.releases.hashicorp.com/gpg

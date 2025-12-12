@@ -24,6 +24,7 @@ dev_tools_install_helm: true              # Helm (via official script)
 dev_tools_install_k9s: true               # k9s (via GitHub releases)
 dev_tools_install_aws_cli: true           # AWS CLI (via apt)
 dev_tools_install_gcloud: true            # Google Cloud SDK (via Google apt repo)
+dev_tools_install_dust: false             # dust disk analyzer (via cargo, requires Rust)
 
 # AI Coding Agents
 ai_agents_install_claude: true   # Claude Code CLI (interactive auth)

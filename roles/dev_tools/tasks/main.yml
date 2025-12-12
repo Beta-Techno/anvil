@@ -298,6 +298,34 @@
     - dev_tools_install
     - dev_tools_install_gcloud
 
+# dust installation (Rust tool via cargo)
+- name: Check if cargo is available for dust
+  ansible.builtin.command: which cargo
+  register: cargo_check
+  changed_when: false
+  failed_when: false
+  when:
+    - dev_tools_install
+    - dev_tools_install_dust
+
+- name: Install dust via cargo
+  ansible.builtin.command: cargo install du-dust
+  when:
+    - dev_tools_install
+    - dev_tools_install_dust
+    - cargo_check.rc == 0
+  register: dust_install
+  changed_when: "'Installing' in dust_install.stderr"
+  failed_when: false
+
+- name: Warn if cargo not available for dust
+  ansible.builtin.debug:
+    msg: "dust requires cargo (Rust). Enable langs_install_rust=true to install Rust toolchain."
+  when:
+    - dev_tools_install
+    - dev_tools_install_dust
+    - cargo_check.rc != 0
+
 - name: Dev tools summary
   ansible.builtin.debug:
     msg: |
@@ -318,4 +346,5 @@
         - k9s: {{ dev_tools_install_k9s }}
         - AWS CLI: {{ dev_tools_install_aws_cli }}
         - Google Cloud SDK: {{ dev_tools_install_gcloud }}
+        - dust (cargo): {{ dev_tools_install_dust }}
   when: dev_tools_install
