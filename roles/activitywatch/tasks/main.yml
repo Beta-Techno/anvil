@@ -19,15 +19,32 @@
     - activitywatch_install
     - not activitywatch_dir.stat.exists
 
-- name: Download and extract ActivityWatch
+- name: Download and extract ActivityWatch to temp directory
   ansible.builtin.unarchive:
     src: "{{ activitywatch_url }}"
-    dest: "{{ activitywatch_install_dir }}"
+    dest: /tmp
     remote_src: true
-    extra_opts: [--strip-components=1]
   when:
     - activitywatch_install
     - not activitywatch_dir.stat.exists
+
+- name: Find extracted ActivityWatch directory
+  ansible.builtin.find:
+    paths: /tmp
+    patterns: "activitywatch"
+    file_type: directory
+  register: aw_extracted_dir
+  when:
+    - activitywatch_install
+    - not activitywatch_dir.stat.exists
+
+- name: Move ActivityWatch to install directory
+  ansible.builtin.command:
+    cmd: "mv {{ aw_extracted_dir.files[0].path }} {{ activitywatch_install_dir }}"
+  when:
+    - activitywatch_install
+    - not activitywatch_dir.stat.exists
+    - aw_extracted_dir.files | length > 0
 
 - name: Create ActivityWatch desktop entry directory
   ansible.builtin.file:
