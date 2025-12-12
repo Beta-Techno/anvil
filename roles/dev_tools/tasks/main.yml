@@ -52,6 +52,42 @@
   become: true
   when: dev_tools_install
 
+- name: Install secret management tools
+  ansible.builtin.apt:
+    name: "{{ dev_tools_secrets }}"
+    state: present
+    update_cache: true
+  become: true
+  when: dev_tools_install
+
+# Bitwarden CLI installation
+- name: Check if snapd is available for Bitwarden CLI
+  ansible.builtin.command: which snap
+  register: snap_check
+  changed_when: false
+  failed_when: false
+  when:
+    - dev_tools_install
+    - dev_tools_install_bitwarden_cli
+
+- name: Install Bitwarden CLI via snap
+  community.general.snap:
+    name: bw
+    state: present
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_bitwarden_cli
+    - snap_check.rc == 0
+
+- name: Warn if snapd not available for Bitwarden CLI
+  ansible.builtin.debug:
+    msg: "Bitwarden CLI requires snapd. Install snapd or use npm: npm install -g @bitwarden/cli"
+  when:
+    - dev_tools_install
+    - dev_tools_install_bitwarden_cli
+    - snap_check.rc != 0
+
 # Terraform installation
 - name: Add HashiCorp GPG key for Terraform
   ansible.builtin.apt_key:
@@ -142,7 +178,9 @@
         - Network tools: {{ dev_tools_network_tools | join(', ') }}
         - Modern CLI: {{ dev_tools_modern_cli | join(', ') }}
         - Monitoring: {{ dev_tools_monitoring | join(', ') }}
+        - Secrets: {{ dev_tools_secrets | join(', ') }}
         - Terraform: {{ dev_tools_install_terraform }}
         - Terragrunt: {{ dev_tools_install_terragrunt }}
         - ngrok: {{ dev_tools_install_ngrok }}
+        - Bitwarden CLI: {{ dev_tools_install_bitwarden_cli }}
   when: dev_tools_install
