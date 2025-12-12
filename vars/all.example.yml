@@ -13,6 +13,13 @@ snap_apps_install: true
 chezmoi_install: true
 chezmoi_apply: true
 
+# Security Tools
+security_ufw_enable: false                # Enable UFW firewall (careful on SSH-only hosts)
+security_fail2ban_enable: true            # Enable fail2ban brute-force protection
+security_install_certbot: false           # Let's Encrypt SSL certificate management
+security_install_auditd: false            # Linux audit framework
+security_install_lynis: false             # Security auditing tool
+
 # Developer Tools
 dev_tools_install: true                   # Database clients, gh CLI, httpie, jq, yq, fd, bat, rsync, etc.
 dev_tools_install_sops: true              # sops secret encryption (via GitHub releases)

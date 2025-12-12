@@ -1,0 +1,31 @@
+---
+# Tier 0 - Foundational security tools (always install)
+security_tier0_packages:
+  - ufw               # Uncomplicated Firewall
+  - openssl           # SSL/TLS toolkit
+  - fail2ban          # Brute-force attack prevention
+
+# Tier 1 - Advanced security tools (opt-in for serious nodes)
+security_install_certbot: false
+security_install_auditd: false
+security_install_lynis: false
+
+security_tier1_packages:
+  - certbot           # Let's Encrypt SSL certificate management
+  - auditd            # Linux audit framework
+  - lynis             # Security auditing tool
+
+# UFW configuration
+security_ufw_enable: false  # Set to true to enable firewall (careful on SSH-only hosts)
+security_ufw_default_incoming: deny
+security_ufw_default_outgoing: allow
+security_ufw_allowed_ports:
+  - 22/tcp            # SSH
+  # - 80/tcp          # HTTP (uncomment if needed)
+  # - 443/tcp         # HTTPS (uncomment if needed)
+
+# fail2ban configuration
+security_fail2ban_enable: true
+security_fail2ban_bantime: 3600       # Ban for 1 hour
+security_fail2ban_findtime: 600       # 10 minutes
+security_fail2ban_maxretry: 5         # 5 failed attempts

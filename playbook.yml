@@ -9,6 +9,7 @@
     ansible_python_interpreter: /usr/bin/python3
   roles:
     - { role: base, tags: [base, essential], become: true }
+    - { role: security, tags: [security, essential, server], become: true }
     - { role: drivers, tags: [drivers, essential], become: true }
     - { role: docker, tags: [docker, server, essential], become: true }
     - { role: tailscale, tags: [tailscale, server], become: true }

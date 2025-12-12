@@ -1,0 +1,100 @@
+---
+# Tier 0 - Foundational security tools
+- name: Install Tier 0 security packages
+  ansible.builtin.apt:
+    name: "{{ security_tier0_packages }}"
+    state: present
+    update_cache: true
+  become: true
+
+# UFW configuration
+- name: Configure UFW default policies
+  ansible.builtin.ufw:
+    direction: "{{ item.direction }}"
+    policy: "{{ item.policy }}"
+  loop:
+    - { direction: incoming, policy: "{{ security_ufw_default_incoming }}" }
+    - { direction: outgoing, policy: "{{ security_ufw_default_outgoing }}" }
+  become: true
+  when: security_ufw_enable
+
+- name: Allow specified ports through UFW
+  ansible.builtin.ufw:
+    rule: allow
+    port: "{{ item.split('/')[0] }}"
+    proto: "{{ item.split('/')[1] }}"
+  loop: "{{ security_ufw_allowed_ports }}"
+  become: true
+  when: security_ufw_enable
+
+- name: Enable UFW
+  ansible.builtin.ufw:
+    state: enabled
+  become: true
+  when: security_ufw_enable
+
+- name: Warn if UFW is disabled
+  ansible.builtin.debug:
+    msg: "UFW installed but not enabled (security_ufw_enable=false). Enable manually with 'sudo ufw enable' when ready."
+  when: not security_ufw_enable
+
+# fail2ban configuration
+- name: Enable and start fail2ban service
+  ansible.builtin.systemd:
+    name: fail2ban
+    enabled: "{{ security_fail2ban_enable }}"
+    state: "{{ 'started' if security_fail2ban_enable else 'stopped' }}"
+  become: true
+
+- name: Configure fail2ban defaults
+  ansible.builtin.copy:
+    content: |
+      [DEFAULT]
+      bantime = {{ security_fail2ban_bantime }}
+      findtime = {{ security_fail2ban_findtime }}
+      maxretry = {{ security_fail2ban_maxretry }}
+
+      [sshd]
+      enabled = true
+    dest: /etc/fail2ban/jail.local
+    mode: "0644"
+  become: true
+  when: security_fail2ban_enable
+  notify: restart fail2ban
+
+# Tier 1 - Advanced security tools (conditional)
+- name: Build Tier 1 package list
+  ansible.builtin.set_fact:
+    security_tier1_install: "{{ security_tier1_install | default([]) + [item] }}"
+  loop:
+    - { package: certbot, condition: "{{ security_install_certbot }}" }
+    - { package: auditd, condition: "{{ security_install_auditd }}" }
+    - { package: lynis, condition: "{{ security_install_lynis }}" }
+  when: item.condition | bool
+
+- name: Install Tier 1 security packages
+  ansible.builtin.apt:
+    name: "{{ security_tier1_install | map(attribute='package') | list }}"
+    state: present
+    update_cache: true
+  become: true
+  when: security_tier1_install is defined and security_tier1_install | length > 0
+
+- name: Enable and start auditd service
+  ansible.builtin.systemd:
+    name: auditd
+    enabled: true
+    state: started
+  become: true
+  when: security_install_auditd
+
+- name: Security tools summary
+  ansible.builtin.debug:
+    msg: |
+      Security tools installed:
+        - Tier 0 (always): {{ security_tier0_packages | join(', ') }}
+        - UFW enabled: {{ security_ufw_enable }}
+        - fail2ban enabled: {{ security_fail2ban_enable }}
+        - certbot: {{ security_install_certbot }}
+        - auditd: {{ security_install_auditd }}
+        - lynis: {{ security_install_lynis }}
