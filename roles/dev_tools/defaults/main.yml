@@ -62,6 +62,10 @@ dev_tools_install_k9s: true
 dev_tools_install_aws_cli: true
 dev_tools_install_gcloud: true
 
+# AWS CLI v2 installation (via official installer)
+dev_tools_aws_cli_zip_url: "https://awscli.amazonaws.com/awscli-exe-linux-{{ 'x86_64' if apt_arch == 'amd64' else 'aarch64' }}.zip"
+dev_tools_aws_cli_install_dir: /usr/local/aws-cli
+
 # Optional Rust-based tools (requires cargo from langs role)
 dev_tools_install_dust: false
 

@@ -277,16 +277,65 @@
     - dev_tools_install_k9s
     - not k9s_binary.stat.exists
 
-# AWS CLI installation
-- name: Install AWS CLI
+# AWS CLI v2 installation
+- name: Check if AWS CLI is already installed
+  ansible.builtin.command: aws --version
+  register: aws_cli_check
+  changed_when: false
+  failed_when: false
+  when:
+    - dev_tools_install
+    - dev_tools_install_aws_cli
+
+- name: Download AWS CLI v2 installer
+  ansible.builtin.get_url:
+    url: "{{ dev_tools_aws_cli_zip_url }}"
+    dest: /tmp/awscliv2.zip
+    mode: "0644"
+  when:
+    - dev_tools_install
+    - dev_tools_install_aws_cli
+    - aws_cli_check.rc != 0
+
+- name: Ensure unzip is installed for AWS CLI
   ansible.builtin.apt:
-    name: awscli
+    name: unzip
     state: present
-    update_cache: true
   become: true
   when:
     - dev_tools_install
     - dev_tools_install_aws_cli
+    - aws_cli_check.rc != 0
+
+- name: Extract AWS CLI v2 installer
+  ansible.builtin.unarchive:
+    src: /tmp/awscliv2.zip
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_aws_cli
+    - aws_cli_check.rc != 0
+
+- name: Install AWS CLI v2
+  ansible.builtin.command: /tmp/aws/install
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_aws_cli
+    - aws_cli_check.rc != 0
+
+- name: Clean up AWS CLI installer files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/awscliv2.zip
+    - /tmp/aws
+  when:
+    - dev_tools_install
+    - dev_tools_install_aws_cli
+    - aws_cli_check.rc != 0
 
 # Google Cloud SDK installation
 - name: Add Google Cloud GPG key
