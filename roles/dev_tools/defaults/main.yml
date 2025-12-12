@@ -92,8 +92,8 @@ dev_tools_delta_url: "https://github.com/dandavison/delta/releases/download/{{ d
 dev_tools_delta_install_path: /usr/local/bin/delta
 
 # ghorg installation (via GitHub releases)
-dev_tools_ghorg_version: "1.9.13"
-dev_tools_ghorg_url: "https://github.com/gabrie30/ghorg/releases/download/v{{ dev_tools_ghorg_version }}/ghorg_{{ dev_tools_ghorg_version }}_linux_{{ apt_arch }}.tar.gz"
+dev_tools_ghorg_version: "1.11.7"
+dev_tools_ghorg_url: "https://github.com/gabrie30/ghorg/releases/download/v{{ dev_tools_ghorg_version }}/ghorg_{{ dev_tools_ghorg_version }}_Linux_{{ 'x86_64' if apt_arch == 'amd64' else 'arm64' }}.tar.gz"
 dev_tools_ghorg_install_path: /usr/local/bin/ghorg
 
 # Optional Rust-based tools (requires cargo from langs role)
