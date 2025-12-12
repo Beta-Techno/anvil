@@ -60,6 +60,26 @@
   become: true
   when: dev_tools_install
 
+# sops installation
+- name: Check if sops is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_sops_install_path }}"
+  register: sops_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_sops
+
+- name: Download sops binary
+  ansible.builtin.get_url:
+    url: "{{ dev_tools_sops_url }}"
+    dest: "{{ dev_tools_sops_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_sops
+    - not sops_binary.stat.exists
+
 # Bitwarden CLI installation
 - name: Check if snapd is available for Bitwarden CLI
   ansible.builtin.command: which snap
@@ -337,6 +357,7 @@
         - Modern CLI: {{ dev_tools_modern_cli | join(', ') }}
         - Monitoring: {{ dev_tools_monitoring | join(', ') }}
         - Secrets: {{ dev_tools_secrets | join(', ') }}
+        - sops: {{ dev_tools_install_sops }}
         - Terraform: {{ dev_tools_install_terraform }}
         - Terragrunt: {{ dev_tools_install_terragrunt }}
         - ngrok: {{ dev_tools_install_ngrok }}
