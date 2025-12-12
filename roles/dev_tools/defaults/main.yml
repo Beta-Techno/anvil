@@ -27,6 +27,15 @@ dev_tools_network_tools:
   - mtr               # Network diagnostic tool (traceroute + ping)
   - nmap              # Network scanner and security auditing
   - socat             # Advanced socket utilities
+  - openssh-client    # SSH client tools (ssh, scp, sftp, ssh-keygen)
+  - sshfs             # Mount remote filesystems over SSH
+  - iperf3            # Network bandwidth measurement tool
+  - tcpdump           # Packet analyzer for network debugging
+  - dnsutils          # DNS utilities (dig, nslookup, etc.)
+  - autossh           # Persistent SSH tunnels and forwards
+  - tshark            # Wireshark CLI for packet analysis
+  - iftop             # Bandwidth usage monitor by connection
+  - wireguard-tools   # WireGuard VPN utilities
 
 # Modern CLI tools
 dev_tools_modern_cli:
