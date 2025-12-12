@@ -534,6 +534,26 @@
     - dev_tools_install_dust
     - cargo_check.rc != 0
 
+# hadolint installation
+- name: Check if hadolint is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_hadolint_install_path }}"
+  register: hadolint_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_hadolint
+
+- name: Download hadolint binary
+  ansible.builtin.get_url:
+    url: "{{ dev_tools_hadolint_url }}"
+    dest: "{{ dev_tools_hadolint_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_hadolint
+    - not hadolint_binary.stat.exists
+
 # doctl installation
 - name: Check if doctl is already installed
   ansible.builtin.stat:
@@ -717,6 +737,7 @@
         - kubectl: {{ dev_tools_install_kubectl }}
         - Helm: {{ dev_tools_install_helm }}
         - k9s: {{ dev_tools_install_k9s }}
+        - hadolint: {{ dev_tools_install_hadolint }}
         - doctl: {{ dev_tools_install_doctl }}
         - act: {{ dev_tools_install_act }}
         - Packer: {{ dev_tools_install_packer }}

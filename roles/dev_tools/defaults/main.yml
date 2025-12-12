@@ -17,7 +17,6 @@ dev_tools_git_extras:
 # DevOps & CI/CD tools
 dev_tools_devops:
   - ansible-lint      # Static analysis for Ansible playbooks
-  - hadolint          # Dockerfile linter
 
 # Data processing tools
 dev_tools_data_tools:
@@ -83,6 +82,7 @@ dev_tools_install_delta: true
 dev_tools_install_ghorg: true
 
 # DevOps & IaC tools
+dev_tools_install_hadolint: true  # Dockerfile linter
 dev_tools_install_doctl: true     # DigitalOcean CLI
 dev_tools_install_act: true       # Run GitHub Actions locally
 dev_tools_install_packer: true    # Image builder for cloud/VM
@@ -145,6 +145,11 @@ dev_tools_k9s_install_path: /usr/local/bin/k9s
 # Google Cloud SDK installation (via Google apt repository)
 dev_tools_gcloud_gpg_url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
 dev_tools_gcloud_repo: "deb [arch={{ apt_arch }}] https://packages.cloud.google.com/apt cloud-sdk main"
+
+# hadolint installation (via GitHub releases)
+dev_tools_hadolint_version: "2.12.0"
+dev_tools_hadolint_url: "https://github.com/hadolint/hadolint/releases/download/v{{ dev_tools_hadolint_version }}/hadolint-Linux-{{ 'x86_64' if apt_arch == 'amd64' else 'arm64' }}"
+dev_tools_hadolint_install_path: /usr/local/bin/hadolint
 
 # doctl installation (via GitHub releases)
 dev_tools_doctl_version: "1.119.0"
