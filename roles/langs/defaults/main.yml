@@ -1,8 +1,24 @@
 ---
+# Base build toolchain (C/C++ compiler, build tools, essential libraries)
+langs_install_build_toolchain: true
+langs_build_toolchain_packages:
+  - build-essential      # gcc, g++, make, etc.
+  - pkg-config           # Helper tool for compiling applications
+  - cmake                # Cross-platform build system
+  - ninja-build          # Small build system with focus on speed
+  - libssl-dev           # SSL/TLS development files
+  - zlib1g-dev           # Compression library development files
+  - libffi-dev           # Foreign Function Interface library
+  - clang                # C/C++ compiler (alternative to gcc)
+  - llvm                 # Compiler infrastructure
+
+# Node.js
 langs_install_node: true
 langs_nvm_version: v0.39.7
 langs_node_default: "lts/*"
+langs_install_pnpm: true           # Fast, space-efficient package manager
 
+# Python
 langs_install_python: true
 langs_pyenv_python_version: "3.11.0"
 langs_pyenv_root: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) + '/.pyenv' }}"
@@ -16,8 +32,11 @@ langs_pyenv_build_deps:
   - libffi-dev
   - liblzma-dev
   - tk-dev
+langs_install_pipx: true           # Install Python CLIs in isolated environments
+langs_install_uv: true             # Fast Python package installer and resolver
 
-langs_install_ruby: true
+# Ruby
+langs_install_ruby: false          # Disabled by default (legacy)
 langs_rbenv_ruby_version: "3.1.0"
 langs_rbenv_root: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) + '/.rbenv' }}"
 langs_ruby_build_deps:
@@ -29,10 +48,26 @@ langs_ruby_build_deps:
   - libyaml-dev
   - libffi-dev
 
+# Go
 langs_install_go: true
-langs_go_version: "1.21.0"
+langs_go_version: "1.23.5"
 langs_go_download_url: "https://go.dev/dl/go{{ langs_go_version }}.linux-{{ apt_arch }}.tar.gz"
+langs_install_golangci_lint: true  # One-stop lint runner
+langs_install_air: true            # Live reload for Go apps
 
+# Rust
 langs_install_rust: true
+langs_install_cargo_edit: true    # cargo add, rm, upgrade
+langs_install_cargo_watch: true   # Rerun tests/build on file changes
+langs_install_cargo_audit: true   # Check for vulnerable dependencies
 
-langs_install_java: true
+# .NET
+langs_install_dotnet: true
+langs_dotnet_version: "8.0"        # .NET 8 LTS
+langs_install_dotnet_ef: true      # Entity Framework migrations tool
+
+# Java
+langs_install_java: false          # Disabled by default (legacy/occasional use)
+
+# Multi-language version manager (optional)
+langs_install_rtx: false           # rtx - fast, Rust-based version manager for multiple languages

@@ -1,4 +1,13 @@
 ---
+# Install base build toolchain first (needed by all language builds)
+- name: Install base build toolchain
+  ansible.builtin.apt:
+    name: "{{ langs_build_toolchain_packages }}"
+    state: present
+    update_cache: true
+  become: true
+  when: langs_install_build_toolchain
+
 - name: Ensure shell config directory exists
   ansible.builtin.file:
     path: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.config/shell"
@@ -73,6 +82,19 @@
   become: false
   when: langs_install_node
 
+- name: Install pnpm globally via npm
+  ansible.builtin.shell: |
+    set -e
+    export NVM_DIR="{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    npm install -g pnpm
+  args:
+    executable: /bin/bash
+  become: false
+  when:
+    - langs_install_node
+    - langs_install_pnpm
+
 - name: Install pyenv
   ansible.builtin.git:
     repo: https://github.com/pyenv/pyenv.git
@@ -107,6 +129,36 @@
     PATH: "{{ langs_pyenv_root }}/bin:{{ langs_pyenv_root }}/shims:{{ ansible_env.PATH }}"
   become: false
   when: langs_install_python
+
+- name: Install pipx
+  ansible.builtin.shell: |
+    set -e
+    export PYENV_ROOT="{{ langs_pyenv_root }}"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
+    pip install --user pipx
+    pipx ensurepath
+  args:
+    executable: /bin/bash
+  environment:
+    PYENV_ROOT: "{{ langs_pyenv_root }}"
+    PATH: "{{ langs_pyenv_root }}/bin:{{ langs_pyenv_root }}/shims:{{ ansible_env.PATH }}"
+  become: false
+  when:
+    - langs_install_python
+    - langs_install_pipx
+
+- name: Install uv
+  ansible.builtin.shell: |
+    set -e
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/uv"
+  become: false
+  when:
+    - langs_install_python
+    - langs_install_uv
 
 - name: Install Ruby build dependencies
   ansible.builtin.apt:
@@ -195,6 +247,47 @@
     - langs_install_go
     - go_version_check.stdout is not defined or ("go" + langs_go_version) not in go_version_check.stdout
 
+- name: Create Go shell configuration
+  ansible.builtin.copy:
+    dest: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.config/shell/go.sh"
+    mode: "0644"
+    content: |
+      # Go
+      export PATH="/usr/local/go/bin:$PATH"
+      export PATH="$HOME/go/bin:$PATH"
+      export GOPATH="$HOME/go"
+  become: false
+  when: langs_install_go
+
+- name: Install golangci-lint
+  ansible.builtin.shell: |
+    set -e
+    curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/go/bin/golangci-lint"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+  become: false
+  when:
+    - langs_install_go
+    - langs_install_golangci_lint
+
+- name: Install air for live reload
+  ansible.builtin.shell: |
+    set -e
+    go install github.com/air-verse/air@latest
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/go/bin/air"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+    GOPATH: "{{ ansible_env.HOME }}/go"
+  become: false
+  when:
+    - langs_install_go
+    - langs_install_air
+
 - name: Install Rust toolchain (rustup)
   ansible.builtin.shell: |
     set -e
@@ -205,6 +298,100 @@
   become: false
   when: langs_install_rust
 
+- name: Create Rust shell configuration
+  ansible.builtin.copy:
+    dest: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.config/shell/rust.sh"
+    mode: "0644"
+    content: |
+      # Rust
+      . "$HOME/.cargo/env"
+  become: false
+  when: langs_install_rust
+
+- name: Install cargo-edit
+  ansible.builtin.shell: |
+    set -e
+    . "$HOME/.cargo/env"
+    cargo install cargo-edit
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/cargo-add"
+  become: false
+  when:
+    - langs_install_rust
+    - langs_install_cargo_edit
+
+- name: Install cargo-watch
+  ansible.builtin.shell: |
+    set -e
+    . "$HOME/.cargo/env"
+    cargo install cargo-watch
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/cargo-watch"
+  become: false
+  when:
+    - langs_install_rust
+    - langs_install_cargo_watch
+
+- name: Install cargo-audit
+  ansible.builtin.shell: |
+    set -e
+    . "$HOME/.cargo/env"
+    cargo install cargo-audit
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/cargo-audit"
+  become: false
+  when:
+    - langs_install_rust
+    - langs_install_cargo_audit
+
+# .NET SDK installation
+- name: Add Microsoft package repository GPG key
+  ansible.builtin.get_url:
+    url: https://packages.microsoft.com/config/ubuntu/{{ ansible_distribution_version }}/packages-microsoft-prod.deb
+    dest: /tmp/packages-microsoft-prod.deb
+    mode: "0644"
+  when: langs_install_dotnet
+
+- name: Install Microsoft package repository
+  ansible.builtin.apt:
+    deb: /tmp/packages-microsoft-prod.deb
+  become: true
+  when: langs_install_dotnet
+
+- name: Install .NET SDK
+  ansible.builtin.apt:
+    name: "dotnet-sdk-{{ langs_dotnet_version }}"
+    state: present
+    update_cache: true
+  become: true
+  when: langs_install_dotnet
+
+- name: Install Entity Framework tool
+  ansible.builtin.shell: |
+    set -e
+    dotnet tool install --global dotnet-ef
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.dotnet/tools/dotnet-ef"
+  become: false
+  when:
+    - langs_install_dotnet
+    - langs_install_dotnet_ef
+
+- name: Create .NET shell configuration
+  ansible.builtin.copy:
+    dest: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.config/shell/dotnet.sh"
+    mode: "0644"
+    content: |
+      # .NET
+      export PATH="$HOME/.dotnet/tools:$PATH"
+      export DOTNET_CLI_TELEMETRY_OPTOUT=1
+  become: false
+  when: langs_install_dotnet
+
 - name: Install Java (default-jdk)
   ansible.builtin.apt:
     name: default-jdk
@@ -213,6 +400,37 @@
   become: true
   when: langs_install_java
 
+# rtx version manager (optional)
+- name: Install rtx
+  ansible.builtin.shell: |
+    set -e
+    curl https://rtx.pub/install.sh | sh
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.local/bin/rtx"
+  become: false
+  when: langs_install_rtx
+
+- name: Create rtx shell configuration
+  ansible.builtin.copy:
+    dest: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}/.config/shell/rtx.sh"
+    mode: "0644"
+    content: |
+      # rtx version manager
+      eval "$(~/.local/bin/rtx activate bash)"
+  become: false
+  when: langs_install_rtx
+
 - name: Langs summary
   ansible.builtin.debug:
-    msg: "Languages installed (node={{ langs_install_node }}, pyenv={{ langs_install_python }}, ruby={{ langs_install_ruby }}, go={{ langs_install_go }}, rust={{ langs_install_rust }}, java={{ langs_install_java }})."
+    msg: |
+      Languages and toolchains installed:
+        - Build toolchain: {{ langs_install_build_toolchain }}
+        - Node.js: {{ langs_install_node }} (pnpm={{ langs_install_pnpm }})
+        - Python: {{ langs_install_python }} (pipx={{ langs_install_pipx }}, uv={{ langs_install_uv }})
+        - Ruby: {{ langs_install_ruby }}
+        - Go: {{ langs_install_go }} (golangci-lint={{ langs_install_golangci_lint }}, air={{ langs_install_air }})
+        - Rust: {{ langs_install_rust }} (cargo-edit={{ langs_install_cargo_edit }}, cargo-watch={{ langs_install_cargo_watch }}, cargo-audit={{ langs_install_cargo_audit }})
+        - .NET: {{ langs_install_dotnet }} (dotnet-ef={{ langs_install_dotnet_ef }})
+        - Java: {{ langs_install_java }}
+        - rtx: {{ langs_install_rtx }}

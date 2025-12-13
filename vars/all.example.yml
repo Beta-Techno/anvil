@@ -66,6 +66,26 @@ dev_tools_install_dust: false             # dust disk analyzer (via cargo, requi
 ai_agents_install_claude: true   # Claude Code CLI (interactive auth)
 ai_agents_install_codex: true    # OpenAI Codex CLI (requires Node.js >= 18, interactive auth)
 
+# Languages & Toolchains
+langs_install_build_toolchain: true       # C/C++ build tools, cmake, ninja, etc.
+langs_install_node: true                  # Node.js via nvm
+langs_install_pnpm: true                  # Fast, space-efficient npm alternative
+langs_install_python: true                # Python via pyenv
+langs_install_pipx: true                  # Install Python CLIs in isolated environments
+langs_install_uv: true                    # Fast Python package installer
+langs_install_ruby: false                 # Ruby via rbenv (legacy, disabled by default)
+langs_install_go: true                    # Go toolchain
+langs_install_golangci_lint: true         # Go linter
+langs_install_air: true                   # Live reload for Go apps
+langs_install_rust: true                  # Rust via rustup
+langs_install_cargo_edit: true            # cargo add, rm, upgrade
+langs_install_cargo_watch: true           # Rerun tests/build on file changes
+langs_install_cargo_audit: true           # Check for vulnerable dependencies
+langs_install_dotnet: true                # .NET SDK
+langs_install_dotnet_ef: true             # Entity Framework migrations tool
+langs_install_java: false                 # Java JDK (legacy, disabled by default)
+langs_install_rtx: false                  # Multi-language version manager (optional)
+
 # App lists
 flatpak_apps_list:
   - com.discordapp.Discord
