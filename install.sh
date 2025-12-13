@@ -19,7 +19,7 @@ TAGS="${TAGS:-all}"
 VARS_FILE="${VARS_FILE:-vars/all.yml}"
 
 repo_name="$(basename "$REPO_URL" .git)"
-TARGET_DIR="${TARGET_DIR:-/tmp/${repo_name:-anvil}-anvil}"
+TARGET_DIR="${TARGET_DIR:-$HOME/.cache/anvil-bootstrap}"
 
 if ! command -v git >/dev/null 2>&1; then
   echo "[install] git not found; installing via apt…"
@@ -33,8 +33,14 @@ if ! sudo -n true >/dev/null 2>&1; then
   sudo -v
 fi
 
-# Clean up previous bootstrap directory (may contain root-owned files from Ansible)
-sudo rm -rf "$TARGET_DIR"
+# Ensure .cache directory exists
+mkdir -p "$HOME/.cache"
+
+# Clean up previous bootstrap directory (use sudo in case Ansible created root files)
+if [[ -d "$TARGET_DIR" ]]; then
+  sudo rm -rf "$TARGET_DIR"
+fi
+
 git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$TARGET_DIR"
 
 cd "$TARGET_DIR"
