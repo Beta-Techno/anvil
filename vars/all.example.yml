@@ -58,7 +58,7 @@ dev_tools_install_xsv: true               # Fast Rust CSV toolkit (via GitHub re
 dev_tools_install_mongosh: true           # MongoDB shell (via MongoDB releases)
 dev_tools_install_etcdctl: true           # etcd CLI for k8s config stores (via GitHub releases)
 dev_tools_install_influx: true            # InfluxDB CLI (via InfluxData releases)
-dev_tools_install_aws_cli: true           # AWS CLI (via official installer)
+dev_tools_install_aws_cli: false          # AWS CLI (disabled - may lock down /tmp)
 dev_tools_install_gcloud: true            # Google Cloud SDK (via Google apt repo)
 dev_tools_install_dust: true              # dust disk analyzer (via cargo, requires Rust)
 

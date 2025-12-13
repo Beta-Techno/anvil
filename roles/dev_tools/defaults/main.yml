@@ -83,7 +83,7 @@ dev_tools_install_helm: true
 dev_tools_install_k9s: true
 
 # Cloud provider CLIs
-dev_tools_install_aws_cli: true
+dev_tools_install_aws_cli: false  # Disabled - may lock down /tmp permissions
 dev_tools_install_gcloud: true
 
 # Git tools
