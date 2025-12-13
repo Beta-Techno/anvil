@@ -876,33 +876,22 @@
     - dev_tools_install
     - dev_tools_install_influx
 
-- name: Create temp directory for influx extraction
-  ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.cache/ansible-influx"
-    state: directory
-    mode: "0755"
-  when:
-    - dev_tools_install
-    - dev_tools_install_influx
-    - not influx_binary.stat.exists
-
 - name: Download and extract influx
   ansible.builtin.unarchive:
     src: "{{ dev_tools_influx_url }}"
-    dest: "{{ ansible_env.HOME }}/.cache/ansible-influx"
+    dest: /tmp
     remote_src: true
   when:
     - dev_tools_install
     - dev_tools_install_influx
     - not influx_binary.stat.exists
 
-- name: Find extracted influx binary
+- name: Find extracted influx directory
   ansible.builtin.find:
-    paths: "{{ ansible_env.HOME }}/.cache/ansible-influx"
-    patterns: "influx"
-    file_type: file
-    recurse: true
-  register: influx_files
+    paths: /tmp
+    patterns: "influxdb2-client-*"
+    file_type: directory
+  register: influx_dir
   when:
     - dev_tools_install
     - dev_tools_install_influx
@@ -910,7 +899,7 @@
 
 - name: Install influx binary
   ansible.builtin.copy:
-    src: "{{ influx_files.files[0].path }}"
+    src: "{{ influx_dir.files[0].path }}/influx"
     dest: "{{ dev_tools_influx_install_path }}"
     mode: "0755"
   become: true
@@ -918,16 +907,18 @@
     - dev_tools_install
     - dev_tools_install_influx
     - not influx_binary.stat.exists
-    - influx_files.files | length > 0
+    - influx_dir.files | length > 0
 
 - name: Clean up influx temp files
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.cache/ansible-influx"
+    path: "{{ item }}"
     state: absent
+  loop: "{{ influx_dir.files | map(attribute='path') | list }}"
   when:
     - dev_tools_install
     - dev_tools_install_influx
     - not influx_binary.stat.exists
+    - influx_dir.files | length > 0
 
 - name: Dev tools summary
   ansible.builtin.debug:
