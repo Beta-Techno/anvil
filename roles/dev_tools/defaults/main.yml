@@ -1,12 +1,18 @@
 ---
 dev_tools_install: true
 
-# Database clients
+# Database clients (core CLIs)
 dev_tools_database_clients:
-  - postgresql-client
-  - mysql-client
-  - redis-tools
-  - sqlite3
+  - postgresql-client      # psql, pg_dump, pg_restore, pg_basebackup
+  - mysql-client           # mysql, mysqldump
+  - redis-tools            # redis-cli, redis-benchmark
+  - sqlite3                # sqlite3 shell
+
+# Database TUI enhancements (nicer interactive clients)
+dev_tools_database_tui:
+  - pgcli                  # PostgreSQL with autocompletion & syntax highlighting
+  - mycli                  # MySQL/MariaDB with autocompletion & syntax highlighting
+  - litecli                # SQLite with autocompletion & syntax highlighting
 
 # Git enhancements
 dev_tools_git_extras:
@@ -22,6 +28,10 @@ dev_tools_devops:
 dev_tools_data_tools:
   - jq                # JSON query/processor
   - yq                # YAML query/processor
+  - miller            # awk for CSV/TSV/JSON (mlr command)
+  - csvkit            # CSV toolkit (csvcut, csvjoin, csvgrep, etc.)
+  - pv                # Pipe viewer for monitoring data transfer progress
+  - q-text-as-data    # Run SQL on CSV/TSV files
 
 # Network and API tools
 dev_tools_network_tools:
@@ -80,6 +90,15 @@ dev_tools_install_gcloud: true
 dev_tools_install_lazygit: true
 dev_tools_install_delta: true
 dev_tools_install_ghorg: true
+
+# NoSQL & specialized database clients (opt-in)
+dev_tools_install_mongosh: false       # MongoDB shell
+dev_tools_install_etcdctl: false       # etcd CLI (for k8s config stores)
+dev_tools_install_influx: false        # InfluxDB CLI
+dev_tools_install_cqlsh: false         # Cassandra CQL shell
+
+# Data processing tools (binary installs)
+dev_tools_install_xsv: true            # Fast Rust-based CSV toolkit
 
 # DevOps & IaC tools
 dev_tools_install_hadolint: true  # Dockerfile linter
@@ -170,3 +189,23 @@ dev_tools_packer_install_path: /usr/local/bin/packer
 dev_tools_kind_version: "0.26.0"
 dev_tools_kind_url: "https://kind.sigs.k8s.io/dl/v{{ dev_tools_kind_version }}/kind-linux-{{ apt_arch }}"
 dev_tools_kind_install_path: /usr/local/bin/kind
+
+# xsv installation (via GitHub releases)
+dev_tools_xsv_version: "0.13.0"
+dev_tools_xsv_url: "https://github.com/BurntSushi/xsv/releases/download/{{ dev_tools_xsv_version }}/xsv-{{ dev_tools_xsv_version }}-{{ 'x86_64' if apt_arch == 'amd64' else 'aarch64' }}-unknown-linux-musl.tar.gz"
+dev_tools_xsv_install_path: /usr/local/bin/xsv
+
+# mongosh installation (via MongoDB official releases)
+dev_tools_mongosh_version: "2.3.7"
+dev_tools_mongosh_url: "https://downloads.mongodb.com/compass/mongosh-{{ dev_tools_mongosh_version }}-linux-{{ 'x64' if apt_arch == 'amd64' else 'arm64' }}.tgz"
+dev_tools_mongosh_install_path: /usr/local/bin/mongosh
+
+# etcdctl installation (via GitHub releases)
+dev_tools_etcdctl_version: "3.5.17"
+dev_tools_etcdctl_url: "https://github.com/etcd-io/etcd/releases/download/v{{ dev_tools_etcdctl_version }}/etcd-v{{ dev_tools_etcdctl_version }}-linux-{{ apt_arch }}.tar.gz"
+dev_tools_etcdctl_install_path: /usr/local/bin/etcdctl
+
+# influx CLI installation (via GitHub releases)
+dev_tools_influx_version: "2.7.10"
+dev_tools_influx_url: "https://download.influxdata.com/influxdb/releases/influxdb2-client-{{ dev_tools_influx_version }}-linux-{{ apt_arch }}.tar.gz"
+dev_tools_influx_install_path: /usr/local/bin/influx

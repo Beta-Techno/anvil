@@ -12,6 +12,14 @@
   become: true
   when: dev_tools_install
 
+- name: Install database TUI enhancements
+  ansible.builtin.apt:
+    name: "{{ dev_tools_database_tui }}"
+    state: present
+    update_cache: true
+  become: true
+  when: dev_tools_install
+
 - name: Install git enhancements
   ansible.builtin.apt:
     name: "{{ dev_tools_git_extras }}"
@@ -714,11 +722,196 @@
     - dev_tools_install_kind
     - not kind_binary.stat.exists
 
+# xsv installation
+- name: Check if xsv is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_xsv_install_path }}"
+  register: xsv_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_xsv
+
+- name: Download and extract xsv
+  ansible.builtin.unarchive:
+    src: "{{ dev_tools_xsv_url }}"
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_xsv
+    - not xsv_binary.stat.exists
+
+- name: Install xsv binary
+  ansible.builtin.copy:
+    src: /tmp/xsv
+    dest: "{{ dev_tools_xsv_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_xsv
+    - not xsv_binary.stat.exists
+
+- name: Clean up xsv temp files
+  ansible.builtin.file:
+    path: /tmp/xsv
+    state: absent
+  when:
+    - dev_tools_install
+    - dev_tools_install_xsv
+    - not xsv_binary.stat.exists
+
+# mongosh installation
+- name: Check if mongosh is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_mongosh_install_path }}"
+  register: mongosh_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_mongosh
+
+- name: Download and extract mongosh
+  ansible.builtin.unarchive:
+    src: "{{ dev_tools_mongosh_url }}"
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_mongosh
+    - not mongosh_binary.stat.exists
+
+- name: Find extracted mongosh directory
+  ansible.builtin.find:
+    paths: /tmp
+    patterns: "mongosh-*"
+    file_type: directory
+  register: mongosh_dir
+  when:
+    - dev_tools_install
+    - dev_tools_install_mongosh
+    - not mongosh_binary.stat.exists
+
+- name: Install mongosh binary
+  ansible.builtin.copy:
+    src: "{{ mongosh_dir.files[0].path }}/bin/mongosh"
+    dest: "{{ dev_tools_mongosh_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_mongosh
+    - not mongosh_binary.stat.exists
+    - mongosh_dir.files | length > 0
+
+- name: Clean up mongosh temp files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ mongosh_dir.files | map(attribute='path') | list }}"
+  when:
+    - dev_tools_install
+    - dev_tools_install_mongosh
+    - not mongosh_binary.stat.exists
+    - mongosh_dir.files | length > 0
+
+# etcdctl installation
+- name: Check if etcdctl is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_etcdctl_install_path }}"
+  register: etcdctl_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_etcdctl
+
+- name: Download and extract etcd
+  ansible.builtin.unarchive:
+    src: "{{ dev_tools_etcdctl_url }}"
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_etcdctl
+    - not etcdctl_binary.stat.exists
+
+- name: Find extracted etcd directory
+  ansible.builtin.find:
+    paths: /tmp
+    patterns: "etcd-v*-linux-*"
+    file_type: directory
+  register: etcd_dir
+  when:
+    - dev_tools_install
+    - dev_tools_install_etcdctl
+    - not etcdctl_binary.stat.exists
+
+- name: Install etcdctl binary
+  ansible.builtin.copy:
+    src: "{{ etcd_dir.files[0].path }}/etcdctl"
+    dest: "{{ dev_tools_etcdctl_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_etcdctl
+    - not etcdctl_binary.stat.exists
+    - etcd_dir.files | length > 0
+
+- name: Clean up etcd temp files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ etcd_dir.files | map(attribute='path') | list }}"
+  when:
+    - dev_tools_install
+    - dev_tools_install_etcdctl
+    - not etcdctl_binary.stat.exists
+    - etcd_dir.files | length > 0
+
+# influx CLI installation
+- name: Check if influx is already installed
+  ansible.builtin.stat:
+    path: "{{ dev_tools_influx_install_path }}"
+  register: influx_binary
+  when:
+    - dev_tools_install
+    - dev_tools_install_influx
+
+- name: Download and extract influx
+  ansible.builtin.unarchive:
+    src: "{{ dev_tools_influx_url }}"
+    dest: /tmp
+    remote_src: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_influx
+    - not influx_binary.stat.exists
+
+- name: Install influx binary
+  ansible.builtin.copy:
+    src: /tmp/influx
+    dest: "{{ dev_tools_influx_install_path }}"
+    mode: "0755"
+  become: true
+  when:
+    - dev_tools_install
+    - dev_tools_install_influx
+    - not influx_binary.stat.exists
+
+- name: Clean up influx temp files
+  ansible.builtin.file:
+    path: /tmp/influx
+    state: absent
+  when:
+    - dev_tools_install
+    - dev_tools_install_influx
+    - not influx_binary.stat.exists
+
 - name: Dev tools summary
   ansible.builtin.debug:
     msg: |
       Dev tools installed (dev_tools_install={{ dev_tools_install }}):
         - Database clients: {{ dev_tools_database_clients | join(', ') }}
+        - Database TUI: {{ dev_tools_database_tui | join(', ') }}
         - Git extras: {{ dev_tools_git_extras | join(', ') }}
         - DevOps tools: {{ dev_tools_devops | join(', ') }}
         - Data tools: {{ dev_tools_data_tools | join(', ') }}
@@ -742,6 +935,10 @@
         - act: {{ dev_tools_install_act }}
         - Packer: {{ dev_tools_install_packer }}
         - kind: {{ dev_tools_install_kind }}
+        - xsv: {{ dev_tools_install_xsv }}
+        - mongosh: {{ dev_tools_install_mongosh }}
+        - etcdctl: {{ dev_tools_install_etcdctl }}
+        - influx: {{ dev_tools_install_influx }}
         - AWS CLI: {{ dev_tools_install_aws_cli }}
         - Google Cloud SDK: {{ dev_tools_install_gcloud }}
         - dust (cargo): {{ dev_tools_install_dust }}
