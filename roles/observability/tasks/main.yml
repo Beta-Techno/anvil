@@ -226,9 +226,10 @@
 # Netdata installation (Tier 1 - opt-in)
 - name: Install Netdata
   ansible.builtin.shell: |
-    curl -Ss https://my-netdata.io/kickstart.sh | bash -s -- --dont-wait --stable-channel
+    curl -sSL https://get.netdata.cloud/kickstart.sh | bash -s -- --dont-wait --stable-channel
   args:
     creates: /usr/sbin/netdata
+    executable: /bin/bash
   become: true
   when: observability_install_netdata
 
