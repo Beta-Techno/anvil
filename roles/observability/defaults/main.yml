@@ -3,10 +3,10 @@
 observability_install_node_exporter: true
 observability_install_promtail: true
 observability_install_osquery: true
-observability_install_fleetctl: false  # Only on admin boxes
+observability_install_fleetctl: true   # Fleet CLI (safe to install everywhere)
 
-# Tier 1 - Per-node dashboards (opt-in)
-observability_install_netdata: false   # Real-time per-node web dashboard
+# Tier 1 - Per-node dashboards
+observability_install_netdata: true    # Real-time per-node web dashboard at localhost:19999
 
 # Connection details (leave blank to install but not configure)
 # Provide these to wire agents to your NixOS observability stack

@@ -5,10 +5,10 @@ security_tier0_packages:
   - openssl           # SSL/TLS toolkit
   - fail2ban          # Brute-force attack prevention
 
-# Tier 1 - Advanced security tools (opt-in for serious nodes)
-security_install_certbot: false
-security_install_auditd: false
-security_install_lynis: false
+# Tier 1 - Advanced security tools (safe to enable by default)
+security_install_certbot: true
+security_install_auditd: true
+security_install_lynis: true
 
 security_tier1_packages:
   - certbot           # Let's Encrypt SSL certificate management

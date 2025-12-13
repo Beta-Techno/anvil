@@ -91,11 +91,11 @@ dev_tools_install_lazygit: true
 dev_tools_install_delta: true
 dev_tools_install_ghorg: true
 
-# NoSQL & specialized database clients (opt-in)
-dev_tools_install_mongosh: false       # MongoDB shell
-dev_tools_install_etcdctl: false       # etcd CLI (for k8s config stores)
-dev_tools_install_influx: false        # InfluxDB CLI
-dev_tools_install_cqlsh: false         # Cassandra CQL shell
+# NoSQL & specialized database clients
+dev_tools_install_mongosh: true        # MongoDB shell
+dev_tools_install_etcdctl: true        # etcd CLI (for k8s config stores)
+dev_tools_install_influx: true         # InfluxDB CLI
+dev_tools_install_cqlsh: false         # Cassandra CQL shell (truly specialized, keep opt-in)
 
 # Data processing tools (binary installs)
 dev_tools_install_xsv: true            # Fast Rust-based CSV toolkit
@@ -126,8 +126,8 @@ dev_tools_ghorg_version: "1.11.7"
 dev_tools_ghorg_url: "https://github.com/gabrie30/ghorg/releases/download/v{{ dev_tools_ghorg_version }}/ghorg_{{ dev_tools_ghorg_version }}_Linux_{{ 'x86_64' if apt_arch == 'amd64' else 'arm64' }}.tar.gz"
 dev_tools_ghorg_install_path: /usr/local/bin/ghorg
 
-# Optional Rust-based tools (requires cargo from langs role)
-dev_tools_install_dust: false
+# Rust-based tools (requires cargo from langs role)
+dev_tools_install_dust: true
 
 # sops installation (binary download from GitHub)
 dev_tools_install_sops: true

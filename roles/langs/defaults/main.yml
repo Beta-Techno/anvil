@@ -36,7 +36,7 @@ langs_install_pipx: true           # Install Python CLIs in isolated environment
 langs_install_uv: true             # Fast Python package installer and resolver
 
 # Ruby
-langs_install_ruby: false          # Disabled by default (legacy)
+langs_install_ruby: true           # Ruby toolchain
 langs_rbenv_ruby_version: "3.1.0"
 langs_rbenv_root: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) + '/.rbenv' }}"
 langs_ruby_build_deps:
@@ -67,7 +67,7 @@ langs_dotnet_version: "8.0"        # .NET 8 LTS
 langs_install_dotnet_ef: true      # Entity Framework migrations tool
 
 # Java
-langs_install_java: false          # Disabled by default (legacy/occasional use)
+langs_install_java: true           # Java JDK
 
 # Multi-language version manager (optional)
 langs_install_rtx: false           # rtx - fast, Rust-based version manager for multiple languages
