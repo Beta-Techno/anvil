@@ -26,7 +26,7 @@ observability_install_node_exporter: true      # Prometheus metrics exporter
 observability_install_promtail: true           # Loki log forwarder
 observability_install_osquery: true            # osquery agent for Fleet
 observability_install_fleetctl: true           # Fleet CLI (admin boxes only)
-observability_install_netdata: true            # Per-node web dashboard at http://localhost:19999
+observability_install_netdata: false           # Per-node web dashboard (disabled - locks down /tmp)
 # Leave blank to install agents but not configure (configure via ops CLI later)
 observability_loki_endpoint: ""                # e.g., "https://loki.example.com:3100"
 observability_fleet_endpoint: ""               # e.g., "https://fleet.example.com"
