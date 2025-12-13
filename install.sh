@@ -33,7 +33,8 @@ if ! sudo -n true >/dev/null 2>&1; then
   sudo -v
 fi
 
-rm -rf "$TARGET_DIR"
+# Clean up previous bootstrap directory (may contain root-owned files from Ansible)
+sudo rm -rf "$TARGET_DIR"
 git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$TARGET_DIR"
 
 cd "$TARGET_DIR"
