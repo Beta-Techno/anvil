@@ -1,6 +1,6 @@
 ---
-# Install Wazuh agent (always, but disabled until configured)
-wazuh_install_agent: true
+# Install Wazuh agent (disabled - locks down /tmp permissions)
+wazuh_install_agent: false
 
 # Connection details (leave blank to install but not configure)
 # Provide these to wire agent to your NixOS Wazuh manager

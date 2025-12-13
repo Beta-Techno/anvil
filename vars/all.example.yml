@@ -33,7 +33,7 @@ observability_fleet_endpoint: ""               # e.g., "https://fleet.example.co
 observability_fleet_enroll_secret: ""          # Fleet enrollment secret
 
 # Wazuh HIDS (agent installed, disabled until manager configured)
-wazuh_install_agent: true                 # Install Wazuh agent
+wazuh_install_agent: false                # Wazuh HIDS agent (disabled - locks down /tmp)
 wazuh_manager_address: ""                 # Wazuh manager hostname/IP (blank = not configured)
 
 # Developer Tools
