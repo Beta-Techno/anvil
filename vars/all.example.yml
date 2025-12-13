@@ -18,7 +18,7 @@ chezmoi_apply: true
 security_ufw_enable: false                # Enable UFW firewall (careful on SSH-only hosts - MANUAL ONLY)
 security_fail2ban_enable: true            # Enable fail2ban brute-force protection
 security_install_certbot: true            # Let's Encrypt SSL certificate management
-security_install_auditd: true             # Linux audit framework
+security_install_auditd: false            # Linux audit framework (disabled - may lock down /tmp)
 security_install_lynis: true              # Security auditing tool
 
 # Observability (agents installed, disabled until connection details provided)
