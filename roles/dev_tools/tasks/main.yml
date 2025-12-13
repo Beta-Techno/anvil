@@ -886,9 +886,21 @@
     - dev_tools_install_influx
     - not influx_binary.stat.exists
 
+- name: Find extracted influx binary
+  ansible.builtin.find:
+    paths: /tmp
+    patterns: "influx"
+    file_type: file
+    recurse: true
+  register: influx_files
+  when:
+    - dev_tools_install
+    - dev_tools_install_influx
+    - not influx_binary.stat.exists
+
 - name: Install influx binary
   ansible.builtin.copy:
-    src: /tmp/influx
+    src: "{{ influx_files.files[0].path }}"
     dest: "{{ dev_tools_influx_install_path }}"
     mode: "0755"
   become: true
@@ -896,11 +908,15 @@
     - dev_tools_install
     - dev_tools_install_influx
     - not influx_binary.stat.exists
+    - influx_files.files | length > 0
 
 - name: Clean up influx temp files
   ansible.builtin.file:
-    path: /tmp/influx
+    path: "{{ item }}"
     state: absent
+  loop:
+    - /tmp/influx
+    - /tmp/influxdb2-client-{{ dev_tools_influx_version }}
   when:
     - dev_tools_install
     - dev_tools_install_influx

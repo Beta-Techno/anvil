@@ -205,7 +205,7 @@ dev_tools_etcdctl_version: "3.5.17"
 dev_tools_etcdctl_url: "https://github.com/etcd-io/etcd/releases/download/v{{ dev_tools_etcdctl_version }}/etcd-v{{ dev_tools_etcdctl_version }}-linux-{{ apt_arch }}.tar.gz"
 dev_tools_etcdctl_install_path: /usr/local/bin/etcdctl
 
-# influx CLI installation (via GitHub releases)
-dev_tools_influx_version: "2.7.10"
+# influx CLI installation (via InfluxData releases)
+dev_tools_influx_version: "2.7.5"
 dev_tools_influx_url: "https://download.influxdata.com/influxdb/releases/influxdb2-client-{{ dev_tools_influx_version }}-linux-{{ apt_arch }}.tar.gz"
 dev_tools_influx_install_path: /usr/local/bin/influx
