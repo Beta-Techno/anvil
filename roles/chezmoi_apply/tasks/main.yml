@@ -12,7 +12,10 @@
     - ansible_user_id == 'root'
 
 - name: Assert chezmoi is installed
-  ansible.builtin.command: chezmoi --version
+  ansible.builtin.command:
+    argv:
+      - "{{ chezmoi_bin_path }}"
+      - "--version"
   register: chezmoi_version
   changed_when: false
   failed_when: chezmoi_version.rc != 0
@@ -30,7 +33,10 @@
     - ansible_user_id != 'root'
 
 - name: Determine chezmoi source path
-  ansible.builtin.command: chezmoi source-path
+  ansible.builtin.command:
+    argv:
+      - "{{ chezmoi_bin_path }}"
+      - "source-path"
   register: chezmoi_source
   changed_when: false
   when:
@@ -44,7 +50,13 @@
   when: chezmoi_apply
 
 - name: Update chezmoi source if git repo exists
-  ansible.builtin.command: chezmoi git -- pull --ff-only
+  ansible.builtin.command:
+    argv:
+      - "{{ chezmoi_bin_path }}"
+      - "git"
+      - "--"
+      - "pull"
+      - "--ff-only"
   changed_when: true
   when:
     - chezmoi_apply
@@ -52,7 +64,11 @@
     - chezmoi_src_git.stat.exists
 
 - name: Initialize chezmoi from repo when not present
-  ansible.builtin.command: chezmoi init "{{ chezmoi_repo }}"
+  ansible.builtin.command:
+    argv:
+      - "{{ chezmoi_bin_path }}"
+      - "init"
+      - "{{ chezmoi_repo }}"
   changed_when: true
   when:
     - chezmoi_apply
@@ -60,7 +76,11 @@
     - not chezmoi_src_git.stat.exists
 
 - name: Apply chezmoi state
-  ansible.builtin.command: chezmoi apply --force
+  ansible.builtin.command:
+    argv:
+      - "{{ chezmoi_bin_path }}"
+      - "apply"
+      - "--force"
   changed_when: true
   when:
     - chezmoi_apply
