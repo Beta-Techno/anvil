@@ -99,3 +99,13 @@
       Configured: {{ wazuh_configured | default(false) }}
       Manager: {{ wazuh_manager_address if wazuh_configured | default(false) else 'not configured' }}
   when: wazuh_install_agent
+
+- name: Reset /tmp permissions after Wazuh install
+  ansible.builtin.file:
+    path: /tmp
+    state: directory
+    mode: "01777"
+    owner: root
+    group: root
+  when: wazuh_install_agent
+  become: true
