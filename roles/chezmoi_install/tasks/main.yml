@@ -27,6 +27,16 @@
     mode: "0755"
   when: chezmoi_install
 
+- name: Ensure /tmp is writable before chezmoi install
+  ansible.builtin.file:
+    path: /tmp
+    state: directory
+    mode: "01777"
+    owner: root
+    group: root
+  when: chezmoi_install
+  become: true
+
 - name: Install chezmoi
   ansible.builtin.shell: |
     set -e
