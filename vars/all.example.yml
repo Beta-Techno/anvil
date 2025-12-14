@@ -82,7 +82,7 @@ langs_install_cargo_edit: true            # cargo add, rm, upgrade
 langs_install_cargo_watch: true           # Rerun tests/build on file changes
 langs_install_cargo_audit: true           # Check for vulnerable dependencies
 langs_install_dotnet: true                # .NET SDK
-langs_install_dotnet_ef: true             # Entity Framework migrations tool
+langs_install_dotnet_ef: false            # Entity Framework migrations tool
 langs_install_java: true                  # Java JDK
 langs_install_rtx: false                  # Multi-language version manager (optional)
 
