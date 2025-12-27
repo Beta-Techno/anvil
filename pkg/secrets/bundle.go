@@ -49,9 +49,9 @@ func Unlock(bundleURL, bundlePath, ageKeyPath string) error {
 
 	cmd := exec.Command("sops", "--decrypt", tmp.Name())
 	cmd.Env = append(os.Environ(), fmt.Sprintf("SOPS_AGE_KEY_FILE=%s", ageKeyPath))
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("sops decrypt failed: %w", err)
+		return fmt.Errorf("sops decrypt failed: %w\n%s", err, string(output))
 	}
 	if err := os.WriteFile(bundlePath, output, 0o600); err != nil {
 		return err
@@ -102,5 +102,8 @@ func writeKey(path string, data []byte) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return err
 	}
-	return os.WriteFile(path, append(data, '\n'), 0o600)
+	if err := os.WriteFile(path, append(data, '\n'), 0o600); err != nil {
+		return err
+	}
+	return nil
 }
