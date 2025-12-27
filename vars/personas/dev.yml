@@ -1,0 +1,10 @@
+# Persona defaults for developer workstations
+persona: dev
+
+# Developers keep everything local: disable telemetry/monitoring agents and trackers
+observability_install_node_exporter: false
+observability_install_promtail: false
+observability_install_osquery: false
+observability_install_fleetctl: false
+observability_install_netdata: false
+activitywatch_install: false

@@ -6,3 +6,7 @@ git_pull_ff_only: true
 git_color_ui: auto
 git_enable_ssh_signing: true
 git_ssh_key_path: "{{ lookup('env', 'HOME') | default(ansible_env.HOME, true) + '/.ssh/id_ed25519' }}"
+# GitHub integration (optional)
+git_github_token: "{{ github_token | default(lookup('env', 'GITHUB_TOKEN'), true) | default('', true) }}"
+git_github_upload_key: "{{ github_upload_key | default(true) }}"
+git_github_key_title: "{{ git_github_key_title_override | default('astro-' ~ ansible_hostname ~ '-' ~ ansible_date_time.iso8601_basic_short, true) }}"

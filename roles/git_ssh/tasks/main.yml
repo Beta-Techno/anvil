@@ -63,6 +63,30 @@
   when: git_enable_ssh_signing
   failed_when: false
 
+- name: Upload SSH key to GitHub (optional)
+  ansible.builtin.uri:
+    url: https://api.github.com/user/keys
+    method: POST
+    headers:
+      Authorization: "token {{ git_github_token }}"
+      Content-Type: application/json
+      Accept: application/vnd.github+json
+    body_format: json
+    body:
+      title: "{{ git_github_key_title }}"
+      key: "{{ lookup('file', git_ssh_key_path + '.pub') }}"
+  when:
+    - git_github_token | length > 0
+    - git_github_upload_key
+  register: github_key_resp
+  failed_when: github_key_resp.status not in [200, 201]
+  ignore_errors: true
+
+- name: Warn when GitHub token missing
+  ansible.builtin.debug:
+    msg: "GitHub token not provided; upload {{ git_ssh_key_path }}.pub manually."
+  when: git_github_token | length == 0
+
 - name: Show public key path
   ansible.builtin.debug:
     msg: "Public key ready at {{ git_ssh_key_path }}.pub (add to Git hosting)."

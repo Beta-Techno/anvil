@@ -95,6 +95,10 @@ snap_apps_list:
 # Dotfiles repo
 chezmoi_repo: https://github.com/Beta-Techno/dotfiles.git
 
+# GitHub bootstrap (optional)
+github_token: ""
+github_upload_key: true
+
 # Optional checksums (sha256:...); leave blank to skip verification
 zed_install_checksum: ""
 ghostty_install_checksum: ""
