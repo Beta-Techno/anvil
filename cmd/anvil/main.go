@@ -59,10 +59,6 @@ func newUpCmd() *cobra.Command {
 				fmt.Println("[anvil] skipping bundle unlock (per config)")
 			}
 
-			if err := persona.LoadOverrides(cfg.PersonaFile); err != nil {
-				return err
-			}
-
 			if err := runtime.EnsureRepo(cfg.RepoPath, cfg.RepoURL); err != nil {
 				return err
 			}
@@ -70,6 +66,10 @@ func newUpCmd() *cobra.Command {
 				return err
 			}
 			if err := runtime.EnsurePersonaFile(cfg.RepoPath, cfg.Persona, cfg.PersonaFile); err != nil {
+				return err
+			}
+
+			if err := persona.LoadOverrides(cfg.PersonaFile); err != nil {
 				return err
 			}
 
