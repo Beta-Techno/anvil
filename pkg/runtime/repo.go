@@ -46,3 +46,25 @@ func EnsureVarsFile(repoPath, varsFile string) error {
 	fmt.Println("[runtime] Created vars file from template:", varsFile)
 	return nil
 }
+
+func EnsurePersonaFile(repoPath, persona, personaFile string) error {
+	if personaFile == "" {
+		return fmt.Errorf("persona file path empty")
+	}
+	if _, err := os.Stat(personaFile); err == nil {
+		return nil
+	}
+	template := filepath.Join(repoPath, "vars", "personas", persona+".yml")
+	data, err := os.ReadFile(template)
+	if err != nil {
+		return fmt.Errorf("failed to read persona template %s: %w", template, err)
+	}
+	if err := os.MkdirAll(filepath.Dir(personaFile), 0o755); err != nil {
+		return err
+	}
+	if err := os.WriteFile(personaFile, data, 0o644); err != nil {
+		return err
+	}
+	fmt.Println("[runtime] Created persona vars from template:", personaFile)
+	return nil
+}

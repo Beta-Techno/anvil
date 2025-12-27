@@ -69,6 +69,9 @@ func newUpCmd() *cobra.Command {
 			if err := runtime.EnsureVarsFile(cfg.RepoPath, cfg.VarsFile); err != nil {
 				return err
 			}
+			if err := runtime.EnsurePersonaFile(cfg.RepoPath, cfg.Persona, cfg.PersonaFile); err != nil {
+				return err
+			}
 
 			ansCfg := runtime.AnsibleConfig{
 				RepoPath:    cfg.RepoPath,
