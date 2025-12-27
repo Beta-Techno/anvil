@@ -13,6 +13,9 @@ func EnsureRepo(path, url string) error {
 	}
 	if _, err := os.Stat(filepath.Join(path, ".git")); os.IsNotExist(err) {
 		fmt.Println("[runtime] Cloning repo", url, "->", path)
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			return err
+		}
 		cmd := exec.Command("git", "clone", url, path)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
