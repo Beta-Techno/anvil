@@ -1,25 +1,15 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/viper"
 )
 
-var (
-	v       = viper.New()
-	rootDir string
-)
+var v = viper.New()
 
 func init() {
-	cwd, err := os.Getwd()
-	if err != nil {
-		cwd = "."
-	}
-	rootDir = cwd
-
 	v.SetConfigName("astro")
 	v.AddConfigPath("/etc/astro")
 	v.AddConfigPath("$HOME/.config/astro")
@@ -33,11 +23,17 @@ func init() {
 	v.SetDefault("profile", "devheavy")
 	v.SetDefault("tags", "all")
 	v.SetDefault("skip_bundle", false)
-	v.SetDefault("repo_path", rootDir)
-	v.SetDefault("vars_file", filepath.Join(rootDir, "vars", "all.yml"))
-	v.SetDefault("persona_file", filepath.Join(rootDir, "vars", "personas", "dev.yml"))
-	v.SetDefault("bundle_file", filepath.Join(os.Getenv("HOME"), ".config", "anvil", "key-bundle.yml"))
-	v.SetDefault("age_key_file", filepath.Join(os.Getenv("HOME"), ".config", "anvil", "age.key"))
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = "."
+	}
+	v.SetDefault("repo_path", filepath.Join(home, ".local", "share", "anvil"))
+	v.SetDefault("repo_url", "https://github.com/Beta-Techno/anvil.git")
+	v.SetDefault("bundle_file", filepath.Join(home, ".config", "anvil", "key-bundle.yml"))
+	v.SetDefault("age_key_file", filepath.Join(home, ".config", "anvil", "age.key"))
+	v.SetDefault("vars_file", "")
+	v.SetDefault("persona_file", "")
 
 	_ = v.ReadInConfig()
 }
@@ -50,6 +46,7 @@ type Config struct {
 	Tags        string
 	SkipBundle  bool
 	RepoPath    string
+	RepoURL     string
 	VarsFile    string
 	PersonaFile string
 	BundleFile  string
@@ -63,40 +60,43 @@ func Load(overrides map[string]any) (*Config, error) {
 	}
 
 	cfg := &Config{
-		Persona:     v.GetString("persona"),
-		BundleURL:   v.GetString("bundle_url"),
-		Profile:     v.GetString("profile"),
-		Tags:        v.GetString("tags"),
-		SkipBundle:  v.GetBool("skip_bundle"),
-		RepoPath:    absPath(v.GetString("repo_path")),
-		VarsFile:    absPath(v.GetString("vars_file")),
-		PersonaFile: absPath(v.GetString("persona_file")),
-		BundleFile:  v.GetString("bundle_file"),
-		AgeKeyFile:  v.GetString("age_key_file"),
+		Persona:    v.GetString("persona"),
+		BundleURL:  v.GetString("bundle_url"),
+		Profile:    v.GetString("profile"),
+		Tags:       v.GetString("tags"),
+		SkipBundle: v.GetBool("skip_bundle"),
+		RepoPath:   expandPath(v.GetString("repo_path")),
+		RepoURL:    v.GetString("repo_url"),
+		BundleFile: expandPath(v.GetString("bundle_file")),
+		AgeKeyFile: expandPath(v.GetString("age_key_file")),
 	}
 
-	if cfg.PersonaFile == "" {
-		cfg.PersonaFile = filepath.Join(cfg.RepoPath, "vars", "personas", cfg.Persona+".yml")
+	varsFile := v.GetString("vars_file")
+	if varsFile == "" {
+		varsFile = filepath.Join(cfg.RepoPath, "vars", "all.yml")
 	}
+	cfg.VarsFile = expandPath(varsFile)
 
-	if cfg.Persona == "" {
-		return nil, fmt.Errorf("persona cannot be empty")
+	personaFile := v.GetString("persona_file")
+	if personaFile == "" {
+		personaFile = filepath.Join(cfg.RepoPath, "vars", "personas", cfg.Persona+".yml")
 	}
-	if _, err := os.Stat(cfg.VarsFile); err != nil {
-		return nil, fmt.Errorf("vars file %s missing: %w", cfg.VarsFile, err)
-	}
-	if _, err := os.Stat(cfg.PersonaFile); err != nil {
-		return nil, fmt.Errorf("persona vars file %s missing: %w", cfg.PersonaFile, err)
-	}
+	cfg.PersonaFile = expandPath(personaFile)
+
 	return cfg, nil
 }
 
-func absPath(p string) string {
+func expandPath(p string) string {
 	if p == "" {
 		return p
+	}
+	if len(p) >= 2 && p[:2] == "~/" {
+		if home, err := os.UserHomeDir(); err == nil {
+			return filepath.Join(home, p[2:])
+		}
 	}
 	if filepath.IsAbs(p) {
 		return p
 	}
-	return filepath.Clean(filepath.Join(rootDir, p))
+	return filepath.Clean(p)
 }
