@@ -47,7 +47,7 @@ func Unlock(bundleURL, bundlePath, ageKeyPath string) error {
 		return err
 	}
 
-	cmd := exec.Command("sops", "--decrypt", tmp.Name())
+	cmd := exec.Command("sops", "--input-type", "yaml", "--decrypt", tmp.Name())
 	cmd.Env = append(os.Environ(), fmt.Sprintf("SOPS_AGE_KEY_FILE=%s", ageKeyPath))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
