@@ -82,6 +82,9 @@ func Load(overrides map[string]any) (*Config, error) {
 		personaFile = filepath.Join(cfg.RepoPath, "vars", "personas", cfg.Persona+".yml")
 	}
 	cfg.PersonaFile = expandPath(personaFile)
+	if !filepath.IsAbs(cfg.PersonaFile) {
+		cfg.PersonaFile = filepath.Join(cfg.RepoPath, cfg.PersonaFile)
+	}
 
 	return cfg, nil
 }
