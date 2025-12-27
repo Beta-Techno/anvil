@@ -24,7 +24,7 @@ func Unlock(bundleURL, bundlePath, ageKeyPath string) error {
 		return err
 	}
 
-	tmp, err := os.CreateTemp("", "bundle-*.sops")
+	tmp, err := os.CreateTemp("", "bundle-*.sops.yaml")
 	if err != nil {
 		return err
 	}
@@ -42,12 +42,15 @@ func Unlock(bundleURL, bundlePath, ageKeyPath string) error {
 	if _, err := io.Copy(tmp, resp.Body); err != nil {
 		return err
 	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
 
 	if err := os.MkdirAll(filepath.Dir(bundlePath), 0o700); err != nil {
 		return err
 	}
 
-	cmd := exec.Command("sops", "--output-type", "yaml", "--decrypt", tmp.Name())
+	cmd := exec.Command("sops", "decrypt", "--input-type", "yaml", "--output-type", "yaml", tmp.Name())
 	cmd.Env = append(os.Environ(), fmt.Sprintf("SOPS_AGE_KEY_FILE=%s", ageKeyPath))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
