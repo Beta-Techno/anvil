@@ -1,7 +1,5 @@
-# Persona defaults for developer workstations
+# Default persona overrides for developer workstations
 persona: dev
-
-# Developers keep everything local: disable telemetry/monitoring agents and trackers
 observability_install_node_exporter: false
 observability_install_promtail: false
 observability_install_osquery: false

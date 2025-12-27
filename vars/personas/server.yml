@@ -1,10 +1,8 @@
-# Persona defaults for servers / managed fleet
+# Default persona overrides for servers or managed nodes
 persona: server
-
-# Servers report into observability + tracking stack
 observability_install_node_exporter: true
 observability_install_promtail: true
 observability_install_osquery: true
 observability_install_fleetctl: true
-observability_install_netdata: false  # opt-in dashboard remains false unless explicitly enabled
-activitywatch_install: false          # servers do not need desktop tracking
+observability_install_netdata: false
+activitywatch_install: false
