@@ -2,7 +2,7 @@
 set -euo pipefail
 
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
-BINARY_URL="${BINARY_URL:-https://example.com/anvil-linux-amd64}" # TODO: publish
+BINARY_URL="${BINARY_URL:-https://github.com/Beta-Techno/anvil/releases/latest/download/anvil-linux-amd64}"
 TARGET="$INSTALL_DIR/anvil"
 
 if [[ $EUID -ne 0 ]]; then
