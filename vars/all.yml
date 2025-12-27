@@ -1,0 +1,107 @@
+---
+# Toggle installs (set to true to enable)
+chrome_install: true
+zed_install: true
+cursor_install: true
+ghostty_install: true
+jetbrains_toolbox_install: true
+docker_desktop_install: true     # requires /dev/kvm and not LXC
+nomachine_install: true          # amd64 only
+terminal_extras_install: true
+activitywatch_install: true       # Personal time tracking and productivity monitoring
+flatpak_apps_install: true
+snap_apps_install: true
+chezmoi_install: true
+chezmoi_apply: true
+
+# Security Tools
+security_ufw_enable: false                # Enable UFW firewall (careful on SSH-only hosts - MANUAL ONLY)
+security_fail2ban_enable: true            # Enable fail2ban brute-force protection
+security_install_certbot: true            # Let's Encrypt SSL certificate management
+security_install_auditd: false            # Linux audit framework (disabled - may lock down /tmp)
+security_install_lynis: true              # Security auditing tool
+
+# Observability (agents installed, disabled until connection details provided)
+observability_install_node_exporter: true      # Prometheus metrics exporter
+observability_install_promtail: true           # Loki log forwarder
+observability_install_osquery: true            # osquery agent for Fleet
+observability_install_fleetctl: true           # Fleet CLI (admin boxes only)
+observability_install_netdata: false           # Per-node web dashboard (disabled - locks down /tmp)
+# Leave blank to install agents but not configure (configure via ops CLI later)
+observability_loki_endpoint: ""                # e.g., "https://loki.example.com:3100"
+observability_fleet_endpoint: ""               # e.g., "https://fleet.example.com"
+observability_fleet_enroll_secret: ""          # Fleet enrollment secret
+
+# Wazuh HIDS (agent installed, disabled until manager configured)
+wazuh_install_agent: false                # Wazuh HIDS agent (disabled - locks down /tmp)
+wazuh_manager_address: ""                 # Wazuh manager hostname/IP (blank = not configured)
+
+# Developer Tools
+dev_tools_install: true                   # Database clients, gh CLI, httpie, jq, yq, fd, bat, rsync, etc.
+dev_tools_install_sops: true              # sops secret encryption (via GitHub releases)
+dev_tools_install_lazygit: true           # lazygit TUI for git (via GitHub releases)
+dev_tools_install_delta: true             # delta syntax-highlighting pager for git (via GitHub releases)
+dev_tools_install_ghorg: true             # ghorg clone all repos from GitHub org (via GitHub releases)
+dev_tools_install_terraform: true         # Terraform (via HashiCorp apt repo)
+dev_tools_install_terragrunt: true        # Terragrunt (binary download)
+dev_tools_install_ngrok: true             # ngrok (via ngrok apt repo)
+dev_tools_install_bitwarden_cli: true     # Bitwarden CLI (via snap)
+dev_tools_install_kubectl: true           # kubectl (via Kubernetes apt repo)
+dev_tools_install_helm: true              # Helm (via official script)
+dev_tools_install_k9s: true               # k9s (via GitHub releases)
+dev_tools_install_hadolint: true          # Dockerfile linter (via GitHub releases)
+dev_tools_install_doctl: true             # DigitalOcean CLI (via GitHub releases)
+dev_tools_install_act: true               # Run GitHub Actions locally (via GitHub releases)
+dev_tools_install_packer: true            # Packer image builder (via HashiCorp releases)
+dev_tools_install_kind: true              # Kubernetes in Docker (via GitHub releases)
+dev_tools_install_xsv: true               # Fast Rust CSV toolkit (via GitHub releases)
+dev_tools_install_mongosh: true           # MongoDB shell (via MongoDB releases)
+dev_tools_install_etcdctl: true           # etcd CLI for k8s config stores (via GitHub releases)
+dev_tools_install_influx: true            # InfluxDB CLI (via InfluxData releases)
+dev_tools_install_aws_cli: false          # AWS CLI (disabled - may lock down /tmp)
+dev_tools_install_gcloud: true            # Google Cloud SDK (via Google apt repo)
+dev_tools_install_dust: true              # dust disk analyzer (via cargo, requires Rust)
+
+# AI Coding Agents
+ai_agents_install_claude: true   # Claude Code CLI (interactive auth)
+ai_agents_install_codex: true    # OpenAI Codex CLI (requires Node.js >= 18, interactive auth)
+
+# Languages & Toolchains
+langs_install_build_toolchain: true       # C/C++ build tools, cmake, ninja, etc.
+langs_install_node: true                  # Node.js via nvm
+langs_install_pnpm: true                  # Fast, space-efficient npm alternative
+langs_install_python: true                # Python via pyenv
+langs_install_pipx: true                  # Install Python CLIs in isolated environments
+langs_install_uv: true                    # Fast Python package installer
+langs_install_ruby: true                  # Ruby via rbenv
+langs_install_go: true                    # Go toolchain
+langs_install_golangci_lint: true         # Go linter
+langs_install_air: true                   # Live reload for Go apps
+langs_install_rust: true                  # Rust via rustup
+langs_install_cargo_edit: true            # cargo add, rm, upgrade
+langs_install_cargo_watch: true           # Rerun tests/build on file changes
+langs_install_cargo_audit: true           # Check for vulnerable dependencies
+langs_install_dotnet: true                # .NET SDK
+langs_install_dotnet_ef: false            # Entity Framework migrations tool
+langs_install_java: true                  # Java JDK
+langs_install_rtx: false                  # Multi-language version manager (optional)
+
+# App lists
+flatpak_apps_list:
+  - com.discordapp.Discord
+snap_apps_list:
+  - bitwarden
+
+# Dotfiles repo
+chezmoi_repo: https://github.com/Beta-Techno/dotfiles.git
+
+# GitHub bootstrap (optional)
+github_token: ""
+github_upload_key: true
+
+# Optional checksums (sha256:...); leave blank to skip verification
+zed_install_checksum: ""
+ghostty_install_checksum: ""
+cursor_deb_checksum: ""
+jetbrains_toolbox_checksum: ""
+docker_desktop_checksum: ""
