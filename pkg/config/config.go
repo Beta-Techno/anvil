@@ -32,8 +32,6 @@ func init() {
 	v.SetDefault("repo_url", "https://github.com/Beta-Techno/anvil.git")
 	v.SetDefault("bundle_file", filepath.Join(home, ".config", "anvil", "key-bundle.yml"))
 	v.SetDefault("age_key_file", filepath.Join(home, ".config", "anvil", "age.key"))
-	v.SetDefault("vars_file", "")
-	v.SetDefault("persona_file", "")
 
 	_ = v.ReadInConfig()
 }
@@ -70,23 +68,31 @@ func Load(overrides map[string]any) (*Config, error) {
 		BundleFile: expandPath(v.GetString("bundle_file")),
 		AgeKeyFile: expandPath(v.GetString("age_key_file")),
 	}
+	if cfg.RepoPath == "" {
+		cfg.RepoPath = "."
+	}
 
 	varsFile := v.GetString("vars_file")
 	if varsFile == "" {
-		varsFile = filepath.Join(cfg.RepoPath, "vars", "all.yml")
+		varsFile = filepath.Join("vars", "all.yml")
 	}
-	cfg.VarsFile = expandPath(varsFile)
+	cfg.VarsFile = makeRepoPath(cfg.RepoPath, varsFile)
 
 	personaFile := v.GetString("persona_file")
 	if personaFile == "" {
-		personaFile = filepath.Join(cfg.RepoPath, "vars", "personas", cfg.Persona+".yml")
+		personaFile = filepath.Join("vars", "personas", cfg.Persona+".yml")
 	}
-	cfg.PersonaFile = expandPath(personaFile)
-	if !filepath.IsAbs(cfg.PersonaFile) {
-		cfg.PersonaFile = filepath.Join(cfg.RepoPath, cfg.PersonaFile)
-	}
+	cfg.PersonaFile = makeRepoPath(cfg.RepoPath, personaFile)
 
 	return cfg, nil
+}
+
+func makeRepoPath(repoPath, candidate string) string {
+	candidate = expandPath(candidate)
+	if filepath.IsAbs(candidate) {
+		return candidate
+	}
+	return filepath.Join(repoPath, candidate)
 }
 
 func expandPath(p string) string {
