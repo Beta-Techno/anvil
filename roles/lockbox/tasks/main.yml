@@ -235,6 +235,7 @@
     lockbox_ngrok_current_token: "{{ ((lockbox_ngrok_config.content | b64decode | from_yaml) | default({})).authtoken | default('') }}"
   when:
     - lockbox_ngrok_config is defined
+    - lockbox_ngrok_config is not skipped
 
 - name: Configure ngrok authtoken
   ansible.builtin.command: ngrok config add-authtoken {{ lockbox_vars.ngrok_authtoken }}
