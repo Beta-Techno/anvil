@@ -1,48 +1,68 @@
 ---
+- name: Track Docker Desktop install intent
+  ansible.builtin.set_fact:
+    docker_desktop_should_install: "{{ docker_desktop_install }}"
+
 - name: Skip Docker Desktop when disabled
   ansible.builtin.debug:
     msg: "Docker Desktop install skipped (docker_desktop_install=false)."
-  when: not docker_desktop_install
+  when: not docker_desktop_should_install
 
 - name: Check virtualization environment
   ansible.builtin.command: systemd-detect-virt
   register: dd_virt
   changed_when: false
   failed_when: false
-  when: docker_desktop_install
+  when: docker_desktop_should_install
 
-- name: Fail if running inside unsupported virtualization
-  ansible.builtin.fail:
-    msg: "Docker Desktop not supported in virtualization '{{ dd_virt.stdout }}'."
+- name: Disable Docker Desktop inside virtualization
+  ansible.builtin.set_fact:
+    docker_desktop_should_install: false
   when:
-    - docker_desktop_install
-    - dd_virt.stdout | lower in ['lxc']
+    - docker_desktop_should_install
+    - dd_virt.stdout | lower not in ['', 'none']
+
+- name: Log virtualization skip reason
+  ansible.builtin.debug:
+    msg: "Docker Desktop skipped: virtualization '{{ dd_virt.stdout }}' detected."
+  when:
+    - not docker_desktop_should_install
+    - dd_virt is defined
+    - dd_virt.stdout | lower not in ['', 'none']
 
 - name: Ensure KVM device exists
   ansible.builtin.stat:
     path: /dev/kvm
   register: kvm_stat
-  when: docker_desktop_install
+  when: docker_desktop_should_install
 
-- name: Fail when KVM not available
-  ansible.builtin.fail:
-    msg: "/dev/kvm is required for Docker Desktop."
+- name: Disable when KVM not available
+  ansible.builtin.set_fact:
+    docker_desktop_should_install: false
   when:
-    - docker_desktop_install
-    - not kvm_stat.stat.exists
+    - docker_desktop_should_install
+    - (kvm_stat.stat.exists | default(false)) | bool == false
+
+- name: Log missing KVM skip
+  ansible.builtin.debug:
+    msg: "Docker Desktop skipped: /dev/kvm missing."
+  when:
+    - not docker_desktop_should_install
+    - kvm_stat is defined
+    - (kvm_stat.stat.exists | default(false)) | bool == false
 
 - name: Check if Docker Desktop is already installed
   ansible.builtin.command: dpkg -l docker-desktop
   register: docker_desktop_check
   changed_when: false
   failed_when: false
-  when: docker_desktop_install
+  when: docker_desktop_should_install
 
 - name: Skip Docker Desktop if already installed
   ansible.builtin.debug:
     msg: "Docker Desktop already installed, skipping."
   when:
-    - docker_desktop_install
+    - docker_desktop_should_install
     - docker_desktop_check.rc == 0
 
 - name: Download Docker Desktop package
@@ -52,7 +72,7 @@
     mode: "0644"
     checksum: "{{ docker_desktop_checksum if docker_desktop_checksum | length > 0 else omit }}"
   when:
-    - docker_desktop_install
+    - docker_desktop_should_install
     - docker_desktop_check.rc != 0
 
 - name: Install Docker Desktop
@@ -61,7 +81,7 @@
     state: present
     update_cache: true
   when:
-    - docker_desktop_install
+    - docker_desktop_should_install
     - docker_desktop_check.rc != 0
 
 - name: Add user to kvm group for Docker Desktop
@@ -70,7 +90,7 @@
     groups: kvm
     append: true
   when:
-    - docker_desktop_install
+    - docker_desktop_should_install
     - docker_desktop_check.rc != 0
 
 - name: Enable user linger for Docker Desktop
@@ -78,7 +98,7 @@
   changed_when: "'linger added' in linger_result.stdout | default('')"
   register: linger_result
   when:
-    - docker_desktop_install
+    - docker_desktop_should_install
     - docker_desktop_check.rc != 0
   failed_when: false
 
@@ -87,10 +107,10 @@
     path: /tmp/docker-desktop.deb
     state: absent
   when:
-    - docker_desktop_install
+    - docker_desktop_should_install
     - docker_desktop_check.rc != 0
 
 - name: Docker Desktop summary
   ansible.builtin.debug:
-    msg: "Docker Desktop install attempted (docker_desktop_install={{ docker_desktop_install }})."
+    msg: "Docker Desktop install attempted (effective_install={{ docker_desktop_should_install }})."
   when: docker_desktop_install
