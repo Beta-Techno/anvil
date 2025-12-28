@@ -32,7 +32,7 @@ func init() {
 	v.SetDefault("repo_url", "https://github.com/Beta-Techno/anvil.git")
 	v.SetDefault("bundle_file", filepath.Join(home, ".config", "anvil", "key-bundle.yml"))
 	v.SetDefault("age_key_file", filepath.Join(home, ".config", "anvil", "age.key"))
-	v.SetDefault("lockbox_repo_url", "https://github.com/Beta-Techno/lockbox.git")
+	v.SetDefault("lockbox_repo_url", "git@github.com:Beta-Techno/lock.git")
 	v.SetDefault("lockbox_repo_path", filepath.Join(home, ".local", "share", "lockbox"))
 	v.SetDefault("lockbox_repo_ref", "")
 	v.SetDefault("lockbox_age_key_file", filepath.Join(home, ".config", "anvil", "lockbox.age"))
