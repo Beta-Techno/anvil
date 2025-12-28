@@ -32,23 +32,31 @@ func init() {
 	v.SetDefault("repo_url", "https://github.com/Beta-Techno/anvil.git")
 	v.SetDefault("bundle_file", filepath.Join(home, ".config", "anvil", "key-bundle.yml"))
 	v.SetDefault("age_key_file", filepath.Join(home, ".config", "anvil", "age.key"))
+	v.SetDefault("lockbox_repo_url", "https://github.com/Beta-Techno/lockbox.git")
+	v.SetDefault("lockbox_repo_path", filepath.Join(home, ".local", "share", "lockbox"))
+	v.SetDefault("lockbox_repo_ref", "")
+	v.SetDefault("lockbox_age_key_file", filepath.Join(home, ".config", "anvil", "lockbox.age"))
 
 	_ = v.ReadInConfig()
 }
 
 // Config represents merged inputs.
 type Config struct {
-	Persona     string
-	BundleURL   string
-	Profile     string
-	Tags        string
-	SkipBundle  bool
-	RepoPath    string
-	RepoURL     string
-	VarsFile    string
-	PersonaFile string
-	BundleFile  string
-	AgeKeyFile  string
+	Persona           string
+	BundleURL         string
+	Profile           string
+	Tags              string
+	SkipBundle        bool
+	RepoPath          string
+	RepoURL           string
+	VarsFile          string
+	PersonaFile       string
+	BundleFile        string
+	AgeKeyFile        string
+	LockboxRepoURL    string
+	LockboxRepoPath   string
+	LockboxRepoRef    string
+	LockboxAgeKeyFile string
 }
 
 // Load returns the merged configuration.
@@ -58,15 +66,19 @@ func Load(overrides map[string]any) (*Config, error) {
 	}
 
 	cfg := &Config{
-		Persona:    v.GetString("persona"),
-		BundleURL:  v.GetString("bundle_url"),
-		Profile:    v.GetString("profile"),
-		Tags:       v.GetString("tags"),
-		SkipBundle: v.GetBool("skip_bundle"),
-		RepoPath:   expandPath(v.GetString("repo_path")),
-		RepoURL:    v.GetString("repo_url"),
-		BundleFile: expandPath(v.GetString("bundle_file")),
-		AgeKeyFile: expandPath(v.GetString("age_key_file")),
+		Persona:           v.GetString("persona"),
+		BundleURL:         v.GetString("bundle_url"),
+		Profile:           v.GetString("profile"),
+		Tags:              v.GetString("tags"),
+		SkipBundle:        v.GetBool("skip_bundle"),
+		RepoPath:          expandPath(v.GetString("repo_path")),
+		RepoURL:           v.GetString("repo_url"),
+		BundleFile:        expandPath(v.GetString("bundle_file")),
+		AgeKeyFile:        expandPath(v.GetString("age_key_file")),
+		LockboxRepoURL:    v.GetString("lockbox_repo_url"),
+		LockboxRepoPath:   expandPath(v.GetString("lockbox_repo_path")),
+		LockboxRepoRef:    v.GetString("lockbox_repo_ref"),
+		LockboxAgeKeyFile: expandPath(v.GetString("lockbox_age_key_file")),
 	}
 	if cfg.RepoPath == "" {
 		cfg.RepoPath = "."

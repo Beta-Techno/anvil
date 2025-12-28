@@ -1,5 +1,11 @@
 # Default persona overrides for servers or managed nodes
 persona: server
+
+lockbox_render_targets:
+  - project: anvil
+    env: server
+    stack: bootstrap
+    out: "{{ anvil_repo_path }}"
 observability_install_node_exporter: true
 observability_install_promtail: true
 observability_install_osquery: true

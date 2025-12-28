@@ -1,0 +1,9 @@
+---
+lockbox_install: true
+lockbox_require_go: true
+lockbox_repo_path: "{{ vars['lockbox_repo_path'] | default(lookup('env','LOCKBOX_REPO_PATH') | default(ansible_env.HOME + '/.local/share/lockbox', true), true) }}"
+lockbox_age_key_file: "{{ vars['lockbox_age_key_file'] | default(lookup('env','LOCKBOX_AGE_KEY_FILE') | default(ansible_env.HOME + '/.config/anvil/lockbox.age', true), true) }}"
+lockbox_lockctl_path: "{{ vars['lockbox_lockctl_path'] | default('/usr/local/bin/lockctl', true) }}"
+lockbox_render_targets: "{{ vars['lockbox_render_targets'] | default([], true) }}"
+lockbox_user_home: "{{ lookup('env','HOME') | default(ansible_env.HOME, true) }}"
+lockbox_tailscale_extra_args: "--ssh"

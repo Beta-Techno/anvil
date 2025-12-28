@@ -51,12 +51,38 @@ func newUpCmd() *cobra.Command {
 				return err
 			}
 
+			var bundleData *secrets.BundleData
 			if !cfg.SkipBundle {
 				if err := secrets.Unlock(cfg.BundleURL, cfg.BundleFile, cfg.AgeKeyFile); err != nil {
 					return err
 				}
 			} else {
 				fmt.Println("[anvil] skipping bundle unlock (per config)")
+			}
+
+			bundleData, err = secrets.LoadBundleData(cfg.BundleFile)
+			if err != nil {
+				return err
+			}
+			if bundleData != nil && bundleData.LockboxAgeKey != "" && cfg.LockboxAgeKeyFile != "" {
+				if err := secrets.SaveKeyFile(cfg.LockboxAgeKeyFile, bundleData.LockboxAgeKey); err != nil {
+					return err
+				}
+				fmt.Println("[secrets] Stored lockbox age key at", cfg.LockboxAgeKeyFile)
+			}
+
+			lockboxURL := cfg.LockboxRepoURL
+			if bundleData != nil && bundleData.LockboxRepoURL != "" {
+				lockboxURL = bundleData.LockboxRepoURL
+			}
+			lockboxRef := cfg.LockboxRepoRef
+			if bundleData != nil && bundleData.LockboxRepoRef != "" {
+				lockboxRef = bundleData.LockboxRepoRef
+			}
+			if lockboxURL != "" && cfg.LockboxRepoPath != "" {
+				if err := runtime.EnsureRepoRef(cfg.LockboxRepoPath, lockboxURL, lockboxRef); err != nil {
+					return err
+				}
 			}
 
 			if err := runtime.EnsureRepo(cfg.RepoPath, cfg.RepoURL); err != nil {
@@ -74,13 +100,15 @@ func newUpCmd() *cobra.Command {
 			}
 
 			ansCfg := runtime.AnsibleConfig{
-				RepoPath:    cfg.RepoPath,
-				VarsFile:    cfg.VarsFile,
-				PersonaFile: cfg.PersonaFile,
-				BundleFile:  cfg.BundleFile,
-				Profile:     cfg.Profile,
-				Tags:        cfg.Tags,
-				Persona:     cfg.Persona,
+				RepoPath:        cfg.RepoPath,
+				VarsFile:        cfg.VarsFile,
+				PersonaFile:     cfg.PersonaFile,
+				BundleFile:      cfg.BundleFile,
+				Profile:         cfg.Profile,
+				Tags:            cfg.Tags,
+				Persona:         cfg.Persona,
+				LockboxRepoPath: cfg.LockboxRepoPath,
+				LockboxAgeKey:   cfg.LockboxAgeKeyFile,
 			}
 
 			if err := runtime.RunAnsible(ansCfg); err != nil {

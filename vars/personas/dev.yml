@@ -1,5 +1,11 @@
 # Default persona overrides for developer workstations
 persona: dev
+
+lockbox_render_targets:
+  - project: anvil
+    env: dev
+    stack: bootstrap
+    out: "{{ anvil_repo_path }}"
 observability_install_node_exporter: false
 observability_install_promtail: false
 observability_install_osquery: false

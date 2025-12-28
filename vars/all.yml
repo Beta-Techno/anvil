@@ -99,6 +99,13 @@ chezmoi_repo: https://github.com/Beta-Techno/dotfiles.git
 github_token: ""
 github_upload_key: true
 
+# Local paths and lockbox rendering
+anvil_repo_path: "{{ lookup('env','ANVIL_REPO_PATH') | default(ansible_env.HOME + '/.local/share/anvil', true) }}"
+lockbox_repo_path: "{{ lookup('env','LOCKBOX_REPO_PATH') | default(ansible_env.HOME + '/.local/share/lockbox', true) }}"
+lockbox_age_key_file: "{{ lookup('env','LOCKBOX_AGE_KEY_FILE') | default(ansible_env.HOME + '/.config/anvil/lockbox.age', true) }}"
+lockbox_lockctl_path: /usr/local/bin/lockctl
+lockbox_render_targets: []
+
 # Optional checksums (sha256:...); leave blank to skip verification
 zed_install_checksum: ""
 ghostty_install_checksum: ""

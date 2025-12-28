@@ -110,3 +110,12 @@ func writeKey(path string, data []byte) error {
 	}
 	return nil
 }
+
+// SaveKeyFile writes key material to the provided path with 0600 perms.
+func SaveKeyFile(path, key string) error {
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return errors.New("key input empty")
+	}
+	return writeKey(path, []byte(key))
+}

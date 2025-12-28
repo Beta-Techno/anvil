@@ -28,6 +28,34 @@ func EnsureRepo(path, url string) error {
 	return cmd.Run()
 }
 
+// EnsureRepoRef updates the repo and ensures the requested ref is checked out.
+func EnsureRepoRef(path, url, ref string) error {
+	if err := EnsureRepo(path, url); err != nil {
+		return err
+	}
+	if ref == "" {
+		return nil
+	}
+	if err := runGit(path, "fetch", "origin", ref); err != nil {
+		return err
+	}
+	// Try direct checkout first, fall back to creating the branch from origin/ref.
+	if err := runGit(path, "checkout", ref); err != nil {
+		if err := runGit(path, "checkout", "-B", ref, "origin/"+ref); err != nil {
+			return err
+		}
+	}
+	return runGit(path, "pull", "--ff-only", "origin", ref)
+}
+
+func runGit(path string, args ...string) error {
+	cmdArgs := append([]string{"-C", path}, args...)
+	cmd := exec.Command("git", cmdArgs...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
 func EnsureVarsFile(repoPath, varsFile string) error {
 	if varsFile == "" {
 		return fmt.Errorf("vars file path empty")

@@ -1,0 +1,233 @@
+---
+- name: Skip lockbox setup when disabled
+  ansible.builtin.debug:
+    msg: "Lockbox integration disabled (lockbox_install=false)."
+  when: not lockbox_install
+
+- name: Set lockbox facts
+  ansible.builtin.set_fact:
+    lockbox_repo_path_resolved: "{{ lockbox_repo_path }}"
+    lockbox_age_key_file_resolved: "{{ lockbox_age_key_file }}"
+    lockbox_render_targets_resolved: "{{ lockbox_render_targets }}"
+    lockbox_vars: "{{ lockbox_vars | default({}) }}"
+  when: lockbox_install
+
+- name: Check lockbox repo path
+  ansible.builtin.stat:
+    path: "{{ lockbox_repo_path_resolved }}"
+  register: lockbox_repo_stat
+  when: lockbox_install
+
+- name: Check lockbox age key file
+  ansible.builtin.stat:
+    path: "{{ lockbox_age_key_file_resolved }}"
+  register: lockbox_key_stat
+  when: lockbox_install
+
+- name: Report when lockbox repo or key missing
+  ansible.builtin.debug:
+    msg: "Lockbox repo or age key missing; skipping lockctl install/render."
+  when:
+    - lockbox_install
+    - not (lockbox_repo_stat.stat.exists and lockbox_key_stat.stat.exists)
+
+- name: Check lockctl binary presence
+  ansible.builtin.stat:
+    path: "{{ lockbox_lockctl_path }}"
+  register: lockbox_lockctl_stat
+  when:
+    - lockbox_install
+    - lockbox_repo_stat.stat.exists
+    - lockbox_key_stat.stat.exists
+
+- name: Check Go toolchain for lockctl build
+  ansible.builtin.stat:
+    path: /usr/local/go/bin/go
+  register: lockbox_go_stat
+  when:
+    - lockbox_install
+    - lockbox_repo_stat.stat.exists
+    - lockbox_key_stat.stat.exists
+    - not lockbox_lockctl_stat.stat.exists
+
+- name: Warn when Go toolchain missing
+  ansible.builtin.debug:
+    msg: "Go toolchain missing at /usr/local/go/bin/go; skipping lockctl build."
+  when:
+    - lockbox_install
+    - lockbox_repo_stat.stat.exists
+    - lockbox_key_stat.stat.exists
+    - not lockbox_lockctl_stat.stat.exists
+    - not lockbox_go_stat.stat.exists
+
+- name: Build lockctl from source
+  ansible.builtin.shell: |
+    set -e
+    /usr/local/go/bin/go build -o {{ lockbox_lockctl_path }} ./cmd/lockctl
+  args:
+    chdir: "{{ lockbox_repo_path_resolved }}"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+    GOPATH: "{{ ansible_env.HOME }}/go"
+  become: true
+  when:
+    - lockbox_install
+    - lockbox_repo_stat.stat.exists
+    - lockbox_key_stat.stat.exists
+    - not lockbox_lockctl_stat.stat.exists
+    - lockbox_go_stat.stat.exists
+
+- name: Refresh lockctl binary presence
+  ansible.builtin.stat:
+    path: "{{ lockbox_lockctl_path }}"
+  register: lockbox_lockctl_stat
+  when:
+    - lockbox_install
+    - lockbox_repo_stat.stat.exists
+    - lockbox_key_stat.stat.exists
+
+- name: Render lockbox stacks and capture values
+  vars:
+    lockbox_target_out: "{{ item.out | default(anvil_repo_path) }}"
+  block:
+    - name: Render stack {{ item.project }}/{{ item.env }}/{{ item.stack }}
+      ansible.builtin.command: >
+        {{ lockbox_lockctl_path }} render --repo {{ lockbox_repo_path_resolved }}
+        --project {{ item.project }} --env {{ item.env }} --stack {{ item.stack }}
+        --out {{ lockbox_target_out }}
+      environment:
+        SOPS_AGE_KEY_FILE: "{{ lockbox_age_key_file_resolved }}"
+
+    - name: Load lockbox stack values
+      ansible.builtin.command: >
+        {{ lockbox_lockctl_path }} show --repo {{ lockbox_repo_path_resolved }}
+        --project {{ item.project }} --env {{ item.env }} --stack {{ item.stack }}
+        --format yaml
+      register: lockbox_stack_values
+      changed_when: false
+      environment:
+        SOPS_AGE_KEY_FILE: "{{ lockbox_age_key_file_resolved }}"
+
+    - name: Merge lockbox stack values
+      ansible.builtin.set_fact:
+        lockbox_vars: >-
+          {{ lockbox_vars | combine(((lockbox_stack_values.stdout | default('')) | length > 0) | ternary(lockbox_stack_values.stdout | from_yaml, {}), recursive=True) }}
+  loop: "{{ lockbox_render_targets_resolved }}"
+  loop_control:
+    label: "{{ item.project }}/{{ item.env }}/{{ item.stack }}"
+  when:
+    - lockbox_install
+    - lockbox_repo_stat.stat.exists
+    - lockbox_key_stat.stat.exists
+    - lockbox_lockctl_stat.stat.exists
+    - lockbox_render_targets_resolved | length > 0
+
+- name: Log lockbox render summary
+  ansible.builtin.debug:
+    msg: "Lockbox render targets processed: {{ lockbox_render_targets_resolved | length }}"
+  when:
+    - lockbox_install
+    - lockbox_repo_stat.stat.exists
+    - lockbox_key_stat.stat.exists
+    - lockbox_render_targets_resolved | length > 0
+
+- name: Populate secret facts from lockbox
+  ansible.builtin.set_fact:
+    lockbox_vars: "{{ lockbox_vars }}"
+    tailscale_auth_key: "{{ tailscale_auth_key | default(lockbox_vars.tailscale_auth_key, true) }}"
+    ngrok_authtoken: "{{ ngrok_authtoken | default(lockbox_vars.ngrok_authtoken, true) }}"
+    cloudflare_api_token: "{{ cloudflare_api_token | default(lockbox_vars.cloudflare_api_token, true) }}"
+    cloudflare_account_id: "{{ cloudflare_account_id | default(lockbox_vars.cloudflare_account_id, true) }}"
+    cloudflare_zone_id: "{{ cloudflare_zone_id | default(lockbox_vars.cloudflare_zone_id, true) }}"
+    observability_loki_endpoint: "{{ observability_loki_endpoint | default(lockbox_vars.observability_loki_endpoint, true) }}"
+    observability_loki_username: "{{ observability_loki_username | default(lockbox_vars.observability_loki_username, true) }}"
+    observability_loki_password: "{{ observability_loki_password | default(lockbox_vars.observability_loki_password, true) }}"
+    observability_fleet_endpoint: "{{ observability_fleet_endpoint | default(lockbox_vars.observability_fleet_endpoint, true) }}"
+    observability_fleet_enroll_secret: "{{ observability_fleet_enroll_secret | default(lockbox_vars.observability_fleet_enroll_secret, true) }}"
+    activitywatch_endpoint: "{{ activitywatch_endpoint | default(lockbox_vars.activitywatch_endpoint, true) }}"
+  when:
+    - lockbox_install
+    - lockbox_repo_stat.stat.exists
+    - lockbox_key_stat.stat.exists
+    - lockbox_render_targets_resolved | length > 0
+
+- name: Check tailscale binary
+  ansible.builtin.stat:
+    path: /usr/bin/tailscale
+  register: lockbox_tailscale_bin
+  when:
+    - lockbox_install
+    - lockbox_vars.tailscale_auth_key | default('') | length > 0
+
+- name: Check Tailscale status
+  ansible.builtin.command: tailscale status --json
+  register: lockbox_tailscale_status
+  changed_when: false
+  failed_when: false
+  become: true
+  when:
+    - lockbox_install
+    - lockbox_vars.tailscale_auth_key | default('') | length > 0
+    - lockbox_tailscale_bin is defined
+    - lockbox_tailscale_bin.stat.exists
+
+- name: Determine Tailscale backend state
+  ansible.builtin.set_fact:
+    lockbox_tailscale_state: "{{ ((lockbox_tailscale_status.stdout | default('{}')) | from_json).BackendState | default('') }}"
+  when:
+    - lockbox_tailscale_status is defined
+    - lockbox_tailscale_status.rc is defined
+    - lockbox_tailscale_status.rc == 0
+
+- name: Authenticate Tailscale using lockbox key
+  ansible.builtin.command: >-
+    tailscale up --auth-key {{ lockbox_vars.tailscale_auth_key }} {{ lockbox_tailscale_extra_args }}
+  become: true
+  when:
+    - lockbox_install
+    - lockbox_vars.tailscale_auth_key | default('') | length > 0
+    - lockbox_tailscale_bin is defined
+    - lockbox_tailscale_bin.stat.exists
+    - lockbox_tailscale_status.rc | default(1) != 0 or (lockbox_tailscale_state | default('')) != 'Running'
+
+- name: Ensure ngrok config directory exists
+  ansible.builtin.file:
+    path: "{{ lockbox_user_home }}/.config/ngrok"
+    state: directory
+    mode: "0700"
+  when:
+    - lockbox_install
+    - lockbox_vars.ngrok_authtoken | default('') | length > 0
+
+- name: Check ngrok config file
+  ansible.builtin.stat:
+    path: "{{ lockbox_user_home }}/.config/ngrok/ngrok.yml"
+  register: lockbox_ngrok_config_stat
+  when:
+    - lockbox_install
+    - lockbox_vars.ngrok_authtoken | default('') | length > 0
+
+- name: Read current ngrok config
+  ansible.builtin.slurp:
+    path: "{{ lockbox_user_home }}/.config/ngrok/ngrok.yml"
+  register: lockbox_ngrok_config
+  when:
+    - lockbox_ngrok_config_stat is defined
+    - lockbox_ngrok_config_stat.stat.exists
+
+- name: Set current ngrok authtoken fact
+  ansible.builtin.set_fact:
+    lockbox_ngrok_current_token: "{{ ((lockbox_ngrok_config.content | b64decode | from_yaml) | default({})).authtoken | default('') }}"
+  when:
+    - lockbox_ngrok_config is defined
+
+- name: Configure ngrok authtoken
+  ansible.builtin.command: ngrok config add-authtoken {{ lockbox_vars.ngrok_authtoken }}
+  environment:
+    HOME: "{{ lockbox_user_home }}"
+    XDG_CONFIG_HOME: "{{ lockbox_user_home }}/.config"
+  changed_when: true
+  when:
+    - lockbox_install
+    - lockbox_vars.ngrok_authtoken | default('') | length > 0
+    - lockbox_ngrok_current_token | default('') != lockbox_vars.ngrok_authtoken

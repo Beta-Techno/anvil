@@ -8,13 +8,15 @@ import (
 )
 
 type AnsibleConfig struct {
-	RepoPath    string
-	VarsFile    string
-	PersonaFile string
-	BundleFile  string
-	Profile     string
-	Tags        string
-	Persona     string
+	RepoPath        string
+	VarsFile        string
+	PersonaFile     string
+	BundleFile      string
+	Profile         string
+	Tags            string
+	Persona         string
+	LockboxRepoPath string
+	LockboxAgeKey   string
 }
 
 func RunAnsible(cfg AnsibleConfig) error {
@@ -39,6 +41,13 @@ func RunAnsible(cfg AnsibleConfig) error {
 		env = append(env, "PERSONA="+cfg.Persona)
 	}
 	env = append(env, "KEY_BUNDLE_FETCH=skip")
+	env = append(env, "ANVIL_REPO_PATH="+cfg.RepoPath)
+	if cfg.LockboxRepoPath != "" {
+		env = append(env, "LOCKBOX_REPO_PATH="+cfg.LockboxRepoPath)
+	}
+	if cfg.LockboxAgeKey != "" {
+		env = append(env, "LOCKBOX_AGE_KEY_FILE="+cfg.LockboxAgeKey)
+	}
 	cmd.Env = env
 
 	fmt.Println("[runtime] Running:", cmd.String())
