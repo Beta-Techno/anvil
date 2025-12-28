@@ -86,32 +86,13 @@
     - lockbox_repo_stat.stat.exists
     - lockbox_key_stat.stat.exists
 
-- name: Render lockbox stacks and capture values
-  vars:
-    lockbox_target_out: "{{ item.out | default(anvil_repo_path) }}"
-  block:
-    - name: Render stack {{ item.project }}/{{ item.env }}/{{ item.stack }}
-      ansible.builtin.command: >
-        {{ lockbox_lockctl_path }} render --repo {{ lockbox_repo_path_resolved }}
-        --project {{ item.project }} --env {{ item.env }} --stack {{ item.stack }}
-        --out {{ lockbox_target_out }}
-      environment:
-        SOPS_AGE_KEY_FILE: "{{ lockbox_age_key_file_resolved }}"
-
-    - name: Load lockbox stack values
-      ansible.builtin.command: >
-        {{ lockbox_lockctl_path }} show --repo {{ lockbox_repo_path_resolved }}
-        --project {{ item.project }} --env {{ item.env }} --stack {{ item.stack }}
-        --format yaml
-      register: lockbox_stack_values
-      changed_when: false
-      environment:
-        SOPS_AGE_KEY_FILE: "{{ lockbox_age_key_file_resolved }}"
-
-    - name: Merge lockbox stack values
-      ansible.builtin.set_fact:
-        lockbox_vars: >-
-          {{ lockbox_vars | combine(((lockbox_stack_values.stdout | default('')) | length > 0) | ternary(lockbox_stack_values.stdout | from_yaml, {}), recursive=True) }}
+- name: Render lockbox stacks
+  ansible.builtin.command: >
+    {{ lockbox_lockctl_path }} render --repo {{ lockbox_repo_path_resolved }}
+    --project {{ item.project }} --env {{ item.env }} --stack {{ item.stack }}
+    --out {{ item.out | default(anvil_repo_path) }}
+  environment:
+    SOPS_AGE_KEY_FILE: "{{ lockbox_age_key_file_resolved }}"
   loop: "{{ lockbox_render_targets_resolved }}"
   loop_control:
     label: "{{ item.project }}/{{ item.env }}/{{ item.stack }}"
@@ -120,6 +101,40 @@
     - lockbox_repo_stat.stat.exists
     - lockbox_key_stat.stat.exists
     - lockbox_lockctl_stat.stat.exists
+    - lockbox_render_targets_resolved | length > 0
+
+- name: Load lockbox stack values
+  ansible.builtin.command: >
+    {{ lockbox_lockctl_path }} show --repo {{ lockbox_repo_path_resolved }}
+    --project {{ item.project }} --env {{ item.env }} --stack {{ item.stack }}
+    --format yaml
+  register: lockbox_stack_show
+  changed_when: false
+  environment:
+    SOPS_AGE_KEY_FILE: "{{ lockbox_age_key_file_resolved }}"
+  loop: "{{ lockbox_render_targets_resolved }}"
+  loop_control:
+    label: "{{ item.project }}/{{ item.env }}/{{ item.stack }}"
+  when:
+    - lockbox_install
+    - lockbox_repo_stat.stat.exists
+    - lockbox_key_stat.stat.exists
+    - lockbox_lockctl_stat.stat.exists
+    - lockbox_render_targets_resolved | length > 0
+
+- name: Merge lockbox stack values
+  ansible.builtin.set_fact:
+    lockbox_vars: >-
+      {{ lockbox_vars | combine((item.stdout | default('')) | ternary(item.stdout | from_yaml, {}), recursive=True) }}
+  loop: "{{ lockbox_stack_show.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.project }}/{{ item.item.env }}/{{ item.item.stack }}"
+  when:
+    - lockbox_install
+    - lockbox_repo_stat.stat.exists
+    - lockbox_key_stat.stat.exists
+    - lockbox_lockctl_stat.stat.exists
+    - lockbox_render_targets_resolved | length > 0
     - lockbox_render_targets_resolved | length > 0
 
 - name: Log lockbox render summary
