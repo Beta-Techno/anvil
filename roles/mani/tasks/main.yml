@@ -17,14 +17,41 @@
     mode: "0755"
   when: mani_install
 
-- name: Install mani via go install
-  ansible.builtin.shell: >-
-    GOBIN=/usr/local/bin /usr/local/go/bin/go install {{ mani_go_package }}@{{ mani_go_version }}
-  args:
-    executable: /bin/bash
-  environment:
-    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+- name: Download mani release
+  ansible.builtin.get_url:
+    url: "https://github.com/alajmo/mani/releases/{{ 'latest/download' if mani_version == 'latest' else ('download/' ~ mani_version) }}/mani_Linux_{{ mani_arch_map[apt_arch] | default(apt_arch) }}.tar.gz"
+    dest: /tmp/mani.tar.gz
+    mode: "0644"
+  when:
+    - mani_install
+    - not mani_bin_stat.stat.exists | default(false)
+
+- name: Extract mani binary
+  ansible.builtin.unarchive:
+    src: /tmp/mani.tar.gz
+    dest: /tmp/mani-bin
+    remote_src: true
+  when:
+    - mani_install
+    - not mani_bin_stat.stat.exists | default(false)
+
+- name: Install mani binary
+  ansible.builtin.copy:
+    src: /tmp/mani-bin/mani
+    dest: "{{ mani_bin_path }}"
+    mode: "0755"
   become: true
+  when:
+    - mani_install
+    - not mani_bin_stat.stat.exists | default(false)
+
+- name: Cleanup mani artifacts
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/mani.tar.gz
+    - /tmp/mani-bin
   when:
     - mani_install
     - not mani_bin_stat.stat.exists | default(false)

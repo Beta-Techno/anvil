@@ -5,8 +5,10 @@ mani_repo_path: "{{ lookup('env','MANI_REPO_PATH') | default(ansible_env.HOME + 
 mani_bin_path: "{{ lookup('env','MANI_BIN') | default('/usr/local/bin/mani', true) }}"
 mani_sync_tags_raw: "{{ lookup('env','MANI_SYNC_TAGS') | default('infra', true) }}"
 mani_run_commands_raw: "{{ lookup('env','MANI_RUN_COMMANDS') | default('', true) }}"
-mani_go_package: github.com/alajmo/mani/cmd/mani
-mani_go_version: latest
+mani_version: latest
+mani_arch_map:
+  amd64: x86_64
+  arm64: arm64
 mani_sync_tags: >-
   {{ mani_sync_tags_raw | regex_replace('\s+', '') | split(',') | reject('equalto', '') | list }}
 mani_run_commands: >-
