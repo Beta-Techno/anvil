@@ -7,7 +7,7 @@ mani_sync_tags_raw: "{{ lookup('env','MANI_SYNC_TAGS') | default('infra', true) 
 mani_run_commands_raw: "{{ lookup('env','MANI_RUN_COMMANDS') | default('', true) }}"
 mani_version: "{{ lookup('env','MANI_VERSION') | default('v0.31.2', true) }}"
 mani_arch_map:
-  amd64: x86_64
+  amd64: amd64
   arm64: arm64
 mani_version_number: "{{ mani_version | regex_replace('^v', '') }}"
 mani_sync_tags: >-
