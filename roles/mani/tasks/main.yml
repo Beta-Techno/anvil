@@ -17,6 +17,15 @@
     mode: "0755"
   when: mani_install
 
+- name: Ensure mani extraction directory exists
+  ansible.builtin.file:
+    path: /tmp/mani-bin
+    state: directory
+    mode: "0755"
+  when:
+    - mani_install
+    - not mani_bin_stat.stat.exists | default(false)
+
 - name: Download mani release
   ansible.builtin.get_url:
     url: "https://github.com/alajmo/mani/releases/download/{{ mani_version }}/mani_{{ mani_version_number }}_linux_{{ mani_arch_map[apt_arch] | default(apt_arch) }}.tar.gz"
