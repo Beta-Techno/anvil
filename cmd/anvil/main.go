@@ -109,6 +109,11 @@ func newUpCmd() *cobra.Command {
 				Persona:         cfg.Persona,
 				LockboxRepoPath: cfg.LockboxRepoPath,
 				LockboxAgeKey:   cfg.LockboxAgeKeyFile,
+				ManiRepoPath:    cfg.ManiRepoPath,
+				ManiRepoURL:     cfg.ManiRepoURL,
+				ManiBin:         cfg.ManiBin,
+				ManiSyncTags:    cfg.ManiSyncTags,
+				ManiRunCommands: cfg.ManiRunCommands,
 			}
 
 			if err := runtime.RunAnsible(ansCfg); err != nil {

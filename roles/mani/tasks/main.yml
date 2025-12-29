@@ -1,0 +1,54 @@
+---
+- name: Skip mani setup when disabled
+  ansible.builtin.debug:
+    msg: "Mani integration disabled (mani_install=false)."
+  when: not mani_install
+
+- name: Check mani binary
+  ansible.builtin.stat:
+    path: "{{ mani_bin_path }}"
+  register: mani_bin_stat
+  when: mani_install
+
+- name: Ensure mani destination directory exists
+  ansible.builtin.file:
+    path: "{{ mani_repo_path | dirname }}"
+    state: directory
+    mode: "0755"
+  when: mani_install
+
+- name: Install mani via go install
+  ansible.builtin.shell: >-
+    GOBIN=/usr/local/bin /usr/local/go/bin/go install {{ mani_go_package }}@{{ mani_go_version }}
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+  become: true
+  when:
+    - mani_install
+    - not mani_bin_stat.stat.exists | default(false)
+
+- name: Ensure mani manifest repo present
+  ansible.builtin.git:
+    repo: "{{ mani_repo_url }}"
+    dest: "{{ mani_repo_path }}"
+    version: main
+  when: mani_install
+
+- name: Run mani sync
+  ansible.builtin.command: >-
+    {{ mani_bin_path }} --config {{ mani_repo_path }}/mani.yaml sync --tags {{ mani_sync_tags | join(',') }}
+  environment: "{{ mani_env }}"
+  when:
+    - mani_install
+    - mani_sync_tags | length > 0
+
+- name: Run mani commands
+  ansible.builtin.command: >-
+    {{ mani_bin_path }} --config {{ mani_repo_path }}/mani.yaml run {{ item }}
+  loop: "{{ mani_run_commands }}"
+  environment: "{{ mani_env }}"
+  when:
+    - mani_install
+    - mani_run_commands | length > 0

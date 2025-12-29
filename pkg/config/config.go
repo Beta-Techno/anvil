@@ -36,6 +36,11 @@ func init() {
 	v.SetDefault("lockbox_repo_path", filepath.Join(home, ".local", "share", "lockbox"))
 	v.SetDefault("lockbox_repo_ref", "")
 	v.SetDefault("lockbox_age_key_file", filepath.Join(home, ".config", "anvil", "lockbox.age"))
+	v.SetDefault("mani_repo_url", "git@github.com:Beta-Techno/mani.git")
+	v.SetDefault("mani_repo_path", filepath.Join(home, ".local", "share", "infra", "mani"))
+	v.SetDefault("mani_bin", "/usr/local/bin/mani")
+	v.SetDefault("mani_sync_tags", []string{"infra"})
+	v.SetDefault("mani_run_commands", []string{})
 
 	_ = v.ReadInConfig()
 }
@@ -57,6 +62,11 @@ type Config struct {
 	LockboxRepoPath   string
 	LockboxRepoRef    string
 	LockboxAgeKeyFile string
+	ManiRepoURL       string
+	ManiRepoPath      string
+	ManiBin           string
+	ManiSyncTags      []string
+	ManiRunCommands   []string
 }
 
 // Load returns the merged configuration.
@@ -79,6 +89,11 @@ func Load(overrides map[string]any) (*Config, error) {
 		LockboxRepoPath:   expandPath(v.GetString("lockbox_repo_path")),
 		LockboxRepoRef:    v.GetString("lockbox_repo_ref"),
 		LockboxAgeKeyFile: expandPath(v.GetString("lockbox_age_key_file")),
+		ManiRepoURL:       v.GetString("mani_repo_url"),
+		ManiRepoPath:      expandPath(v.GetString("mani_repo_path")),
+		ManiBin:           expandPath(v.GetString("mani_bin")),
+		ManiSyncTags:      toStringSlice(v.Get("mani_sync_tags")),
+		ManiRunCommands:   toStringSlice(v.Get("mani_run_commands")),
 	}
 	if cfg.RepoPath == "" {
 		cfg.RepoPath = "."
@@ -120,4 +135,26 @@ func expandPath(p string) string {
 		return p
 	}
 	return filepath.Clean(p)
+}
+
+func toStringSlice(val any) []string {
+	switch v := val.(type) {
+	case []string:
+		return v
+	case []any:
+		result := make([]string, 0, len(v))
+		for _, item := range v {
+			if s, ok := item.(string); ok {
+				result = append(result, s)
+			}
+		}
+		return result
+	case string:
+		if v == "" {
+			return nil
+		}
+		return []string{v}
+	default:
+		return nil
+	}
 }

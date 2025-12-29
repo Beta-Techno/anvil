@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type AnsibleConfig struct {
@@ -17,6 +18,11 @@ type AnsibleConfig struct {
 	Persona         string
 	LockboxRepoPath string
 	LockboxAgeKey   string
+	ManiRepoPath    string
+	ManiRepoURL     string
+	ManiBin         string
+	ManiSyncTags    []string
+	ManiRunCommands []string
 }
 
 func RunAnsible(cfg AnsibleConfig) error {
@@ -47,6 +53,21 @@ func RunAnsible(cfg AnsibleConfig) error {
 	}
 	if cfg.LockboxAgeKey != "" {
 		env = append(env, "LOCKBOX_AGE_KEY_FILE="+cfg.LockboxAgeKey)
+	}
+	if cfg.ManiRepoPath != "" {
+		env = append(env, "MANI_REPO_PATH="+cfg.ManiRepoPath)
+	}
+	if cfg.ManiRepoURL != "" {
+		env = append(env, "MANI_REPO_URL="+cfg.ManiRepoURL)
+	}
+	if cfg.ManiBin != "" {
+		env = append(env, "MANI_BIN="+cfg.ManiBin)
+	}
+	if len(cfg.ManiSyncTags) > 0 {
+		env = append(env, "MANI_SYNC_TAGS="+strings.Join(cfg.ManiSyncTags, ","))
+	}
+	if len(cfg.ManiRunCommands) > 0 {
+		env = append(env, "MANI_RUN_COMMANDS="+strings.Join(cfg.ManiRunCommands, ","))
 	}
 	cmd.Env = env
 

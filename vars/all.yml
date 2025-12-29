@@ -106,6 +106,18 @@ lockbox_age_key_file: "{{ lookup('env','LOCKBOX_AGE_KEY_FILE') | default(ansible
 lockbox_lockctl_path: /usr/local/bin/lockctl
 lockbox_render_targets: []
 
+# Mani workspace
+mani_install: true
+mani_repo_url: "{{ lookup('env','MANI_REPO_URL') | default('git@github.com:Beta-Techno/mani.git', true) }}"
+mani_repo_path: "{{ lookup('env','MANI_REPO_PATH') | default(ansible_env.HOME + '/.local/share/infra/mani', true) }}"
+mani_bin_path: "{{ lookup('env','MANI_BIN') | default('/usr/local/bin/mani', true) }}"
+mani_sync_tags_raw: "{{ lookup('env','MANI_SYNC_TAGS') | default('infra', true) }}"
+mani_run_commands_raw: "{{ lookup('env','MANI_RUN_COMMANDS') | default('', true) }}"
+mani_sync_tags: >-
+  {{ mani_sync_tags_raw | regex_replace('\\s+', '') | split(',') | reject('equalto', '') | list }}
+mani_run_commands: >-
+  {{ mani_run_commands_raw | regex_replace('\\s+', '') | split(',') | reject('equalto', '') | list }}
+
 # Optional checksums (sha256:...); leave blank to skip verification
 zed_install_checksum: ""
 ghostty_install_checksum: ""

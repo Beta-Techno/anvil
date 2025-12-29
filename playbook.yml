@@ -21,6 +21,7 @@
     - { role: chezmoi_apply, tags: [chezmoi_apply, essential] }
     - { role: langs, tags: [langs, essential] }
     - { role: lockbox, tags: [lockbox, essential] }
+    - { role: mani, tags: [mani, essential] }
     - { role: ai_agents, tags: [ai_agents, essential] }
     - { role: lazyvim, tags: [lazyvim] }
     - { role: cloudflared, tags: [cloudflared], become: true }
