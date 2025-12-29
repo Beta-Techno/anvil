@@ -5,10 +5,11 @@ mani_repo_path: "{{ lookup('env','MANI_REPO_PATH') | default(ansible_env.HOME + 
 mani_bin_path: "{{ lookup('env','MANI_BIN') | default('/usr/local/bin/mani', true) }}"
 mani_sync_tags_raw: "{{ lookup('env','MANI_SYNC_TAGS') | default('infra', true) }}"
 mani_run_commands_raw: "{{ lookup('env','MANI_RUN_COMMANDS') | default('', true) }}"
-mani_version: latest
+mani_version: "{{ lookup('env','MANI_VERSION') | default('v0.31.2', true) }}"
 mani_arch_map:
   amd64: x86_64
   arm64: arm64
+mani_version_number: "{{ mani_version | regex_replace('^v', '') }}"
 mani_sync_tags: >-
   {{ mani_sync_tags_raw | regex_replace('\s+', '') | split(',') | reject('equalto', '') | list }}
 mani_run_commands: >-

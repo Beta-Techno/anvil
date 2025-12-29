@@ -19,7 +19,7 @@
 
 - name: Download mani release
   ansible.builtin.get_url:
-    url: "https://github.com/alajmo/mani/releases/{{ 'latest/download' if mani_version == 'latest' else ('download/' ~ mani_version) }}/mani_Linux_{{ mani_arch_map[apt_arch] | default(apt_arch) }}.tar.gz"
+    url: "https://github.com/alajmo/mani/releases/download/{{ mani_version }}/mani_{{ mani_version_number }}_linux_{{ mani_arch_map[apt_arch] | default(apt_arch) }}.tar.gz"
     dest: /tmp/mani.tar.gz
     mode: "0644"
   when:
