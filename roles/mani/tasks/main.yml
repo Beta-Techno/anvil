@@ -31,6 +31,7 @@
     src: /tmp/mani.tar.gz
     dest: /tmp/mani-bin
     remote_src: true
+    creates: /tmp/mani-bin/mani
   when:
     - mani_install
     - not mani_bin_stat.stat.exists | default(false)
