@@ -23,3 +23,8 @@ mani_env:
 mani_lockbox_env: "{{ persona }}"
 mani_lockbox_stack: bootstrap
 mani_lockbox_out: "{{ anvil_repo_path }}"
+mani_workspace_dirs:
+  - "{{ ansible_env.HOME }}/code/infra"
+  - "{{ ansible_env.HOME }}/code/web"
+  - "{{ ansible_env.HOME }}/code/web/static"
+  - "{{ ansible_env.HOME }}/code/web/react"
