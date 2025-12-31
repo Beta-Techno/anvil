@@ -108,8 +108,8 @@ lockbox_render_targets: []
 
 # Mani workspace
 mani_install: true
-mani_repo_url: "{{ lookup('env','MANI_REPO_URL') | default('git@github.com:Beta-Techno/mani.git', true) }}"
-mani_repo_path: "{{ lookup('env','MANI_REPO_PATH') | default(ansible_env.HOME + '/.local/share/infra/mani', true) }}"
+mani_repo_url: "{{ lookup('env','MANI_REPO_URL') | default('git@github.com:Beta-Techno/atlas.git', true) }}"
+mani_repo_path: "{{ lookup('env','MANI_REPO_PATH') | default(ansible_env.HOME + '/.local/share/infra/atlas', true) }}"
 mani_bin_path: "{{ lookup('env','MANI_BIN') | default('/usr/local/bin/mani', true) }}"
 mani_sync_tags_raw: "{{ lookup('env','MANI_SYNC_TAGS') | default('infra', true) }}"
 mani_run_commands_raw: "{{ lookup('env','MANI_RUN_COMMANDS') | default('', true) }}"
