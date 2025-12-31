@@ -37,7 +37,7 @@ func init() {
 	v.SetDefault("lockbox_repo_ref", "")
 	v.SetDefault("lockbox_age_key_file", filepath.Join(home, ".config", "anvil", "lockbox.age"))
 	v.SetDefault("mani_repo_url", "git@github.com:Beta-Techno/atlas.git")
-	v.SetDefault("mani_repo_path", filepath.Join(home, ".local", "share", "infra", "atlas"))
+	v.SetDefault("mani_repo_path", filepath.Join(home, "code", "infra", "atlas"))
 	v.SetDefault("mani_bin", "/usr/local/bin/mani")
 	v.SetDefault("mani_sync_tags", []string{"infra"})
 	v.SetDefault("mani_run_commands", []string{})
