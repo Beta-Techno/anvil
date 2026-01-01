@@ -6,14 +6,7 @@
 
 - name: Load mani manifest list
   ansible.builtin.set_fact:
-    mani_manifest_list: >-
-      {{
-        (lookup('env','MANI_MANIFESTS_JSON') | default('', true)) | length > 0
-          | ternary(
-              lookup('env','MANI_MANIFESTS_JSON') | from_json,
-              mani_manifests | default([])
-            )
-      }}
+    mani_manifest_list: "{{ (lookup('env','MANI_MANIFESTS_JSON') | default('[]', true)) | from_json }}"
   when: mani_install
 
 - name: Ensure mani manifest fallback
