@@ -4,24 +4,30 @@
     msg: "Mani integration disabled (mani_install=false)."
   when: not mani_install
 
-- name: Load mani manifest list
+- name: Initialize mani manifest list
   ansible.builtin.set_fact:
     mani_manifest_list: >-
-      {{
-        ((lookup('env','MANI_MANIFESTS_JSON') | default('[]', true)) | from_json)
-        | to_yaml | from_yaml
-      }}
+      {{ (mani_manifests | default([], true)) | to_yaml | from_yaml }}
   when: mani_install
+
+- name: Load mani manifest list from env when unset
+  ansible.builtin.set_fact:
+    mani_manifest_list: >-
+      {{ (lookup('env','MANI_MANIFESTS_JSON') | default('[]', true) | from_json) | to_yaml | from_yaml }}
+  when:
+    - mani_install
+    - mani_manifest_list | length == 0
 
 - name: Ensure mani manifest fallback
   ansible.builtin.set_fact:
-    mani_manifest_list: "{{ ([{
-      'repo_url': mani_repo_url,
-      'repo_path': mani_repo_path,
-      'repo_ref': 'main',
-      'sync_tags': mani_sync_tags,
-      'run_commands': mani_run_commands
-    }]) | to_yaml | from_yaml }}"
+    mani_manifest_list: >-
+      {{ ([{
+        'repo_url': mani_repo_url,
+        'repo_path': mani_repo_path,
+        'repo_ref': 'main',
+        'sync_tags': mani_sync_tags,
+        'run_commands': mani_run_commands
+      }]) | to_yaml | from_yaml }}
   when:
     - mani_install
     - mani_manifest_list | length == 0
