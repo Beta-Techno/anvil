@@ -28,3 +28,5 @@ mani_workspace_dirs:
   - "{{ ansible_env.HOME }}/code/web"
   - "{{ ansible_env.HOME }}/code/web/static"
   - "{{ ansible_env.HOME }}/code/web/react"
+  - "{{ ansible_env.HOME }}/code/web/nextjs"
+  - "{{ ansible_env.HOME }}/code/web/solid"
