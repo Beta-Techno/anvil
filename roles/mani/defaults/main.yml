@@ -31,7 +31,7 @@ mani_workspace_dirs:
   - "{{ ansible_env.HOME }}/code/web/nextjs"
   - "{{ ansible_env.HOME }}/code/web/solid"
   - "{{ ansible_env.HOME }}/code/web/svelte"
-  - "{{ ansible_env.HOME }}/code/web/monolith"
+  - "{{ ansible_env.HOME }}/code/web/mono"
   - "{{ ansible_env.HOME }}/code/web/npm"
   - "{{ ansible_env.HOME }}/code/service"
   - "{{ ansible_env.HOME }}/code/service/go"
