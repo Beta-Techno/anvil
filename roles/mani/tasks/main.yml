@@ -6,17 +6,18 @@
 
 - name: Load mani manifest list
   ansible.builtin.set_fact:
-    mani_manifest_list: {{ mani_manifests | default([]) }}
+    mani_manifest_list: "{{ mani_manifests | default([]) | to_yaml | from_yaml }}"
   when: mani_install
 
 - name: Ensure mani manifest fallback
   ansible.builtin.set_fact:
-    mani_manifest_list:
-      - repo_url: "{{ mani_repo_url }}"
-        repo_path: "{{ mani_repo_path }}"
-        repo_ref: "main"
-        sync_tags: {{ mani_sync_tags }}
-        run_commands: {{ mani_run_commands }}
+    mani_manifest_list: "{{ ([{
+      'repo_url': mani_repo_url,
+      'repo_path': mani_repo_path,
+      'repo_ref': 'main',
+      'sync_tags': mani_sync_tags,
+      'run_commands': mani_run_commands
+    }]) | to_yaml | from_yaml }}"
   when:
     - mani_install
     - mani_manifest_list | length == 0
