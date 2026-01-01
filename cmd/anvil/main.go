@@ -114,6 +114,7 @@ func newUpCmd() *cobra.Command {
 				ManiBin:         cfg.ManiBin,
 				ManiSyncTags:    cfg.ManiSyncTags,
 				ManiRunCommands: cfg.ManiRunCommands,
+				ManiManifests:   cfg.ManiManifests,
 			}
 
 			if err := runtime.RunAnsible(ansCfg); err != nil {

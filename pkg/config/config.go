@@ -67,6 +67,7 @@ type Config struct {
 	ManiBin           string
 	ManiSyncTags      []string
 	ManiRunCommands   []string
+	ManiManifests     []ManifestConfig
 }
 
 // Load returns the merged configuration.
@@ -94,9 +95,22 @@ func Load(overrides map[string]any) (*Config, error) {
 		ManiBin:           expandPath(v.GetString("mani_bin")),
 		ManiSyncTags:      toStringSlice(v.Get("mani_sync_tags")),
 		ManiRunCommands:   toStringSlice(v.Get("mani_run_commands")),
+		ManiManifests:     decodeManifestList(v.Get("mani_manifests")),
 	}
 	if cfg.RepoPath == "" {
 		cfg.RepoPath = "."
+	}
+	if len(cfg.ManiManifests) == 0 {
+		cfg.ManiManifests = []ManifestConfig{defaultManifest(cfg)}
+	}
+	for i := range cfg.ManiManifests {
+		cfg.ManiManifests[i].RepoPath = expandPath(cfg.ManiManifests[i].RepoPath)
+		if len(cfg.ManiManifests[i].SyncTags) == 0 {
+			cfg.ManiManifests[i].SyncTags = cfg.ManiSyncTags
+		}
+		if len(cfg.ManiManifests[i].RunCommands) == 0 {
+			cfg.ManiManifests[i].RunCommands = cfg.ManiRunCommands
+		}
 	}
 
 	varsFile := v.GetString("vars_file")

@@ -14,6 +14,7 @@ mani_sync_tags: >-
   {{ mani_sync_tags_raw | regex_replace('\s+', '') | split(',') | reject('equalto', '') | list }}
 mani_run_commands: >-
   {{ mani_run_commands_raw | regex_replace('\s+', '') | split(',') | reject('equalto', '') | list }}
+mani_manifests: []
 mani_env:
   SOPS_AGE_KEY_FILE: "{{ lockbox_age_key_file }}"
   LOCKCTL_BIN: "{{ lockbox_lockctl_path }}"

@@ -1,11 +1,14 @@
 package runtime
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/Beta-Techno/anvil-cli/pkg/config"
 )
 
 type AnsibleConfig struct {
@@ -23,6 +26,7 @@ type AnsibleConfig struct {
 	ManiBin         string
 	ManiSyncTags    []string
 	ManiRunCommands []string
+	ManiManifests   []config.ManifestConfig
 }
 
 func RunAnsible(cfg AnsibleConfig) error {
@@ -68,6 +72,11 @@ func RunAnsible(cfg AnsibleConfig) error {
 	}
 	if len(cfg.ManiRunCommands) > 0 {
 		env = append(env, "MANI_RUN_COMMANDS="+strings.Join(cfg.ManiRunCommands, ","))
+	}
+	if len(cfg.ManiManifests) > 0 {
+		if payload, err := json.Marshal(cfg.ManiManifests); err == nil {
+			env = append(env, "MANI_MANIFESTS_JSON="+string(payload))
+		}
 	}
 	cmd.Env = env
 
