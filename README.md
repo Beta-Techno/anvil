@@ -18,6 +18,17 @@ anvil update          # or sudo anvil update if installed to /usr/local/bin
 
 `anvil up` also hits GitHub’s release API once per run and warns if a newer tag exists (set `ANVIL_NO_UPDATE_CHECK=1` to disable the warning). Check your current build with `anvil version`.
 
+## Developer workflow (editing roles locally)
+
+If you’re hacking on the Ansible roles/playbook, clone the repo wherever you like and point the CLI at that working tree via `ANVIL_REPO_PATH`:
+
+```bash
+git clone https://github.com/Beta-Techno/anvil.git ~/dev/infrastructure/anvil
+ANVIL_REPO_PATH=~/dev/infrastructure/anvil anvil up --tags base
+```
+
+Any override supported in `config.Load` is also exposed as an env var (prefix `ANVIL_`), so you can set `ANVIL_REPO_URL`, `ANVIL_REPO_REF`, or `ANVIL_VARS_FILE` the same way. This lets you iterate on roles without touching the installed binary or legacy scripts.
+
 ## Local run
 ```bash
 cp vars/all.example.yml vars/all.yml   # edit toggles/checksums
