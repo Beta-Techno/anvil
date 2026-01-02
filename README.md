@@ -6,7 +6,12 @@ One-liner bootstrap for an Ubuntu box with optional workstation extras, IDEs, an
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Beta-Techno/anvil/main/install.sh | bash
 ```
-Defaults: profile `devheavy`, tags `all`, vars file `vars/all.yml` (auto-copied from `vars/all.example.yml` if missing). Override with env: `BRANCH`, `PROFILE`, `TAGS`, `VARS_FILE`, `TARGET_DIR`.
+The installer auto-detects your OS/arch (currently linux/darwin on amd64) and drops the binary in `/usr/local/bin/anvil`. Override via env:
+
+- `INSTALL_DIR=/path/to/bin` — install somewhere else (e.g., `$HOME/.local/bin`).
+- `VERSION=v0.0.44` — pin to a specific tag instead of `latest`.
+
+Afterward run `anvil up`. There’s no longer a separate bash installer/run script; everything flows through the CLI. Defaults: profile `devheavy`, tags `all`, vars file `vars/all.yml`.
 
 ## Updating the CLI
 
