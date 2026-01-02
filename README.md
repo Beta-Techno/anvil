@@ -29,13 +29,6 @@ ANVIL_REPO_PATH=~/dev/infrastructure/anvil anvil up --tags base
 
 Any override supported in `config.Load` is also exposed as an env var (prefix `ANVIL_`), so you can set `ANVIL_REPO_URL`, `ANVIL_REPO_REF`, or `ANVIL_VARS_FILE` the same way. This lets you iterate on roles without touching the installed binary or legacy scripts.
 
-## Local run
-```bash
-cp vars/all.example.yml vars/all.yml   # edit toggles/checksums
-./run.sh                               # uses TAGS=all, PROFILE=devheavy, PERSONA=dev
-```
-Override with `TAGS=... VARS_FILE=... PROFILE=... ./run.sh`.
-
 ### Personas (dev vs server)
 
 Anvil now ships with persona presets that toggle opinionated defaults:
@@ -43,25 +36,18 @@ Anvil now ships with persona presets that toggle opinionated defaults:
 - `dev` (default) — full workstation experience with GUIs/languages, but local-only: telemetry agents and remote trackers stay disabled.
 - `server` — same base stack plus observability/security agents that report into your fleet tooling.
 
-Pick the persona via `PERSONA` when calling `run.sh`/`bootstrap.sh`:
-
-```bash
-PERSONA=server ./run.sh           # renders vars/all.yml + vars/personas/server.yml
-PERSONA=dev PROFILE=devheavy ./run.sh --tags essential
-```
-
 Persona overrides live under `vars/personas/*.yml`. Drop in your own file and point `PERSONA_FILE` to it if you need custom behavior per org or host type.
 
 ### Bootstrap secrets bundle (optional)
 
-`run.sh` looks for a decrypted bundle at `~/.config/anvil/key-bundle.yml`. If it’s missing (and `KEY_BUNDLE_FETCH` isn’t set to `skip`), it automatically runs [`scripts/unlock-key-bundle.sh`](scripts/unlock-key-bundle.sh), which:
+The CLI looks for a decrypted bundle at `~/.config/anvil/key-bundle.yml`. If it’s missing (and `KEY_BUNDLE_FETCH` isn’t set to `skip`), it automatically runs [`scripts/unlock-key-bundle.sh`](scripts/unlock-key-bundle.sh), which:
 
 - Ensures `sops` is installed
 - Prompts for your age secret key (unless `SOPS_AGE_KEY` / `SOPS_AGE_KEY_FILE` already exist)
 - Downloads the default encrypted bundle from [`Beta-Techno/key`](../key) (override via `KEY_BUNDLE_URL`)
 - Decrypts it to `~/.config/anvil/key-bundle.yml` and stores the age key at `~/.config/anvil/age.key`
 
-If the file exists, `run.sh` automatically includes it (`-e @~/.config/anvil/key-bundle.yml`) so Git credentials, tokens, lockbox age keys, etc. are available to Ansible without manual edits. To bypass the helper entirely (e.g., on air-gapped hosts), set `KEY_BUNDLE_FETCH=skip`.
+If the file exists, Anvil automatically includes it (`-e @~/.config/anvil/key-bundle.yml`) so Git credentials, tokens, lockbox age keys, etc. are available to Ansible without manual edits. To bypass the helper entirely (e.g., on air-gapped hosts), set `KEY_BUNDLE_FETCH=skip`.
 
 ## Tags (summary)
 - **Essential** (`essential`): Core development setup - `base`, `drivers`, `docker`, `git`, `chezmoi` (dotfiles), `langs` (Node/Python/Ruby/Go/Rust/Java)
@@ -135,9 +121,7 @@ This ensures your `.bashrc` has the source loop **before** tool configs are crea
 - Extras: Chrome, Zed, Cursor, Ghostty, JetBrains Toolbox, Docker Desktop, NoMachine, terminal extras (tilix, zsh, oh-my-zsh), Flatpak/Snap apps, chezmoi dotfiles, cleanup
 
 ## Repo structure (high level)
-- `bootstrap.sh` — entrypoint; installs Ansible if needed, runs `playbook.yml`.
-- `run.sh` — local runner: sets `TAGS`/`PROFILE`/`VARS_FILE` (defaults: essential/devheavy/vars/all.yml) then calls `bootstrap.sh`.
-- `install.sh` — curlable installer: installs git if needed, clones repo, copies vars template, calls `run.sh`.
+- `bootstrap.sh` — entrypoint; installs Ansible if needed, runs `playbook.yml` (still available for dev/debug use).
 - `vars/all.example.yml` — sample vars file with all toggles/checksums/app lists/dotfiles repo.
 - `playbook.yml` — applies roles on localhost with tags.
 - `roles/` — individual roles for base, drivers, docker, etc.
