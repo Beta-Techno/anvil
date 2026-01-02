@@ -8,6 +8,16 @@ curl -fsSL https://raw.githubusercontent.com/Beta-Techno/anvil/main/install.sh |
 ```
 Defaults: profile `devheavy`, tags `all`, vars file `vars/all.yml` (auto-copied from `vars/all.example.yml` if missing). Override with env: `BRANCH`, `PROFILE`, `TAGS`, `VARS_FILE`, `TARGET_DIR`.
 
+## Updating the CLI
+
+Whenever a new version is released, run:
+
+```bash
+anvil update          # or sudo anvil update if installed to /usr/local/bin
+```
+
+`anvil up` also hits GitHub’s release API once per run and warns if a newer tag exists (set `ANVIL_NO_UPDATE_CHECK=1` to disable the warning). Check your current build with `anvil version`.
+
 ## Local run
 ```bash
 cp vars/all.example.yml vars/all.yml   # edit toggles/checksums

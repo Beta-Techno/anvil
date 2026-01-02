@@ -3,13 +3,17 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/Beta-Techno/anvil-cli/pkg/config"
 	"github.com/Beta-Techno/anvil-cli/pkg/persona"
 	"github.com/Beta-Techno/anvil-cli/pkg/runtime"
 	"github.com/Beta-Techno/anvil-cli/pkg/secrets"
+	"github.com/Beta-Techno/anvil-cli/pkg/update"
 	"github.com/spf13/cobra"
 )
+
+var version = "dev"
 
 func main() {
 	rootCmd := &cobra.Command{
@@ -20,6 +24,8 @@ func main() {
 	rootCmd.AddCommand(newUpCmd())
 	rootCmd.AddCommand(newUnlockCmd())
 	rootCmd.AddCommand(newDoctorCmd())
+	rootCmd.AddCommand(newVersionCmd())
+	rootCmd.AddCommand(newUpdateCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -50,6 +56,8 @@ func newUpCmd() *cobra.Command {
 			if err := runtime.CheckPrereqs(); err != nil {
 				return err
 			}
+
+			maybeWarnOutdated()
 
 			var bundleData *secrets.BundleData
 			if !cfg.SkipBundle {
@@ -149,5 +157,75 @@ func newDoctorCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("[anvil] doctor placeholder")
 		},
+	}
+}
+
+func newVersionCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Print Anvil CLI version",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(version)
+		},
+	}
+}
+
+func newUpdateCmd() *cobra.Command {
+	var targetFlag string
+	var versionFlag string
+	cmd := &cobra.Command{
+		Use:   "update",
+		Short: "Download and install the latest Anvil CLI",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var target string
+			if targetFlag != "" {
+				target = targetFlag
+			} else {
+				execPath, err := os.Executable()
+				if err != nil {
+					return err
+				}
+				target = execPath
+			}
+			target, _ = filepath.Abs(target)
+
+			var desiredVersion, downloadURL string
+			var err error
+			if versionFlag != "" {
+				desiredVersion = versionFlag
+				downloadURL = update.BuildDownloadURL(versionFlag)
+			} else {
+				desiredVersion, downloadURL, err = update.LatestVersionInfo()
+				if err != nil {
+					return fmt.Errorf("failed to fetch latest release: %w", err)
+				}
+			}
+
+			fmt.Printf("[update] downloading %s\n", downloadURL)
+			if err := update.DownloadAndReplace(downloadURL, target); err != nil {
+				return fmt.Errorf("update failed: %w", err)
+			}
+			fmt.Printf("[update] installed %s at %s\n", desiredVersion, target)
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&targetFlag, "target", "", "Binary path to replace (defaults to current executable)")
+	cmd.Flags().StringVar(&versionFlag, "version", "", "Specific version tag to install (default latest)")
+	return cmd
+}
+
+func maybeWarnOutdated() {
+	if os.Getenv("ANVIL_NO_UPDATE_CHECK") != "" {
+		return
+	}
+	if version == "" || version == "dev" {
+		return
+	}
+	latest, _, err := update.LatestVersionInfo()
+	if err != nil {
+		return
+	}
+	if update.CompareVersions(version, latest) < 0 {
+		fmt.Printf("[update] New Anvil CLI version available: %s (current %s). Run `anvil update`.\n", latest, version)
 	}
 }
