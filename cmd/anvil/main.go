@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Beta-Techno/anvil-cli/pkg/config"
+	"github.com/Beta-Techno/anvil-cli/pkg/gitssh"
 	"github.com/Beta-Techno/anvil-cli/pkg/persona"
 	"github.com/Beta-Techno/anvil-cli/pkg/runtime"
 	"github.com/Beta-Techno/anvil-cli/pkg/secrets"
@@ -86,6 +88,19 @@ func newUpCmd() *cobra.Command {
 			lockboxRef := cfg.LockboxRepoRef
 			if bundleData != nil && bundleData.LockboxRepoRef != "" {
 				lockboxRef = bundleData.LockboxRepoRef
+			}
+
+			if usesSSH(lockboxURL, cfg.ManiManifests) {
+				if bundleData == nil || bundleData.GitHubToken == "" {
+					return fmt.Errorf("github token missing in bundle; cannot set up SSH before cloning private repos")
+				}
+				if err := gitssh.EnsureAccess(gitssh.Config{
+					Username: bundleData.GitUsername,
+					Email:    bundleData.GitEmail,
+					Token:    bundleData.GitHubToken,
+				}); err != nil {
+					return err
+				}
 			}
 			if lockboxURL != "" && cfg.LockboxRepoPath != "" {
 				if err := runtime.EnsureRepoRef(cfg.LockboxRepoPath, lockboxURL, lockboxRef); err != nil {
@@ -228,4 +243,16 @@ func maybeWarnOutdated() {
 	if update.CompareVersions(version, latest) < 0 {
 		fmt.Printf("[update] New Anvil CLI version available: %s (current %s). Run `anvil update`.\n", latest, version)
 	}
+}
+
+func usesSSH(lockboxURL string, manifests []config.ManifestConfig) bool {
+	if strings.HasPrefix(lockboxURL, "git@") {
+		return true
+	}
+	for _, m := range manifests {
+		if strings.HasPrefix(m.RepoURL, "git@") {
+			return true
+		}
+	}
+	return false
 }

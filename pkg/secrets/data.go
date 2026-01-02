@@ -12,6 +12,9 @@ type BundleData struct {
 	LockboxAgeKey  string `yaml:"lockbox_age_key"`
 	LockboxRepoURL string `yaml:"lockbox_repo_url"`
 	LockboxRepoRef string `yaml:"lockbox_repo_ref"`
+	GitUsername    string `yaml:"git_username"`
+	GitEmail       string `yaml:"git_email"`
+	GitHubToken    string `yaml:"github_token"`
 }
 
 // LoadBundleData loads bundle metadata from disk. If the file is missing it returns (nil, nil).
