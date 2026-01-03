@@ -40,6 +40,7 @@ func main() {
 func newUpCmd() *cobra.Command {
 	var personaFlag, bundleURLFlag, profileFlag, tagsFlag string
 	var skipBundleFlag bool
+	var repoPathFlag, lockboxURLFlag, lockboxPathFlag, lockboxRefFlag string
 
 	cmd := &cobra.Command{
 		Use:   "up",
@@ -51,6 +52,18 @@ func newUpCmd() *cobra.Command {
 				"profile":     profileFlag,
 				"tags":        tagsFlag,
 				"skip_bundle": skipBundleFlag,
+			}
+			if repoPathFlag != "" {
+				overrides["repo_path"] = repoPathFlag
+			}
+			if lockboxURLFlag != "" {
+				overrides["lockbox_repo_url"] = lockboxURLFlag
+			}
+			if lockboxPathFlag != "" {
+				overrides["lockbox_repo_path"] = lockboxPathFlag
+			}
+			if lockboxRefFlag != "" {
+				overrides["lockbox_repo_ref"] = lockboxRefFlag
 			}
 			cfg, err := config.Load(overrides)
 			if err != nil {
@@ -153,6 +166,10 @@ func newUpCmd() *cobra.Command {
 	cmd.Flags().StringVar(&bundleURLFlag, "bundle-url", "https://raw.githubusercontent.com/Beta-Techno/key/main/bundles/default.sops.yaml", "Encrypted bundle URL")
 	cmd.Flags().StringVar(&profileFlag, "profile", "devheavy", "Anvil profile to run")
 	cmd.Flags().StringVar(&tagsFlag, "tags", "all", "Comma-separated tags override")
+	cmd.Flags().StringVar(&repoPathFlag, "repo-path", "", "Override Anvil repo clone path")
+	cmd.Flags().StringVar(&lockboxURLFlag, "lockbox-url", "", "Lockbox repo URL override")
+	cmd.Flags().StringVar(&lockboxPathFlag, "lockbox-path", "", "Lockbox clone path override")
+	cmd.Flags().StringVar(&lockboxRefFlag, "lockbox-ref", "", "Lockbox git ref override")
 	cmd.Flags().BoolVar(&skipBundleFlag, "skip-bundle", false, "Skip bundle unlock even if missing")
 	return cmd
 }
