@@ -1,6 +1,7 @@
 package update
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -70,8 +71,8 @@ func BuildDownloadURL(tag string) string {
 	return fmt.Sprintf("https://github.com/%s/%s/releases/download/%s/%s", repoOwner, repoName, tag, assetName(runtime.GOOS, runtime.GOARCH))
 }
 
-// DownloadAndReplace downloads the binary from url and replaces the target path.
-func DownloadAndReplace(url, target string) error {
+// DownloadAndReplace downloads the binary, verifies checksum, and replaces the target path.
+func DownloadAndReplace(url, checksumURL, target string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -86,6 +87,10 @@ func DownloadAndReplace(url, target string) error {
 	}
 	targetDir := filepath.Dir(target)
 	if err := os.MkdirAll(targetDir, 0o755); err != nil {
+		return err
+	}
+	checksumPath := filepath.Join(targetDir, "anvil-update.sha256")
+	if err := downloadFile(checksumURL, checksumPath); err != nil {
 		return err
 	}
 	tmpFile, err := os.CreateTemp(targetDir, "anvil-update")
@@ -106,11 +111,62 @@ func DownloadAndReplace(url, target string) error {
 	if err := tmpFile.Close(); err != nil {
 		return err
 	}
-
 	if err := os.Rename(tmpFile.Name(), target); err != nil {
 		return err
 	}
 	return nil
+}
+
+func downloadFile(url, dest string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("checksum download failed: %s", resp.Status)
+	}
+	f, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if _, err := io.Copy(f, resp.Body); err != nil {
+		return err
+	}
+	return nil
+}
+
+func fileChecksumMatches(binaryPath, checksumPath string) error {
+	data, err := os.ReadFile(checksumPath)
+	if err != nil {
+		return err
+	}
+	parts := strings.Fields(string(data))
+	if len(parts) < 1 {
+		return errors.New("invalid checksum file")
+	}
+	computed, err := computeSHA256(binaryPath)
+	if err != nil {
+		return err
+	}
+	if !strings.EqualFold(computed, parts[0]) {
+		return fmt.Errorf("checksum mismatch: got %s expected %s", computed, parts[0])
+	}
+	return nil
+}
+
+func computeSHA256(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
 // CompareVersions compares semantic versions (vMAJOR.MINOR.PATCH).

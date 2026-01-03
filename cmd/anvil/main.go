@@ -246,8 +246,9 @@ func newUpdateCmd() *cobra.Command {
 				}
 			}
 
+			checksumURL := downloadURL + ".sha256"
 			fmt.Printf("[update] downloading %s\n", downloadURL)
-			if err := update.DownloadAndReplace(downloadURL, target); err != nil {
+			if err := update.DownloadAndReplace(downloadURL, checksumURL, target); err != nil {
 				return fmt.Errorf("update failed: %w", err)
 			}
 			fmt.Printf("[update] installed %s at %s\n", desiredVersion, target)

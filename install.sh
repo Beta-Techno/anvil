@@ -56,10 +56,23 @@ fi
 $sudo_prefix mkdir -p "$INSTALL_DIR"
 
 tmpfile=$(mktemp)
-trap 'rm -f "$tmpfile"' EXIT
+checksum_file=$(mktemp)
+trap 'rm -f "$tmpfile" "$checksum_file"' EXIT
+
+checksum_url="${download_url}.sha256"
 
 if ! curl -fsSL "$download_url" -o "$tmpfile"; then
   echo "[install] Failed to download $download_url" >&2
+  exit 1
+fi
+
+if ! curl -fsSL "$checksum_url" -o "$checksum_file"; then
+  echo "[install] Failed to download $checksum_url" >&2
+  exit 1
+fi
+
+if ! (cd "$(dirname "$tmpfile")" && sha256sum -c "$checksum_file" >/dev/null 2>&1); then
+  echo "[install] Checksum verification failed" >&2
   exit 1
 fi
 chmod +x "$tmpfile"
