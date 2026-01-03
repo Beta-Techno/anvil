@@ -190,16 +190,29 @@ func newDoctorCmd() *cobra.Command {
 		Short: "Check prerequisites (git, curl, sops, age, ansible)",
 		Run: func(cmd *cobra.Command, args []string) {
 			results := runtime.RunDoctor()
-			missing := runtime.MissingTools(results)
+			var ok []string
+			var missing []string
 			for _, r := range results {
 				if r.Err != nil {
-					fmt.Printf("[doctor] %s: missing (%v)\n", r.Name, r.Err)
+					missing = append(missing, fmt.Sprintf("%s (%v)", r.Name, r.Err))
 				} else {
-					fmt.Printf("[doctor] %s: %s\n", r.Name, r.Version)
+					ok = append(ok, fmt.Sprintf("%s -> %s", r.Name, r.Version))
+				}
+			}
+			if len(ok) > 0 {
+				fmt.Println("[doctor] OK:")
+				for _, entry := range ok {
+					fmt.Printf("  - %s\n", entry)
 				}
 			}
 			if len(missing) > 0 {
-				fmt.Printf("[doctor] Missing tools: %s\n", strings.Join(missing, ", "))
+				fmt.Println("[doctor] Missing or not executable:")
+				for _, entry := range missing {
+					fmt.Printf("  - %s\n", entry)
+				}
+			}
+			if len(missing) == 0 {
+				fmt.Println("[doctor] All required tools detected.")
 			}
 		},
 	}

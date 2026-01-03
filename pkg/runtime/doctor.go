@@ -17,6 +17,7 @@ var doctorCommands = []struct {
 	{"sops", []string{"sops", "--version"}},
 	{"age", []string{"age", "--version"}},
 	{"ansible", []string{"ansible", "--version"}},
+	{"lockctl", []string{"lockctl", "version"}},
 }
 
 func RunDoctor() []DoctorResult {
