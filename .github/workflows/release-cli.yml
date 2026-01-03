@@ -29,10 +29,13 @@ jobs:
         run: |
           mkdir -p dist
           go build -ldflags "-X main.version=${VERSION}" -o dist/anvil-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/anvil
+          (cd dist && sha256sum anvil-${{ matrix.goos }}-${{ matrix.goarch }} > anvil-${{ matrix.goos }}-${{ matrix.goarch }}.sha256)
 
-      - name: Upload release asset
+      - name: Upload release assets
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/anvil-${{ matrix.goos }}-${{ matrix.goarch }}
+          files: |
+            dist/anvil-${{ matrix.goos }}-${{ matrix.goarch }}
+            dist/anvil-${{ matrix.goos }}-${{ matrix.goarch }}.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
