@@ -170,9 +170,20 @@ func newUnlockCmd() *cobra.Command {
 func newDoctorCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "doctor",
-		Short: "Check prerequisites (sops, git, ansible, age)",
+		Short: "Check prerequisites (git, curl, sops, age, ansible)",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("[anvil] doctor placeholder")
+			results := runtime.RunDoctor()
+			missing := runtime.MissingTools(results)
+			for _, r := range results {
+				if r.Err != nil {
+					fmt.Printf("[doctor] %s: missing (%v)\n", r.Name, r.Err)
+				} else {
+					fmt.Printf("[doctor] %s: %s\n", r.Name, r.Version)
+				}
+			}
+			if len(missing) > 0 {
+				fmt.Printf("[doctor] Missing tools: %s\n", strings.Join(missing, ", "))
+			}
 		},
 	}
 }
