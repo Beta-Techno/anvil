@@ -23,6 +23,17 @@ anvil update          # or sudo anvil update if installed to /usr/local/bin
 
 `anvil up` also hits GitHub’s release API once per run and warns if a newer tag exists (set `ANVIL_NO_UPDATE_CHECK=1` to disable the warning). Check your current build with `anvil version`.
 
+## Refreshing secrets/bundle
+
+If the bootstrap bundle or lockbox age key changes, run:
+
+```bash
+anvil secrets reset          # delete cached bundle + lockbox key
+anvil up                     # re-enter age key and download the latest data
+```
+
+This removes `~/.config/anvil/key-bundle.yml` and `~/.config/anvil/lockbox.age` so the next run pulls whatever your Key repo currently contains.
+
 ## Developer workflow (editing roles locally)
 
 If you’re hacking on the Ansible roles/playbook, clone the repo wherever you like and point the CLI at that working tree via `ANVIL_REPO_PATH`:

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -28,6 +29,7 @@ func main() {
 	rootCmd.AddCommand(newDoctorCmd())
 	rootCmd.AddCommand(newVersionCmd())
 	rootCmd.AddCommand(newUpdateCmd())
+	rootCmd.AddCommand(newSecretsCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -229,6 +231,44 @@ func newUpdateCmd() *cobra.Command {
 	return cmd
 }
 
+func newSecretsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "secrets",
+		Short: "Manage cached bundle/lockbox secrets",
+	}
+	cmd.AddCommand(newSecretsResetCmd())
+	return cmd
+}
+
+func newSecretsResetCmd() *cobra.Command {
+	var force bool
+	resetCmd := &cobra.Command{
+		Use:   "reset",
+		Short: "Delete cached bundle + lockbox key so next run re-downloads them",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load(nil)
+			if err != nil {
+				return err
+			}
+			bundle := cfg.BundleFile
+			lockbox := cfg.LockboxAgeKeyFile
+			if !force {
+				if proceed := promptYesNo(fmt.Sprintf("Delete %s and %s?", bundle, lockbox)); !proceed {
+					fmt.Println("[secrets] reset cancelled")
+					return nil
+				}
+			}
+			if err := secrets.Reset(bundle, lockbox); err != nil {
+				return err
+			}
+			fmt.Println("[secrets] Removed cached bundle and lockbox key. Run 'anvil up' to download fresh secrets.")
+			return nil
+		},
+	}
+	resetCmd.Flags().BoolVar(&force, "force", false, "Skip confirmation prompt")
+	return resetCmd
+}
+
 func maybeWarnOutdated() {
 	if os.Getenv("ANVIL_NO_UPDATE_CHECK") != "" {
 		return
@@ -255,4 +295,19 @@ func usesSSH(lockboxURL string, manifests []config.ManifestConfig) bool {
 		}
 	}
 	return false
+}
+
+func promptYesNo(message string) bool {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Printf("%s [yes/no]: ", message)
+		input, _ := reader.ReadString('\n')
+		input = strings.TrimSpace(strings.ToLower(input))
+		switch input {
+		case "yes", "y":
+			return true
+		case "no", "n":
+			return false
+		}
+	}
 }
