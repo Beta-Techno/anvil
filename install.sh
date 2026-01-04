@@ -55,9 +55,10 @@ fi
 
 $sudo_prefix mkdir -p "$INSTALL_DIR"
 
-tmpfile=$(mktemp)
-checksum_file=$(mktemp)
-trap 'rm -f "$tmpfile" "$checksum_file"' EXIT
+tmpdir=$(mktemp -d)
+tmpfile="$tmpdir/$asset"
+checksum_file="$tmpdir/$asset.sha256"
+trap 'rm -rf "$tmpdir"' EXIT
 
 checksum_url="${download_url}.sha256"
 
@@ -71,7 +72,7 @@ if ! curl -fsSL "$checksum_url" -o "$checksum_file"; then
   exit 1
 fi
 
-if ! (cd "$(dirname "$tmpfile")" && sha256sum -c "$checksum_file" >/dev/null 2>&1); then
+if ! (cd "$tmpdir" && sha256sum -c "$checksum_file" >/dev/null 2>&1); then
   echo "[install] Checksum verification failed" >&2
   exit 1
 fi
