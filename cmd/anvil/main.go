@@ -45,6 +45,17 @@ func newUpCmd() *cobra.Command {
 		Use:   "up",
 		Short: "Unlock bundle, select persona, run Anvil provisioning",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// First-time setup: prompt for org if not configured
+			if config.NeedsSetup() {
+				org, err := promptOrg()
+				if err != nil {
+					return err
+				}
+				if err := config.SaveOrg(org); err != nil {
+					return err
+				}
+			}
+
 			overrides := map[string]any{
 				"persona":     personaFlag,
 				"bundle_url":  bundleURLFlag,
@@ -162,7 +173,7 @@ func newUpCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&personaFlag, "persona", "dev", "Persona to apply (dev, server, ...)")
-	cmd.Flags().StringVar(&bundleURLFlag, "bundle-url", "https://raw.githubusercontent.com/Beta-Techno/key/main/bundles/default.sops.yaml", "Encrypted bundle URL")
+	cmd.Flags().StringVar(&bundleURLFlag, "bundle-url", "", "Encrypted bundle URL (derived from org if not set)")
 	cmd.Flags().StringVar(&profileFlag, "profile", "devheavy", "Anvil profile to run")
 	cmd.Flags().StringVar(&tagsFlag, "tags", "all", "Comma-separated tags override")
 	cmd.Flags().StringVar(&repoPathFlag, "repo-path", "", "Override Anvil repo clone path")
@@ -341,4 +352,18 @@ func promptYesNo(message string) bool {
 			return false
 		}
 	}
+}
+
+func promptOrg() (string, error) {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("org: ")
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+	org := strings.TrimSpace(input)
+	if org == "" {
+		org = config.DefaultOrg
+	}
+	return org, nil
 }

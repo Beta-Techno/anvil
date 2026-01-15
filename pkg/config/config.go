@@ -1,25 +1,31 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
+
+// DefaultOrg is used when no org is configured
+const DefaultOrg = "Beta-Techno"
 
 var v = viper.New()
 
 func init() {
 	v.SetConfigName("astro")
 	v.AddConfigPath("/etc/astro")
+	v.AddConfigPath("$HOME/.config/anvil")
 	v.AddConfigPath("$HOME/.config/astro")
 	v.AddConfigPath("$HOME/.config")
 	v.AddConfigPath(".")
 	v.SetEnvPrefix("ANVIL")
 	v.AutomaticEnv()
 
+	v.SetDefault("org", "")
 	v.SetDefault("persona", "dev")
-	v.SetDefault("bundle_url", "https://raw.githubusercontent.com/Beta-Techno/key/main/bundles/default.sops.yaml")
 	v.SetDefault("profile", "devheavy")
 	v.SetDefault("tags", "all")
 	v.SetDefault("skip_bundle", false)
@@ -29,24 +35,42 @@ func init() {
 		home = "."
 	}
 	v.SetDefault("repo_path", filepath.Join(home, ".local", "share", "anvil"))
-	v.SetDefault("repo_url", "https://github.com/Beta-Techno/anvil.git")
 	v.SetDefault("bundle_file", filepath.Join(home, ".config", "anvil", "key-bundle.yml"))
 	v.SetDefault("age_key_file", filepath.Join(home, ".config", "anvil", "age.key"))
-	v.SetDefault("lockbox_repo_url", "git@github.com:Beta-Techno/lock.git")
 	v.SetDefault("lockbox_repo_path", filepath.Join(home, ".local", "share", "lockbox"))
 	v.SetDefault("lockbox_repo_ref", "")
 	v.SetDefault("lockbox_age_key_file", filepath.Join(home, ".config", "anvil", "lockbox.age"))
-	v.SetDefault("mani_repo_url", "git@github.com:Beta-Techno/atlas.git")
 	v.SetDefault("mani_repo_path", filepath.Join(home, "code", "infra", "atlas"))
 	v.SetDefault("mani_bin", "/usr/local/bin/mani")
 	v.SetDefault("mani_sync_tags", []string{"infra"})
 	v.SetDefault("mani_run_commands", []string{})
 
+	// URL defaults are not set here - they're derived from org in Load()
+
 	_ = v.ReadInConfig()
+}
+
+// OrgURLs contains URLs derived from an org name
+type OrgURLs struct {
+	BundleURL    string
+	RepoURL      string
+	LockboxURL   string
+	ManiURL      string
+}
+
+// DeriveURLs returns conventional URLs for a given org
+func DeriveURLs(org string) OrgURLs {
+	return OrgURLs{
+		BundleURL:  fmt.Sprintf("https://raw.githubusercontent.com/%s/key/main/bundles/default.sops.yaml", org),
+		RepoURL:    fmt.Sprintf("https://github.com/%s/anvil.git", org),
+		LockboxURL: fmt.Sprintf("git@github.com:%s/lock.git", org),
+		ManiURL:    fmt.Sprintf("git@github.com:%s/atlas.git", org),
+	}
 }
 
 // Config represents merged inputs.
 type Config struct {
+	Org               string
 	Persona           string
 	BundleURL         string
 	Profile           string
@@ -76,21 +100,49 @@ func Load(overrides map[string]any) (*Config, error) {
 		v.Set(k, val)
 	}
 
+	// Determine org - use configured value or default
+	org := v.GetString("org")
+	if org == "" {
+		org = DefaultOrg
+	}
+
+	// Derive URLs from org (these serve as defaults)
+	urls := DeriveURLs(org)
+
+	// Get explicit URL overrides (empty string means use derived)
+	bundleURL := v.GetString("bundle_url")
+	if bundleURL == "" {
+		bundleURL = urls.BundleURL
+	}
+	repoURL := v.GetString("repo_url")
+	if repoURL == "" {
+		repoURL = urls.RepoURL
+	}
+	lockboxURL := v.GetString("lockbox_repo_url")
+	if lockboxURL == "" {
+		lockboxURL = urls.LockboxURL
+	}
+	maniURL := v.GetString("mani_repo_url")
+	if maniURL == "" {
+		maniURL = urls.ManiURL
+	}
+
 	cfg := &Config{
+		Org:               org,
 		Persona:           v.GetString("persona"),
-		BundleURL:         v.GetString("bundle_url"),
+		BundleURL:         bundleURL,
 		Profile:           v.GetString("profile"),
 		Tags:              v.GetString("tags"),
 		SkipBundle:        v.GetBool("skip_bundle"),
 		RepoPath:          expandPath(v.GetString("repo_path")),
-		RepoURL:           v.GetString("repo_url"),
+		RepoURL:           repoURL,
 		BundleFile:        expandPath(v.GetString("bundle_file")),
 		AgeKeyFile:        expandPath(v.GetString("age_key_file")),
-		LockboxRepoURL:    v.GetString("lockbox_repo_url"),
+		LockboxRepoURL:    lockboxURL,
 		LockboxRepoPath:   expandPath(v.GetString("lockbox_repo_path")),
 		LockboxRepoRef:    v.GetString("lockbox_repo_ref"),
 		LockboxAgeKeyFile: expandPath(v.GetString("lockbox_age_key_file")),
-		ManiRepoURL:       v.GetString("mani_repo_url"),
+		ManiRepoURL:       maniURL,
 		ManiRepoPath:      expandPath(v.GetString("mani_repo_path")),
 		ManiBin:           expandPath(v.GetString("mani_bin")),
 		ManiSyncTags:      toStringSlice(v.Get("mani_sync_tags")),
@@ -171,4 +223,52 @@ func toStringSlice(val any) []string {
 	default:
 		return nil
 	}
+}
+
+// NeedsSetup returns true if org is not configured (first-time setup needed)
+func NeedsSetup() bool {
+	return v.GetString("org") == ""
+}
+
+// ConfigFilePath returns the path to the config file
+func ConfigFilePath() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = "."
+	}
+	return filepath.Join(home, ".config", "anvil", "astro.yml")
+}
+
+// SaveOrg persists the org to the config file
+func SaveOrg(org string) error {
+	configPath := ConfigFilePath()
+	configDir := filepath.Dir(configPath)
+
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
+		return fmt.Errorf("failed to create config dir: %w", err)
+	}
+
+	// Read existing config if present
+	existing := make(map[string]any)
+	if data, err := os.ReadFile(configPath); err == nil {
+		_ = yaml.Unmarshal(data, &existing)
+	}
+
+	// Update org
+	existing["org"] = org
+
+	// Write back
+	data, err := yaml.Marshal(existing)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	if err := os.WriteFile(configPath, data, 0o644); err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
+	}
+
+	// Update viper in-memory
+	v.Set("org", org)
+
+	return nil
 }
