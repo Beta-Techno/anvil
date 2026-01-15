@@ -67,38 +67,54 @@ func ensureAgeKey(path string) error {
 	if path == "" {
 		return errors.New("age key path is empty")
 	}
+	// Already exists at target path
 	if _, err := os.Stat(path); err == nil {
 		return nil
 	}
+	// Check SOPS_AGE_KEY_FILE env var
 	if envFile := os.Getenv("SOPS_AGE_KEY_FILE"); envFile != "" {
 		data, err := os.ReadFile(envFile)
 		if err == nil {
 			return writeKey(path, data)
 		}
 	}
+	// Check SOPS_AGE_KEY env var (raw key)
 	if env := os.Getenv("SOPS_AGE_KEY"); env != "" {
 		return writeKey(path, []byte(env))
 	}
 
-	fmt.Println("Enter/paste your age secret key (end with EOF / Ctrl+D):")
+	// Interactive prompt
 	reader := bufio.NewReader(os.Stdin)
-	var builder strings.Builder
-	for {
-		line, err := reader.ReadString('\n')
-		if errors.Is(err, io.EOF) {
-			builder.WriteString(line)
-			break
+	fmt.Printf("age key [%s]: ", path)
+	input, err := reader.ReadString('\n')
+	if err != nil && !errors.Is(err, io.EOF) {
+		return err
+	}
+	input = strings.TrimSpace(input)
+
+	// Empty input = check if file already exists at default path
+	if input == "" {
+		return errors.New("age key required")
+	}
+
+	// If input looks like a path, read from it
+	if !strings.HasPrefix(input, "AGE-SECRET-KEY-") {
+		// Treat as file path
+		expandedPath := input
+		if strings.HasPrefix(input, "~/") {
+			if home, err := os.UserHomeDir(); err == nil {
+				expandedPath = filepath.Join(home, input[2:])
+			}
 		}
+		data, err := os.ReadFile(expandedPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to read age key from %s: %w", expandedPath, err)
 		}
-		builder.WriteString(line)
+		return writeKey(path, data)
 	}
-	key := strings.TrimSpace(builder.String())
-	if key == "" {
-		return errors.New("age key input empty")
-	}
-	return writeKey(path, []byte(key))
+
+	// Input is the raw key
+	return writeKey(path, []byte(input))
 }
 
 func writeKey(path string, data []byte) error {
