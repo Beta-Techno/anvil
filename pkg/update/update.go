@@ -111,9 +111,13 @@ func DownloadAndReplace(url, checksumURL, target string) error {
 	if err := tmpFile.Close(); err != nil {
 		return err
 	}
+	if err := fileChecksumMatches(tmpFile.Name(), checksumPath); err != nil {
+		return fmt.Errorf("checksum verification failed: %w", err)
+	}
 	if err := os.Rename(tmpFile.Name(), target); err != nil {
 		return err
 	}
+	os.Remove(checksumPath) // clean up checksum file
 	return nil
 }
 

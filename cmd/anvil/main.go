@@ -25,7 +25,6 @@ func main() {
 	}
 
 	rootCmd.AddCommand(newUpCmd())
-	rootCmd.AddCommand(newUnlockCmd())
 	rootCmd.AddCommand(newDoctorCmd())
 	rootCmd.AddCommand(newVersionCmd())
 	rootCmd.AddCommand(newUpdateCmd())
@@ -172,16 +171,6 @@ func newUpCmd() *cobra.Command {
 	cmd.Flags().StringVar(&lockboxRefFlag, "lockbox-ref", "", "Lockbox git ref override")
 	cmd.Flags().BoolVar(&skipBundleFlag, "skip-bundle", false, "Skip bundle unlock even if missing")
 	return cmd
-}
-
-func newUnlockCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "unlock",
-		Short: "Download + decrypt bootstrap bundle only",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("[anvil] bundle unlock placeholder")
-		},
-	}
 }
 
 func newDoctorCmd() *cobra.Command {
