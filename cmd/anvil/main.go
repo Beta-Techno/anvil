@@ -91,8 +91,6 @@ func newUpCmd() *cobra.Command {
 				if err := secrets.Unlock(cfg.BundleURL, cfg.BundleFile, cfg.AgeKeyFile); err != nil {
 					return err
 				}
-			} else {
-				fmt.Println("[anvil] skipping bundle unlock (per config)")
 			}
 
 			bundleData, err = secrets.LoadBundleData(cfg.BundleFile)
@@ -103,7 +101,6 @@ func newUpCmd() *cobra.Command {
 				if err := secrets.SaveKeyFile(cfg.LockboxAgeKeyFile, bundleData.LockboxAgeKey); err != nil {
 					return err
 				}
-				fmt.Println("[secrets] Stored lockbox age key at", cfg.LockboxAgeKeyFile)
 			}
 
 			lockboxURL := cfg.LockboxRepoURL
@@ -168,6 +165,8 @@ func newUpCmd() *cobra.Command {
 			if err := runtime.RunAnsible(ansCfg); err != nil {
 				return err
 			}
+			fmt.Println()
+			fmt.Println("✓ Done. Restart your terminal.")
 			return nil
 		},
 	}
@@ -190,29 +189,20 @@ func newDoctorCmd() *cobra.Command {
 		Short: "Check prerequisites (git, curl, sops, age, ansible)",
 		Run: func(cmd *cobra.Command, args []string) {
 			results := runtime.RunDoctor()
-			var ok []string
 			var missing []string
 			for _, r := range results {
 				if r.Err != nil {
-					missing = append(missing, fmt.Sprintf("%s (%v)", r.Name, r.Err))
+					missing = append(missing, r.Name)
+					fmt.Printf("  ✗ %s\n", r.Name)
 				} else {
-					ok = append(ok, fmt.Sprintf("%s -> %s", r.Name, r.Version))
+					fmt.Printf("  ✓ %s %s\n", r.Name, r.Version)
 				}
 			}
-			if len(ok) > 0 {
-				fmt.Println("[doctor] OK:")
-				for _, entry := range ok {
-					fmt.Printf("  - %s\n", entry)
-				}
-			}
-			if len(missing) > 0 {
-				fmt.Println("[doctor] Missing or not executable:")
-				for _, entry := range missing {
-					fmt.Printf("  - %s\n", entry)
-				}
-			}
+			fmt.Println()
 			if len(missing) == 0 {
-				fmt.Println("[doctor] All required tools detected.")
+				fmt.Println("All prerequisites installed.")
+			} else {
+				fmt.Printf("Missing: %s\n", strings.Join(missing, ", "))
 			}
 		},
 	}
@@ -260,11 +250,11 @@ func newUpdateCmd() *cobra.Command {
 			}
 
 			checksumURL := downloadURL + ".sha256"
-			fmt.Printf("[update] downloading %s\n", downloadURL)
+			fmt.Printf("Downloading %s...\n", desiredVersion)
 			if err := update.DownloadAndReplace(downloadURL, checksumURL, target); err != nil {
 				return fmt.Errorf("update failed: %w", err)
 			}
-			fmt.Printf("[update] installed %s at %s\n", desiredVersion, target)
+			fmt.Printf("✓ Updated to %s\n", desiredVersion)
 			return nil
 		},
 	}
@@ -296,14 +286,14 @@ func newSecretsResetCmd() *cobra.Command {
 			lockbox := cfg.LockboxAgeKeyFile
 			if !force {
 				if proceed := promptYesNo(fmt.Sprintf("Delete %s and %s?", bundle, lockbox)); !proceed {
-					fmt.Println("[secrets] reset cancelled")
+					fmt.Println("Cancelled.")
 					return nil
 				}
 			}
 			if err := secrets.Reset(bundle, lockbox); err != nil {
 				return err
 			}
-			fmt.Println("[secrets] Removed cached bundle and lockbox key. Run 'anvil up' to download fresh secrets.")
+			fmt.Println("✓ Secrets cleared. Run 'anvil up' to re-download.")
 			return nil
 		},
 	}
@@ -323,7 +313,7 @@ func maybeWarnOutdated() {
 		return
 	}
 	if update.CompareVersions(version, latest) < 0 {
-		fmt.Printf("[update] New Anvil CLI version available: %s (current %s). Run `anvil update`.\n", latest, version)
+		fmt.Printf("  Update available: %s → %s (run `anvil update`)\n", version, latest)
 	}
 }
 

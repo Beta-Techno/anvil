@@ -17,8 +17,7 @@ func Unlock(bundleURL, bundlePath, ageKeyPath string) error {
 		return errors.New("bundle path is empty")
 	}
 	if _, err := os.Stat(bundlePath); err == nil {
-		fmt.Println("[secrets] Using existing decrypted bundle:", bundlePath)
-		return nil
+		return nil // bundle already decrypted
 	}
 	if err := ensureAgeKey(ageKeyPath); err != nil {
 		return err
@@ -30,7 +29,7 @@ func Unlock(bundleURL, bundlePath, ageKeyPath string) error {
 	}
 	defer os.Remove(tmp.Name())
 
-	fmt.Println("[secrets] Downloading bundle from", bundleURL)
+	fmt.Println("  Fetching bundle...")
 	resp, err := http.Get(bundleURL)
 	if err != nil {
 		return err
@@ -59,7 +58,7 @@ func Unlock(bundleURL, bundlePath, ageKeyPath string) error {
 	if err := os.WriteFile(bundlePath, output, 0o600); err != nil {
 		return err
 	}
-	fmt.Println("[secrets] Bundle decrypted to", bundlePath)
+	fmt.Println("  Decrypting bundle... ✓")
 	return nil
 }
 

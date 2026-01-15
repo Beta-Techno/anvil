@@ -58,9 +58,7 @@ func ensureSSHKey(keyPath string) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}
-	cmd := exec.Command("ssh-keygen", "-t", "ed25519", "-N", "", "-f", keyPath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd := exec.Command("ssh-keygen", "-t", "ed25519", "-N", "", "-q", "-f", keyPath)
 	return cmd.Run()
 }
 
@@ -91,12 +89,11 @@ func uploadKey(token, pubPath string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusCreated {
-		fmt.Println("[git_ssh] Uploaded SSH key to GitHub")
+		fmt.Println("  Setting up SSH... ✓")
 		return nil
 	}
 	if resp.StatusCode == http.StatusUnprocessableEntity {
-		fmt.Println("[git_ssh] SSH key already registered on GitHub")
-		return nil
+		return nil // key already registered
 	}
 	return fmt.Errorf("github key upload failed: %s", resp.Status)
 }

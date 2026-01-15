@@ -12,18 +12,16 @@ func EnsureRepo(path, url string) error {
 		return fmt.Errorf("repo path empty")
 	}
 	if _, err := os.Stat(filepath.Join(path, ".git")); os.IsNotExist(err) {
-		fmt.Println("[runtime] Cloning repo", url, "->", path)
+		fmt.Println("  Cloning repo...")
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			return err
 		}
-		cmd := exec.Command("git", "clone", url, path)
-		cmd.Stdout = os.Stdout
+		cmd := exec.Command("git", "clone", "--quiet", url, path)
 		cmd.Stderr = os.Stderr
 		return cmd.Run()
 	}
-	fmt.Println("[runtime] Updating repo at", path)
-	cmd := exec.Command("git", "-C", path, "pull", "--ff-only")
-	cmd.Stdout = os.Stdout
+	fmt.Println("  Updating repo...")
+	cmd := exec.Command("git", "-C", path, "pull", "--ff-only", "--quiet")
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
@@ -74,7 +72,7 @@ func EnsureVarsFile(repoPath, varsFile string) error {
 	if err := os.WriteFile(varsFile, data, 0o644); err != nil {
 		return err
 	}
-	fmt.Println("[runtime] Created vars file from template:", varsFile)
+	// Created vars file from template
 	return nil
 }
 
@@ -96,6 +94,6 @@ func EnsurePersonaFile(repoPath, persona, personaFile string) error {
 	if err := os.WriteFile(personaFile, data, 0o644); err != nil {
 		return err
 	}
-	fmt.Println("[runtime] Created persona vars from template:", personaFile)
+	// Created persona vars from template
 	return nil
 }

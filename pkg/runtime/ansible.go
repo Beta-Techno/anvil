@@ -80,7 +80,8 @@ func RunAnsible(cfg AnsibleConfig) error {
 	}
 	cmd.Env = env
 
-	fmt.Println("[runtime] Running:", cmd.String())
+	fmt.Println("  Provisioning...")
+	fmt.Println()
 	return cmd.Run()
 }
 
