@@ -230,6 +230,67 @@ func NeedsSetup() bool {
 	return v.GetString("org") == ""
 }
 
+// NeedsProfileSetup returns true if profile has not been explicitly chosen
+func NeedsProfileSetup() bool {
+	// Check if profile was explicitly set in config file (not just default)
+	return !v.IsSet("profile") || v.GetString("profile") == "devheavy"
+}
+
+// ValidProfiles returns the list of valid profile names
+func ValidProfiles() []string {
+	return []string{"user", "dev", "server", "agent"}
+}
+
+// ProfileDescription returns a short description for a profile
+func ProfileDescription(profile string) string {
+	switch profile {
+	case "user":
+		return "Desktop basics"
+	case "dev":
+		return "Developer workstation"
+	case "server":
+		return "Headless server"
+	case "agent":
+		return "CI/CD agent"
+	default:
+		return ""
+	}
+}
+
+// SaveProfile persists the profile to the config file
+func SaveProfile(profile string) error {
+	configPath := ConfigFilePath()
+	configDir := filepath.Dir(configPath)
+
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
+		return fmt.Errorf("failed to create config dir: %w", err)
+	}
+
+	// Read existing config if present
+	existing := make(map[string]any)
+	if data, err := os.ReadFile(configPath); err == nil {
+		_ = yaml.Unmarshal(data, &existing)
+	}
+
+	// Update profile
+	existing["profile"] = profile
+
+	// Write back
+	data, err := yaml.Marshal(existing)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	if err := os.WriteFile(configPath, data, 0o644); err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
+	}
+
+	// Update viper in-memory
+	v.Set("profile", profile)
+
+	return nil
+}
+
 // ConfigFilePath returns the path to the config file
 func ConfigFilePath() string {
 	home, err := os.UserHomeDir()

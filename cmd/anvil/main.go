@@ -56,6 +56,18 @@ func newUpCmd() *cobra.Command {
 				}
 			}
 
+			// Prompt for profile if not explicitly set via flag or config
+			if !cmd.Flags().Changed("profile") && config.NeedsProfileSetup() {
+				profile, err := promptProfile()
+				if err != nil {
+					return err
+				}
+				if err := config.SaveProfile(profile); err != nil {
+					return err
+				}
+				profileFlag = profile
+			}
+
 			overrides := map[string]any{
 				"persona":     personaFlag,
 				"bundle_url":  bundleURLFlag,
@@ -356,4 +368,48 @@ func promptOrg() (string, error) {
 		org = config.DefaultOrg
 	}
 	return org, nil
+}
+
+func promptProfile() (string, error) {
+	profiles := config.ValidProfiles()
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Println("profile:")
+	for i, p := range profiles {
+		fmt.Printf("  %d. %s - %s\n", i+1, p, config.ProfileDescription(p))
+	}
+	fmt.Print("Select [1-4, default 2]: ")
+
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+	input = strings.TrimSpace(input)
+
+	// Default to dev
+	if input == "" {
+		return "dev", nil
+	}
+
+	// Accept number
+	switch input {
+	case "1":
+		return "user", nil
+	case "2":
+		return "dev", nil
+	case "3":
+		return "server", nil
+	case "4":
+		return "agent", nil
+	}
+
+	// Accept name directly
+	for _, p := range profiles {
+		if strings.EqualFold(input, p) {
+			return p, nil
+		}
+	}
+
+	// Invalid input, default to dev
+	return "dev", nil
 }

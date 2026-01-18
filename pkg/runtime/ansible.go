@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Beta-Techno/anvil-cli/pkg/config"
 )
@@ -42,9 +43,26 @@ func RunAnsible(cfg AnsibleConfig) error {
 
 	cmd := exec.Command("ansible-playbook", args...)
 	cmd.Dir = cfg.RepoPath
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
+
+	// Set up progress renderer
+	progress, err := NewProgressRenderer()
+	if err != nil {
+		return fmt.Errorf("failed to create progress renderer: %w", err)
+	}
+	defer progress.Close()
+
+	// Capture stdout for progress parsing
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+
+	// Capture stderr to log file but also show errors
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return err
+	}
 
 	env := os.Environ()
 	if cfg.Persona != "" {
@@ -78,11 +96,57 @@ func RunAnsible(cfg AnsibleConfig) error {
 			env = append(env, "MANI_MANIFESTS_JSON="+string(payload))
 		}
 	}
+
+	// Use our custom callback plugin for clean progress output
+	env = append(env, "ANSIBLE_STDOUT_CALLBACK=anvil_progress")
+	env = append(env, "ANSIBLE_CALLBACK_PLUGINS="+filepath.Join(cfg.RepoPath, "callback_plugins"))
+
 	cmd.Env = env
 
-	fmt.Println("  Provisioning...")
 	fmt.Println()
-	return cmd.Run()
+
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	// Process output in goroutines
+	done := make(chan bool, 2)
+
+	go func() {
+		progress.ProcessOutput(stdout)
+		done <- true
+	}()
+
+	go func() {
+		progress.ProcessOutput(stderr)
+		done <- true
+	}()
+
+	// Spinner animation
+	ticker := time.NewTicker(100 * time.Millisecond)
+	go func() {
+		for range ticker.C {
+			progress.Tick()
+		}
+	}()
+
+	// Wait for output processing
+	<-done
+	<-done
+	ticker.Stop()
+
+	err = cmd.Wait()
+	fmt.Println()
+
+	if err != nil || progress.Failed() {
+		fmt.Printf("\nSee full log: %s\n", progress.LogPath())
+		if progress.Failed() && progress.FailMessage() != "" {
+			return fmt.Errorf("provisioning failed")
+		}
+		return err
+	}
+
+	return nil
 }
 
 func ResolvePath(base, p string) string {
