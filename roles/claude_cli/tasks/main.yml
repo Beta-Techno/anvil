@@ -10,6 +10,14 @@
   when: claude_cli_install
   register: claude_install
 
+- name: Reset /tmp permissions after Claude install
+  ansible.builtin.file:
+    path: /tmp
+    state: directory
+    mode: "1777"
+  become: true
+  when: claude_cli_install
+
 - name: Claude Code install summary
   ansible.builtin.debug:
     msg: "Claude Code CLI installed at {{ claude_cli_binary_path }}. Run 'claude' to authenticate."
