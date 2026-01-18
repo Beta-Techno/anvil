@@ -1,0 +1,33 @@
+---
+- name: Ensure shell config directory exists
+  ansible.builtin.file:
+    path: "{{ shell_config_dir }}"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Create PATH shell configuration for ~/.local/bin
+  ansible.builtin.copy:
+    dest: "{{ shell_config_dir }}/path.sh"
+    mode: "0644"
+    content: |
+      # Add ~/.local/bin to PATH for user-installed binaries
+      export PATH="$HOME/.local/bin:$PATH"
+  become: false
+
+- name: Ensure shell configs are sourced in shell rc files
+  ansible.builtin.blockinfile:
+    path: "{{ item }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - source shell configs"
+    block: |
+      # Source all shell configurations from ~/.config/shell/
+      if [ -d "$HOME/.config/shell" ]; then
+        for config in "$HOME/.config/shell"/*.sh; do
+          [ -r "$config" ] && . "$config"
+        done
+      fi
+    create: true
+  loop:
+    - "{{ ansible_env.HOME }}/.bashrc"
+    - "{{ ansible_env.HOME }}/.zshrc"
+  become: false

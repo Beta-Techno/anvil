@@ -1,0 +1,16 @@
+---
+python_install: true
+python_version: "3.11.0"
+python_pyenv_root: "{{ ansible_env.HOME }}/.pyenv"
+python_build_deps:
+  - build-essential
+  - libssl-dev
+  - zlib1g-dev
+  - libbz2-dev
+  - libreadline-dev
+  - libsqlite3-dev
+  - libffi-dev
+  - liblzma-dev
+  - tk-dev
+python_install_pipx: true
+python_install_uv: true

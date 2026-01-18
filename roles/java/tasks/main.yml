@@ -1,0 +1,8 @@
+---
+- name: Install Java (default-jdk)
+  ansible.builtin.apt:
+    name: default-jdk
+    state: present
+    update_cache: true
+  become: true
+  when: java_install

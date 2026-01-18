@@ -1,0 +1,46 @@
+---
+- name: Install nvm
+  ansible.builtin.git:
+    repo: https://github.com/nvm-sh/nvm.git
+    dest: "{{ ansible_env.HOME }}/.nvm"
+    version: "{{ node_nvm_version }}"
+  become: false
+  when: node_install
+
+- name: Install Node.js LTS with nvm
+  ansible.builtin.shell: |
+    set -e
+    export NVM_DIR="{{ ansible_env.HOME }}/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    nvm install --lts
+    nvm alias default "{{ node_default_version }}"
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.nvm/alias/default"
+  become: false
+  when: node_install
+
+- name: Create nvm shell configuration
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/shell/nvm.sh"
+    mode: "0644"
+    content: |
+      # nvm (Node Version Manager)
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+  become: false
+  when: node_install
+
+- name: Install pnpm globally via npm
+  ansible.builtin.shell: |
+    set -e
+    export NVM_DIR="{{ ansible_env.HOME }}/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    npm install -g pnpm
+  args:
+    executable: /bin/bash
+  become: false
+  when:
+    - node_install
+    - node_install_pnpm

@@ -1,0 +1,4 @@
+---
+dotnet_install: true
+dotnet_version: "8.0"
+dotnet_install_ef: true

@@ -1,0 +1,12 @@
+---
+ruby_install: true
+ruby_version: "3.1.0"
+ruby_rbenv_root: "{{ ansible_env.HOME }}/.rbenv"
+ruby_build_deps:
+  - make
+  - build-essential
+  - libssl-dev
+  - libreadline-dev
+  - zlib1g-dev
+  - libyaml-dev
+  - libffi-dev

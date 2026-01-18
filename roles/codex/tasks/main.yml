@@ -1,0 +1,53 @@
+---
+- name: Check if Node.js is available for Codex
+  ansible.builtin.shell: |
+    set -e
+    source {{ ansible_env.HOME }}/.nvm/nvm.sh 2>/dev/null || true
+    command -v node >/dev/null 2>&1 && node --version || echo "none"
+  args:
+    executable: /bin/bash
+  register: node_check
+  changed_when: false
+  failed_when: false
+  become: false
+  when: codex_install
+
+- name: Parse Node.js version
+  ansible.builtin.set_fact:
+    node_version_major: "{{ node_check.stdout | regex_replace('^v?(\\d+)\\..*', '\\1') | int }}"
+  when:
+    - codex_install
+    - node_check.stdout is defined
+    - node_check.stdout != "none"
+  failed_when: false
+
+- name: Skip Codex if Node.js not found or version too old
+  ansible.builtin.debug:
+    msg: "Codex requires Node.js >= {{ codex_min_node_version }}. Current: {{ node_check.stdout | default('not found') }}. Install via node role first."
+  when:
+    - codex_install
+    - node_version_major is not defined or node_version_major | int < codex_min_node_version
+
+- name: Install OpenAI Codex CLI via npm
+  ansible.builtin.shell: |
+    set -e
+    source {{ ansible_env.HOME }}/.nvm/nvm.sh
+    npm install -g @openai/codex
+  args:
+    executable: /bin/bash
+  become: false
+  when:
+    - codex_install
+    - node_version_major is defined
+    - node_version_major | int >= codex_min_node_version
+  register: codex_install_result
+  changed_when: "'added' in codex_install_result.stdout or 'updated' in codex_install_result.stdout"
+  failed_when: false
+
+- name: Codex install summary
+  ansible.builtin.debug:
+    msg: "OpenAI Codex CLI installed. Run 'codex' to authenticate and start."
+  when:
+    - codex_install
+    - codex_install_result is defined
+    - not codex_install_result.failed

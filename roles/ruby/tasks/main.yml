@@ -1,0 +1,51 @@
+---
+- name: Install Ruby build dependencies
+  ansible.builtin.apt:
+    name: "{{ ruby_build_deps }}"
+    state: present
+    update_cache: true
+  become: true
+  when: ruby_install
+
+- name: Install rbenv from source
+  ansible.builtin.git:
+    repo: https://github.com/rbenv/rbenv.git
+    dest: "{{ ruby_rbenv_root }}"
+    version: master
+  become: false
+  when: ruby_install
+
+- name: Install ruby-build plugin
+  ansible.builtin.git:
+    repo: https://github.com/rbenv/ruby-build.git
+    dest: "{{ ruby_rbenv_root }}/plugins/ruby-build"
+    version: master
+  become: false
+  when: ruby_install
+
+- name: Install Ruby via rbenv
+  ansible.builtin.shell: |
+    set -e
+    export RBENV_ROOT="{{ ruby_rbenv_root }}"
+    export PATH="$RBENV_ROOT/bin:$RBENV_ROOT/shims:$PATH"
+    rbenv install -s "{{ ruby_version }}"
+    rbenv global "{{ ruby_version }}"
+  args:
+    executable: /bin/bash
+  environment:
+    RBENV_ROOT: "{{ ruby_rbenv_root }}"
+    PATH: "{{ ruby_rbenv_root }}/bin:{{ ruby_rbenv_root }}/shims:{{ ansible_env.PATH }}"
+  become: false
+  when: ruby_install
+
+- name: Create rbenv shell configuration
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/shell/rbenv.sh"
+    mode: "0644"
+    content: |
+      # rbenv (Ruby Version Manager)
+      export RBENV_ROOT="{{ ruby_rbenv_root }}"
+      export PATH="$RBENV_ROOT/bin:$PATH"
+      eval "$(rbenv init - bash)"
+  become: false
+  when: ruby_install

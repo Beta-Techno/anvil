@@ -1,0 +1,77 @@
+---
+- name: Check installed Go version
+  ansible.builtin.command: /usr/local/go/bin/go version
+  register: go_version_check
+  changed_when: false
+  failed_when: false
+  when: go_install
+
+- name: Remove existing Go installation if version differs
+  ansible.builtin.file:
+    path: /usr/local/go
+    state: absent
+  become: true
+  when:
+    - go_install
+    - go_version_check.stdout is defined
+    - ("go" + go_version) not in go_version_check.stdout
+
+- name: Download Go archive
+  ansible.builtin.get_url:
+    url: "{{ go_download_url }}"
+    dest: /tmp/go.tar.gz
+    mode: "0644"
+  when:
+    - go_install
+    - go_version_check.stdout is not defined or ("go" + go_version) not in go_version_check.stdout
+
+- name: Install Go to /usr/local
+  ansible.builtin.unarchive:
+    src: /tmp/go.tar.gz
+    dest: /usr/local
+    remote_src: true
+  become: true
+  when:
+    - go_install
+    - go_version_check.stdout is not defined or ("go" + go_version) not in go_version_check.stdout
+
+- name: Create Go shell configuration
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/shell/go.sh"
+    mode: "0644"
+    content: |
+      # Go
+      export PATH="/usr/local/go/bin:$PATH"
+      export PATH="$HOME/go/bin:$PATH"
+      export GOPATH="$HOME/go"
+  become: false
+  when: go_install
+
+- name: Install golangci-lint
+  ansible.builtin.shell: |
+    set -e
+    curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/go/bin/golangci-lint"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+  become: false
+  when:
+    - go_install
+    - go_install_golangci_lint
+
+- name: Install air for live reload
+  ansible.builtin.shell: |
+    set -e
+    go install github.com/air-verse/air@latest
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/go/bin/air"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+    GOPATH: "{{ ansible_env.HOME }}/go"
+  become: false
+  when:
+    - go_install
+    - go_install_air

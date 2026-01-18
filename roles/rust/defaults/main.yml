@@ -1,0 +1,5 @@
+---
+rust_install: true
+rust_install_cargo_edit: true
+rust_install_cargo_watch: true
+rust_install_cargo_audit: true

@@ -1,5 +1,6 @@
 ---
-# Legacy Ubuntu bootstrap via Ansible (run locally)
+# Anvil provisioning playbook
+# Currently: dev profile only. Add server, agent, user profiles later.
 - hosts: localhost
   gather_facts: true
   become: false
@@ -8,36 +9,67 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3
   roles:
-    - { role: base, tags: [base, essential], become: true }
-    - { role: security, tags: [security, essential, server], become: true }
-    - { role: observability, tags: [observability, essential, server], become: true }
-    - { role: wazuh, tags: [wazuh, server], become: true }
-    - { role: drivers, tags: [drivers, essential], become: true }
-    - { role: docker, tags: [docker, server, essential], become: true }
-    - { role: tailscale, tags: [tailscale, server], become: true }
-    - { role: git_ssh, tags: [git, essential] }
-    - { role: dev_tools, tags: [dev_tools, essential], become: true }
-    - { role: chezmoi_install, tags: [chezmoi_install, essential] }
-    - { role: chezmoi_apply, tags: [chezmoi_apply, essential] }
-    - { role: langs, tags: [langs, essential] }
-    - { role: lockbox, tags: [lockbox, essential] }
-    - { role: mani, tags: [mani, essential] }
-    - { role: ai_agents, tags: [ai_agents, essential] }
-    - { role: lazyvim, tags: [lazyvim] }
-    - { role: cloudflared, tags: [cloudflared], become: true }
-    - { role: nginx, tags: [nginx], become: true }
-    - { role: flatpak_snap, tags: [flatpak_snap, workstation], become: true }
-    - { role: fonts, tags: [fonts, workstation] }
-    - { role: terminals, tags: [terminals, workstation], become: true }
-    - { role: chrome, tags: [chrome, workstation], become: true }
-    - { role: zed, tags: [zed, workstation] }
-    - { role: cursor, tags: [cursor, workstation] }
-    - { role: ghostty, tags: [ghostty, workstation], become: true }
-    - { role: jetbrains_toolbox, tags: [toolbox, workstation] }
-    - { role: docker_desktop, tags: [docker_desktop, workstation], become: true }
-    - { role: nomachine, tags: [nomachine, workstation], become: true }
-    - { role: terminal_extras, tags: [terminal_extras, workstation], become: true }
-    - { role: activitywatch, tags: [activitywatch, workstation] }
-    - { role: flatpak_apps, tags: [flatpak_apps, workstation], become: true }
-    - { role: snap_apps, tags: [snap_apps, workstation], become: true }
-    - { role: cleanup, tags: [cleanup], become: true }
+    # Core system
+    - { role: base, tags: [dev], become: true }
+    - { role: security, tags: [dev], become: true }
+    - { role: drivers, tags: [dev], become: true }
+    - { role: observability, tags: [dev], become: true }
+
+    # Docker
+    - { role: docker, tags: [dev], become: true }
+
+    # Networking
+    - { role: tailscale, tags: [dev], become: true }
+
+    # Git and dotfiles
+    - { role: git_ssh, tags: [dev] }
+    - { role: chezmoi_install, tags: [dev] }
+    - { role: chezmoi_apply, tags: [dev] }
+
+    # Shell configuration
+    - { role: shell_config, tags: [dev] }
+
+    # Build toolchain
+    - { role: build_toolchain, tags: [dev], become: true }
+
+    # Languages
+    - { role: python, tags: [dev] }
+    - { role: node, tags: [dev] }
+    - { role: ruby, tags: [dev] }
+    - { role: go, tags: [dev] }
+    - { role: rust, tags: [dev] }
+    - { role: dotnet, tags: [dev] }
+    - { role: java, tags: [dev] }
+
+    # Dev tools
+    - { role: dev_tools, tags: [dev], become: true }
+
+    # Secrets management
+    - { role: lockbox, tags: [dev] }
+    - { role: mani, tags: [dev] }
+
+    # AI agents
+    - { role: claude_cli, tags: [dev] }
+    - { role: codex, tags: [dev] }
+
+    # Editor/IDE
+    - { role: lazyvim, tags: [dev] }
+    - { role: zed, tags: [dev] }
+    - { role: cursor, tags: [dev] }
+    - { role: jetbrains_toolbox, tags: [dev] }
+
+    # Desktop environment
+    - { role: flatpak_snap, tags: [dev], become: true }
+    - { role: fonts, tags: [dev] }
+    - { role: terminals, tags: [dev], become: true }
+    - { role: ghostty, tags: [dev], become: true }
+    - { role: chrome, tags: [dev], become: true }
+    - { role: docker_desktop, tags: [dev], become: true }
+    - { role: nomachine, tags: [dev], become: true }
+    - { role: terminal_extras, tags: [dev], become: true }
+    - { role: activitywatch, tags: [dev] }
+    - { role: flatpak_apps, tags: [dev], become: true }
+    - { role: snap_apps, tags: [dev], become: true }
+
+    # Cleanup
+    - { role: cleanup, tags: [dev], become: true }

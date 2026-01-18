@@ -1,0 +1,59 @@
+---
+- name: Install Rust toolchain (rustup)
+  ansible.builtin.shell: |
+    set -e
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/rustc"
+  become: false
+  when: rust_install
+
+- name: Create Rust shell configuration
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/shell/rust.sh"
+    mode: "0644"
+    content: |
+      # Rust
+      . "$HOME/.cargo/env"
+  become: false
+  when: rust_install
+
+- name: Install cargo-edit
+  ansible.builtin.shell: |
+    set -e
+    . "$HOME/.cargo/env"
+    cargo install cargo-edit
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/cargo-add"
+  become: false
+  when:
+    - rust_install
+    - rust_install_cargo_edit
+
+- name: Install cargo-watch
+  ansible.builtin.shell: |
+    set -e
+    . "$HOME/.cargo/env"
+    cargo install cargo-watch
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/cargo-watch"
+  become: false
+  when:
+    - rust_install
+    - rust_install_cargo_watch
+
+- name: Install cargo-audit
+  ansible.builtin.shell: |
+    set -e
+    . "$HOME/.cargo/env"
+    cargo install cargo-audit
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/cargo-audit"
+  become: false
+  when:
+    - rust_install
+    - rust_install_cargo_audit

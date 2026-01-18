@@ -1,0 +1,4 @@
+---
+claude_cli_install: true
+claude_cli_install_url: "https://raw.githubusercontent.com/anthropics/claude-code/main/install.sh"
+claude_cli_binary_path: "{{ ansible_env.HOME }}/.local/bin/claude"

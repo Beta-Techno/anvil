@@ -1,0 +1,6 @@
+---
+go_install: true
+go_version: "1.23.5"
+go_download_url: "https://go.dev/dl/go{{ go_version }}.linux-{{ apt_arch }}.tar.gz"
+go_install_golangci_lint: true
+go_install_air: true

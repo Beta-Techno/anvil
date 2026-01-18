@@ -1,0 +1,5 @@
+---
+node_install: true
+node_nvm_version: v0.39.7
+node_default_version: "lts/*"
+node_install_pnpm: true

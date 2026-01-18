@@ -1,0 +1,6 @@
+name: dev
+description: Full developer workstation - all languages and tools
+tags:
+  - dev
+vars:
+  full_dev: true

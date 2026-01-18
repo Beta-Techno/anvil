@@ -1,0 +1,73 @@
+---
+- name: Ensure Python build dependencies are installed
+  ansible.builtin.apt:
+    name: "{{ python_build_deps }}"
+    state: present
+    update_cache: true
+  become: true
+  when: python_install
+
+- name: Install pyenv
+  ansible.builtin.git:
+    repo: https://github.com/pyenv/pyenv.git
+    dest: "{{ python_pyenv_root }}"
+  become: false
+  when: python_install
+
+- name: Create pyenv shell configuration
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/shell/pyenv.sh"
+    mode: "0644"
+    content: |
+      # pyenv (Python Version Manager)
+      export PYENV_ROOT="{{ python_pyenv_root }}"
+      command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+      eval "$(pyenv init -)"
+  become: false
+  when: python_install
+
+- name: Install Python via pyenv
+  ansible.builtin.shell: |
+    set -e
+    export PYENV_ROOT="{{ python_pyenv_root }}"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
+    pyenv install -s "{{ python_version }}"
+    pyenv global "{{ python_version }}"
+  args:
+    executable: /bin/bash
+  environment:
+    PYENV_ROOT: "{{ python_pyenv_root }}"
+    PATH: "{{ python_pyenv_root }}/bin:{{ python_pyenv_root }}/shims:{{ ansible_env.PATH }}"
+  become: false
+  when: python_install
+
+- name: Install pipx
+  ansible.builtin.shell: |
+    set -e
+    export PYENV_ROOT="{{ python_pyenv_root }}"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
+    pip install --user pipx
+    $HOME/.local/bin/pipx ensurepath
+  args:
+    executable: /bin/bash
+  environment:
+    PYENV_ROOT: "{{ python_pyenv_root }}"
+    PATH: "{{ python_pyenv_root }}/bin:{{ python_pyenv_root }}/shims:{{ ansible_env.PATH }}"
+  become: false
+  when:
+    - python_install
+    - python_install_pipx
+
+- name: Install uv
+  ansible.builtin.shell: |
+    set -e
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/uv"
+  become: false
+  when:
+    - python_install
+    - python_install_uv

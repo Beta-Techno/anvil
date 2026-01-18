@@ -1,0 +1,16 @@
+---
+- name: Install Claude Code CLI
+  ansible.builtin.shell: |
+    set -e
+    curl -fsSL {{ claude_cli_install_url }} | bash
+  args:
+    executable: /bin/bash
+    creates: "{{ claude_cli_binary_path }}"
+  become: false
+  when: claude_cli_install
+  register: claude_install
+
+- name: Claude Code install summary
+  ansible.builtin.debug:
+    msg: "Claude Code CLI installed at {{ claude_cli_binary_path }}. Run 'claude' to authenticate."
+  when: claude_cli_install

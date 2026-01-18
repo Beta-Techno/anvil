@@ -1,0 +1,8 @@
+---
+- name: Install base build toolchain
+  ansible.builtin.apt:
+    name: "{{ build_toolchain_packages }}"
+    state: present
+    update_cache: true
+  become: true
+  when: build_toolchain_install

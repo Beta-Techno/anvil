@@ -1,0 +1,12 @@
+---
+build_toolchain_install: true
+build_toolchain_packages:
+  - build-essential      # gcc, g++, make, etc.
+  - pkg-config           # Helper tool for compiling applications
+  - cmake                # Cross-platform build system
+  - ninja-build          # Small build system with focus on speed
+  - libssl-dev           # SSL/TLS development files
+  - zlib1g-dev           # Compression library development files
+  - libffi-dev           # Foreign Function Interface library
+  - clang                # C/C++ compiler (alternative to gcc)
+  - llvm                 # Compiler infrastructure

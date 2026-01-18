@@ -28,6 +28,7 @@ type AnsibleConfig struct {
 	ManiSyncTags    []string
 	ManiRunCommands []string
 	ManiManifests   []config.ManifestConfig
+	ProfileVars     map[string]any
 }
 
 func RunAnsible(cfg AnsibleConfig) error {
@@ -35,6 +36,13 @@ func RunAnsible(cfg AnsibleConfig) error {
 	if cfg.BundleFile != "" {
 		if _, err := os.Stat(cfg.BundleFile); err == nil {
 			args = append(args, "-e", "@"+cfg.BundleFile)
+		}
+	}
+	// Add profile vars as extra-vars
+	if len(cfg.ProfileVars) > 0 {
+		varsJSON, err := json.Marshal(cfg.ProfileVars)
+		if err == nil {
+			args = append(args, "-e", string(varsJSON))
 		}
 	}
 	if cfg.Tags != "" && cfg.Tags != "all" {
