@@ -55,6 +55,7 @@
     path: /tmp/mani-bin
     state: directory
     mode: "0755"
+  become: true
   when:
     - mani_install
     - not mani_bin_stat.stat.exists | default(false)
@@ -74,6 +75,7 @@
     dest: /tmp/mani-bin
     remote_src: true
     creates: /tmp/mani-bin/mani
+  become: true
   when:
     - mani_install
     - not mani_bin_stat.stat.exists | default(false)
@@ -92,6 +94,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
+  become: true
   loop:
     - /tmp/mani.tar.gz
     - /tmp/mani-bin
