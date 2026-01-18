@@ -85,21 +85,22 @@ func DownloadAndReplace(url, checksumURL, target string) error {
 	if target == "" {
 		return errors.New("target path required")
 	}
-	targetDir := filepath.Dir(target)
-	if err := os.MkdirAll(targetDir, 0o755); err != nil {
-		return err
-	}
-	checksumPath := filepath.Join(targetDir, "anvil-update.sha256")
+
+	// Download to system temp dir to avoid permission issues
+	checksumPath := filepath.Join(os.TempDir(), "anvil-update.sha256")
 	if err := downloadFile(checksumURL, checksumPath); err != nil {
 		return err
 	}
-	tmpFile, err := os.CreateTemp(targetDir, "anvil-update")
+	defer os.Remove(checksumPath)
+
+	tmpFile, err := os.CreateTemp("", "anvil-update")
 	if err != nil {
 		return err
 	}
+	tmpPath := tmpFile.Name()
 	defer func() {
 		tmpFile.Close()
-		os.Remove(tmpFile.Name())
+		os.Remove(tmpPath)
 	}()
 
 	if _, err := io.Copy(tmpFile, resp.Body); err != nil {
@@ -111,14 +112,49 @@ func DownloadAndReplace(url, checksumURL, target string) error {
 	if err := tmpFile.Close(); err != nil {
 		return err
 	}
-	if err := fileChecksumMatches(tmpFile.Name(), checksumPath); err != nil {
+	if err := fileChecksumMatches(tmpPath, checksumPath); err != nil {
 		return fmt.Errorf("checksum verification failed: %w", err)
 	}
-	if err := os.Rename(tmpFile.Name(), target); err != nil {
+
+	// Ensure target directory exists
+	targetDir := filepath.Dir(target)
+	if err := os.MkdirAll(targetDir, 0o755); err != nil {
+		if os.IsPermission(err) {
+			return fmt.Errorf("cannot create %s: permission denied (try running with sudo)", targetDir)
+		}
 		return err
 	}
-	os.Remove(checksumPath) // clean up checksum file
+
+	// os.Rename fails across filesystems, so copy then remove
+	if err := copyFile(tmpPath, target); err != nil {
+		if os.IsPermission(err) {
+			return fmt.Errorf("cannot write to %s: permission denied (try running with sudo)", target)
+		}
+		return err
+	}
 	return nil
+}
+
+func copyFile(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	if _, err := io.Copy(out, in); err != nil {
+		return err
+	}
+	if err := out.Chmod(0o755); err != nil {
+		return err
+	}
+	return out.Close()
 }
 
 func downloadFile(url, dest string) error {
