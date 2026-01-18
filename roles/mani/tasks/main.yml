@@ -65,6 +65,7 @@
     url: "https://github.com/alajmo/mani/releases/download/{{ mani_version }}/mani_{{ mani_version_number }}_linux_{{ mani_arch_map[apt_arch] | default(apt_arch) }}.tar.gz"
     dest: /tmp/mani.tar.gz
     mode: "0644"
+  become: true
   when:
     - mani_install
     - not mani_bin_stat.stat.exists | default(false)
