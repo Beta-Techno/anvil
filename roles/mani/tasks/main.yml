@@ -86,6 +86,7 @@
     src: /tmp/mani-bin/mani
     dest: "{{ mani_bin_path }}"
     mode: "0755"
+    remote_src: true
   become: true
   when:
     - mani_install
