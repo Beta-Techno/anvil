@@ -88,6 +88,7 @@ func DownloadAndReplace(url, checksumURL, target string) error {
 
 	// Download to system temp dir to avoid permission issues
 	checksumPath := filepath.Join(os.TempDir(), "anvil-update.sha256")
+	os.Remove(checksumPath) // remove any stale file from previous run
 	if err := downloadFile(checksumURL, checksumPath); err != nil {
 		return err
 	}
@@ -125,7 +126,15 @@ func DownloadAndReplace(url, checksumURL, target string) error {
 		return err
 	}
 
-	// os.Rename fails across filesystems, so copy then remove
+	// Remove target first to avoid "text file busy" when replacing running binary
+	if err := os.Remove(target); err != nil && !os.IsNotExist(err) {
+		if os.IsPermission(err) {
+			return fmt.Errorf("cannot remove %s: permission denied (try running with sudo)", target)
+		}
+		return err
+	}
+
+	// os.Rename fails across filesystems, so copy instead
 	if err := copyFile(tmpPath, target); err != nil {
 		if os.IsPermission(err) {
 			return fmt.Errorf("cannot write to %s: permission denied (try running with sudo)", target)
