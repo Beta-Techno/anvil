@@ -35,6 +35,9 @@ func EnsureAccess(cfg Config) error {
 		keyPath = filepath.Join(home, ".ssh", "id_ed25519")
 	}
 
+	if err := ensureKnownHosts(); err != nil {
+		return err
+	}
 	if err := ensureSSHKey(keyPath); err != nil {
 		return err
 	}
@@ -96,6 +99,40 @@ func uploadKey(token, pubPath string) error {
 		return nil // key already registered
 	}
 	return fmt.Errorf("github key upload failed: %s", resp.Status)
+}
+
+func ensureKnownHosts() error {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	knownHostsPath := filepath.Join(home, ".ssh", "known_hosts")
+
+	// Check if github.com is already in known_hosts
+	if data, err := os.ReadFile(knownHostsPath); err == nil {
+		if strings.Contains(string(data), "github.com") {
+			return nil
+		}
+	}
+
+	if err := os.MkdirAll(filepath.Dir(knownHostsPath), 0o700); err != nil {
+		return err
+	}
+
+	// Fetch GitHub's SSH host keys via ssh-keyscan
+	out, err := exec.Command("ssh-keyscan", "-t", "ed25519,rsa", "github.com").Output()
+	if err != nil {
+		return fmt.Errorf("ssh-keyscan github.com failed: %w", err)
+	}
+
+	f, err := os.OpenFile(knownHostsPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.Write(out)
+	return err
 }
 
 func hostname() string {
