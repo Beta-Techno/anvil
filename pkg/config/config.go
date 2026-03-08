@@ -25,7 +25,7 @@ func init() {
 
 	v.SetDefault("org", "")
 	v.SetDefault("persona", "dev")
-	v.SetDefault("profile", "devheavy")
+	v.SetDefault("profile", "")
 	v.SetDefault("tags", "all")
 	v.SetDefault("skip_bundle", false)
 
@@ -231,13 +231,12 @@ func NeedsSetup() bool {
 
 // NeedsProfileSetup returns true if profile has not been explicitly chosen
 func NeedsProfileSetup() bool {
-	// Check if profile was explicitly set in config file (not just default)
-	return !v.IsSet("profile") || v.GetString("profile") == "devheavy"
+	return v.GetString("profile") == ""
 }
 
 // ValidProfiles returns the list of valid profile names
 func ValidProfiles() []string {
-	return []string{"user", "dev", "server", "agent"}
+	return []string{"user", "dev", "server"}
 }
 
 // ProfileDescription returns a short description for a profile
@@ -249,8 +248,6 @@ func ProfileDescription(profile string) string {
 		return "Developer workstation"
 	case "server":
 		return "Headless server"
-	case "agent":
-		return "CI/CD agent"
 	default:
 		return ""
 	}

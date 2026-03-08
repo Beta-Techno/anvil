@@ -1,6 +1,6 @@
 name: dev
 description: Full developer workstation - all languages and tools
 tags:
+  - core
   - dev
-vars:
-  full_dev: true
+  - desktop

@@ -1,0 +1,4 @@
+name: server
+description: Headless server - no GUI or desktop apps
+tags:
+  - core

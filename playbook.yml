@@ -1,6 +1,16 @@
 ---
 # Anvil provisioning playbook
-# Currently: dev profile only. Add server, agent, user profiles later.
+#
+# Tag groups:
+#   core    - base system, security, docker, networking, config, secrets, cleanup
+#   dev     - languages, build tools, dev tools, editors, AI agents, mani
+#   desktop - GUI apps, terminals, fonts, flatpak/snap
+#
+# Profiles select tag combinations:
+#   user:   [core, desktop]
+#   dev:    [core, dev, desktop]
+#   server: [core]
+
 - hosts: localhost
   gather_facts: true
   become: false
@@ -10,24 +20,24 @@
     ansible_python_interpreter: /usr/bin/python3
   roles:
     # Core system
-    - { role: base, tags: [dev], become: true }
-    - { role: security, tags: [dev], become: true }
-    - { role: drivers, tags: [dev], become: true }
-    - { role: observability, tags: [dev], become: true }
+    - { role: base, tags: [core], become: true }
+    - { role: security, tags: [core], become: true }
+    - { role: drivers, tags: [core], become: true }
+    - { role: observability, tags: [core], become: true }
 
     # Docker
-    - { role: docker, tags: [dev], become: true }
+    - { role: docker, tags: [core], become: true }
 
     # Networking
-    - { role: tailscale, tags: [dev], become: true }
+    - { role: tailscale, tags: [core], become: true }
 
     # Git and dotfiles
-    - { role: git_ssh, tags: [dev] }
-    - { role: chezmoi_install, tags: [dev] }
-    - { role: chezmoi_apply, tags: [dev] }
+    - { role: git_ssh, tags: [core] }
+    - { role: chezmoi_install, tags: [core] }
+    - { role: chezmoi_apply, tags: [core] }
 
     # Shell configuration
-    - { role: shell_config, tags: [dev] }
+    - { role: shell_config, tags: [core] }
 
     # Build toolchain
     - { role: build_toolchain, tags: [dev], become: true }
@@ -45,7 +55,7 @@
     - { role: dev_tools, tags: [dev], become: true }
 
     # Secrets management
-    - { role: lockbox, tags: [dev] }
+    - { role: lockbox, tags: [core] }
     - { role: mani, tags: [dev] }
 
     # AI agents
@@ -59,17 +69,17 @@
     - { role: jetbrains_toolbox, tags: [dev] }
 
     # Desktop environment
-    - { role: flatpak_snap, tags: [dev], become: true }
-    - { role: fonts, tags: [dev] }
-    - { role: terminals, tags: [dev], become: true }
-    - { role: ghostty, tags: [dev], become: true }
-    - { role: chrome, tags: [dev], become: true }
-    - { role: docker_desktop, tags: [dev], become: true }
-    - { role: nomachine, tags: [dev], become: true }
-    - { role: terminal_extras, tags: [dev], become: true }
-    - { role: activitywatch, tags: [dev] }
-    - { role: flatpak_apps, tags: [dev], become: true }
-    - { role: snap_apps, tags: [dev], become: true }
+    - { role: flatpak_snap, tags: [desktop], become: true }
+    - { role: fonts, tags: [desktop] }
+    - { role: terminals, tags: [desktop], become: true }
+    - { role: ghostty, tags: [desktop], become: true }
+    - { role: chrome, tags: [desktop], become: true }
+    - { role: docker_desktop, tags: [desktop], become: true }
+    - { role: nomachine, tags: [desktop], become: true }
+    - { role: terminal_extras, tags: [desktop], become: true }
+    - { role: activitywatch, tags: [desktop] }
+    - { role: flatpak_apps, tags: [desktop], become: true }
+    - { role: snap_apps, tags: [desktop], become: true }
 
     # Cleanup
-    - { role: cleanup, tags: [dev], become: true }
+    - { role: cleanup, tags: [core], become: true }
