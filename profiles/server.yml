@@ -1,4 +1,6 @@
 name: server
-description: Headless server - no GUI or desktop apps
+description: Headless server - infrastructure and secrets
 tags:
-  - core
+  - system
+  - infra
+  - config

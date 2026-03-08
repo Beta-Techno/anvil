@@ -1,6 +1,8 @@
 name: dev
 description: Full developer workstation - all languages and tools
 tags:
-  - core
+  - system
+  - infra
+  - config
   - dev
   - desktop
