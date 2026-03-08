@@ -15,10 +15,9 @@ const DefaultOrg = "Beta-Techno"
 var v = viper.New()
 
 func init() {
-	v.SetConfigName("astro")
-	v.AddConfigPath("/etc/astro")
+	v.SetConfigName("anvil")
+	v.AddConfigPath("/etc/anvil")
 	v.AddConfigPath("$HOME/.config/anvil")
-	v.AddConfigPath("$HOME/.config/astro")
 	v.AddConfigPath("$HOME/.config")
 	v.AddConfigPath(".")
 	v.SetEnvPrefix("ANVIL")
@@ -297,7 +296,7 @@ func ConfigFilePath() string {
 	if err != nil {
 		home = "."
 	}
-	return filepath.Join(home, ".config", "anvil", "astro.yml")
+	return filepath.Join(home, ".config", "anvil", "anvil.yml")
 }
 
 // SaveOrg persists the org to the config file

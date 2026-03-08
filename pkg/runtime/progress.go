@@ -7,11 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
 // ProgressRenderer handles parsing callback markers and rendering clean output.
 type ProgressRenderer struct {
+	mu          sync.Mutex
 	logFile     *os.File
 	currentRole string
 	spinner     int
@@ -59,11 +61,15 @@ func (p *ProgressRenderer) Close() {
 
 // Failed returns true if any task failed.
 func (p *ProgressRenderer) Failed() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	return p.failed
 }
 
 // FailMessage returns the failure message if any.
 func (p *ProgressRenderer) FailMessage() string {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	return p.failMsg
 }
 
@@ -90,7 +96,9 @@ func (p *ProgressRenderer) processLine(line string) {
 	// Parse markers
 	if strings.HasPrefix(line, "@@") && strings.HasSuffix(line, "@@") {
 		marker := line[2 : len(line)-2]
+		p.mu.Lock()
 		p.handleMarker(marker)
+		p.mu.Unlock()
 		return
 	}
 
@@ -168,6 +176,8 @@ func (p *ProgressRenderer) clearLine() {
 
 // Tick updates the spinner animation. Call this periodically.
 func (p *ProgressRenderer) Tick() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	if p.currentRole != "" && time.Since(p.lastUpdate) > 100*time.Millisecond {
 		p.updateSpinner()
 		p.lastUpdate = time.Now()
