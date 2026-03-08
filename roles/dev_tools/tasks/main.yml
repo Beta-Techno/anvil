@@ -536,7 +536,7 @@
 
 - name: Warn if cargo not available for dust
   ansible.builtin.debug:
-    msg: "dust requires cargo (Rust). Enable langs_install_rust=true to install Rust toolchain."
+    msg: "dust requires cargo (Rust). Enable rust_install=true to install Rust toolchain."
   when:
     - dev_tools_install
     - dev_tools_install_dust
