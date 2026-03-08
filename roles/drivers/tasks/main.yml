@@ -1,7 +1,7 @@
 ---
-- name: Determine if driver installation should be skipped (containers)
+- name: Determine if driver installation should be skipped (VMs and containers)
   ansible.builtin.set_fact:
-    drivers_skip: "{{ ansible_virtualization_type in ['lxc', 'docker', 'container'] }}"
+    drivers_skip: "{{ ansible_virtualization_type in ['lxc', 'docker', 'container', 'kvm', 'qemu', 'virtualbox', 'VMware', 'xen', 'hyperv'] }}"
 
 - name: Skip driver install on virtualized/container hosts
   ansible.builtin.debug:
