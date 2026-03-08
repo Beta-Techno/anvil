@@ -149,17 +149,17 @@
 - name: Populate secret facts from lockbox
   ansible.builtin.set_fact:
     lockbox_vars: "{{ lockbox_vars }}"
-    tailscale_auth_key: "{{ tailscale_auth_key | default(lockbox_vars.tailscale_auth_key, true) }}"
-    ngrok_authtoken: "{{ ngrok_authtoken | default(lockbox_vars.ngrok_authtoken, true) }}"
-    cloudflare_api_token: "{{ cloudflare_api_token | default(lockbox_vars.cloudflare_api_token, true) }}"
-    cloudflare_account_id: "{{ cloudflare_account_id | default(lockbox_vars.cloudflare_account_id, true) }}"
-    cloudflare_zone_id: "{{ cloudflare_zone_id | default(lockbox_vars.cloudflare_zone_id, true) }}"
-    observability_loki_endpoint: "{{ observability_loki_endpoint | default(lockbox_vars.observability_loki_endpoint, true) }}"
-    observability_loki_username: "{{ observability_loki_username | default(lockbox_vars.observability_loki_username, true) }}"
-    observability_loki_password: "{{ observability_loki_password | default(lockbox_vars.observability_loki_password, true) }}"
-    observability_fleet_endpoint: "{{ observability_fleet_endpoint | default(lockbox_vars.observability_fleet_endpoint, true) }}"
-    observability_fleet_enroll_secret: "{{ observability_fleet_enroll_secret | default(lockbox_vars.observability_fleet_enroll_secret, true) }}"
-    activitywatch_endpoint: "{{ activitywatch_endpoint | default(lockbox_vars.activitywatch_endpoint, true) }}"
+    tailscale_auth_key: "{{ tailscale_auth_key | default(lockbox_vars.get('tailscale_auth_key', ''), true) }}"
+    ngrok_authtoken: "{{ ngrok_authtoken | default(lockbox_vars.get('ngrok_authtoken', ''), true) }}"
+    cloudflare_api_token: "{{ cloudflare_api_token | default(lockbox_vars.get('cloudflare_api_token', ''), true) }}"
+    cloudflare_account_id: "{{ cloudflare_account_id | default(lockbox_vars.get('cloudflare_account_id', ''), true) }}"
+    cloudflare_zone_id: "{{ cloudflare_zone_id | default(lockbox_vars.get('cloudflare_zone_id', ''), true) }}"
+    observability_loki_endpoint: "{{ observability_loki_endpoint | default(lockbox_vars.get('observability_loki_endpoint', ''), true) }}"
+    observability_loki_username: "{{ observability_loki_username | default(lockbox_vars.get('observability_loki_username', ''), true) }}"
+    observability_loki_password: "{{ observability_loki_password | default(lockbox_vars.get('observability_loki_password', ''), true) }}"
+    observability_fleet_endpoint: "{{ observability_fleet_endpoint | default(lockbox_vars.get('observability_fleet_endpoint', ''), true) }}"
+    observability_fleet_enroll_secret: "{{ observability_fleet_enroll_secret | default(lockbox_vars.get('observability_fleet_enroll_secret', ''), true) }}"
+    activitywatch_endpoint: "{{ activitywatch_endpoint | default(lockbox_vars.get('activitywatch_endpoint', ''), true) }}"
   when:
     - lockbox_install
     - lockbox_repo_stat.stat.exists
