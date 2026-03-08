@@ -3,20 +3,24 @@
 #
 # Tag groups (functional, independently targetable):
 #   system  - base packages, security, drivers, cleanup
-#   infra   - docker, tailscale, observability, lockbox
 #   config  - git, chezmoi, shell configuration
+#   infra   - docker, tailscale, observability, lockbox
 #   dev     - languages, build tools, dev tools, mani, AI agents, editors
 #   desktop - GUI apps, terminals, fonts, flatpak/snap
 #
 # Profiles select tag combinations:
 #   user:   [system, config, desktop]
-#   dev:    [system, infra, config, dev, desktop]
-#   server: [system, infra, config]
+#   dev:    [system, config, infra, dev, desktop]
+#   server: [system, config, infra]
 #
 # Targeted re-runs:
 #   anvil up --tags config    # re-apply dotfiles
 #   anvil up --tags dev       # update languages/tools
 #   anvil up --tags desktop   # fix GUI apps
+#
+# Notes:
+#   - Go is tagged [dev, infra] because lockbox needs it to build lockctl.
+#     When lockctl ships as a pre-built binary, Go reverts to [dev] only.
 
 - hosts: localhost
   gather_facts: true
@@ -31,12 +35,6 @@
     - { role: security, tags: [system], become: true }
     - { role: drivers, tags: [system], become: true }
 
-    # infra — infrastructure services
-    - { role: docker, tags: [infra], become: true }
-    - { role: tailscale, tags: [infra], become: true }
-    - { role: observability, tags: [infra], become: true }
-    - { role: lockbox, tags: [infra] }
-
     # config — identity and dotfiles
     - { role: git_ssh, tags: [config] }
     - { role: chezmoi_install, tags: [config] }
@@ -48,7 +46,7 @@
     - { role: python, tags: [dev] }
     - { role: node, tags: [dev] }
     - { role: ruby, tags: [dev] }
-    - { role: go, tags: [dev] }
+    - { role: go, tags: [dev, infra] }
     - { role: rust, tags: [dev] }
     - { role: dotnet, tags: [dev] }
     - { role: java, tags: [dev] }
@@ -60,6 +58,12 @@
     - { role: zed, tags: [dev] }
     - { role: cursor, tags: [dev] }
     - { role: jetbrains_toolbox, tags: [dev] }
+
+    # infra — infrastructure services
+    - { role: docker, tags: [infra], become: true }
+    - { role: tailscale, tags: [infra], become: true }
+    - { role: observability, tags: [infra], become: true }
+    - { role: lockbox, tags: [infra] }
 
     # desktop — GUI apps and environment
     - { role: flatpak_snap, tags: [desktop], become: true }
